@@ -34,7 +34,7 @@ const mono = IBM_Plex_Mono({
 /** Título y descripción tomados del sitio original de Decker. */
 export const metadata: Metadata = {
   title: {
-    default: 'Decker Stock Online | Camiones, semis y utilitarios',
+    default: 'Decker ',
     template: '%s | Decker Camiones',
   },
   description:
