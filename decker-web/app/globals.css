@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* La nav es sticky: los anclas no quedan tapadas por ella. */
+    scroll-padding-top: 6rem;
+  }
+
+  /**
+   * El lienzo es gris claro y las superficies son blancas, no al revés.
+   * Casi todo el contenido del sitio son tarjetas blancas: sobre una página
+   * blanca dependerían sólo de la sombra para separarse del fondo.
+   * El ritmo vertical lo dan los bloques negros (hero, cierre, footer), no una
+   * alternancia blanco/gris.
+   */
+  body {
+    @apply bg-gris-100 text-negro antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Foco visible en todo elemento interactivo. No se remueve en ningún lado. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-rojo ring-offset-2 ring-offset-white;
+  }
+
+  .oscuro :focus-visible {
+    @apply ring-amarillo ring-offset-negro-950;
+  }
+
+  /* Datos numéricos: mono + tabular para que las columnas queden alineadas. */
+  .dato {
+    @apply font-mono tabular-nums;
+    font-feature-settings: 'zero' 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* El padding lateral baja de 8/10 a 6/8 desde `sm`: sumado al ancho útil
+     mayor, el contenido gana ~136px a 1440. En mobile se mantiene en 20px, que
+     es lo mínimo cómodo para que el texto no toque el borde de la pantalla. */
+  .contenedor {
+    @apply mx-auto w-full max-w-contenido px-5 sm:px-6 lg:px-8;
+  }
+
+  /* Ritmo vertical único para todas las secciones. */
+  .seccion {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  /* Título de sección. La display condensada se reserva para este nivel:
+     usarla también en cada tarjeta es lo que apelmaza la página. */
+  .titulo-seccion {
+    @apply font-display text-[32px] font-semibold leading-[1.05] tracking-[-0.01em] sm:text-[44px];
+  }
+
+  .etiqueta {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em];
+  }
+
+  .campo {
+    @apply block w-full rounded-sm border border-gris-200 bg-white px-3.5 py-2.5 text-sm
+           text-negro transition-colors placeholder:text-gris-400
+           hover:border-gris-300 focus:border-negro focus:outline-none focus:ring-0;
+  }
+
+  .campo-oscuro {
+    @apply border-negro-700 bg-negro-800 text-white placeholder:text-gris-500
+           hover:border-negro-600 focus:border-amarillo;
+  }
+
+  .campo-label {
+    @apply mb-2 block text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-500;
+  }
+
+  /* Superficie base de tarjeta: sin borde duro, con elevación de contacto. */
+  .tarjeta {
+    @apply rounded-md bg-white shadow-tarjeta transition-shadow duration-200 ease-suave;
+  }
+
+  .tarjeta-interactiva {
+    @apply tarjeta hover:shadow-tarjeta-hover;
+  }
+}

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decker Stock Online | Camiones, semis y utilitarios</title>
+  <meta name="description" content="Encontrá camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas. Consultá financiación, entregá tu usado y hablá con un asesor Decker." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header" id="top">
+    <nav class="nav">
+      <a class="brand logo-brand" href="#top" aria-label="Decker Stock Online">
+        <img src="assets/logo-decker.png" alt="Decker Camiones" />
+        <span>
+          <strong>Stock Online</strong>
+          <small>Camiones, semis y utilitarios</small>
+        </span>
+      </a>
+
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#stock">Stock</a>
+        <a href="#financiacion">Financiación</a>
+        <a href="#cotizar">Cotizar usado</a>
+        <a href="#agencias">Agencias</a>
+        <a href="#contacto" class="nav-cta">Consultar</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">Stock premium · Camiones Volvo, usados seleccionados y semis</span>
+          <h1>Elegí tu próxima unidad con respaldo Decker.</h1>
+          <p>
+            Una experiencia online más simple, visual y profesional para encontrar camiones Volvo actuales, usados seleccionados, semis, bateas y utilitarios.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#stock">Explorar unidades</a>
+            <a class="btn secondary" href="#cotizar">Parte de pago</a>
+          </div>
+          <div class="trust-row">
+            <div><strong>5</strong><span>agencias</span></div>
+            <div><strong>Volvo</strong><span>FH · FM · FMX</span></div>
+            <div><strong>360°</strong><span>asesoramiento</span></div>
+          </div>
+
+          <div class="premium-tags">
+            <span>Camiones 0 km</span>
+            <span>Usados seleccionados</span>
+            <span>Semirremolques</span>
+            <span>Financiación</span>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <div class="hero-logo-wrap">
+            <img src="assets/logo-decker.png" alt="Decker Camiones" />
+          </div>
+          <div class="premium-truck-photo">
+            <img src="assets/hero-volvo-fh.png" alt="Camión Volvo FH actual en ruta" />
+            <div class="visual-label">Referencia visual · Línea Volvo actual</div>
+          </div>
+          <h2>Encontrá la unidad ideal</h2>
+          <form class="quick-search" id="quickSearch">
+            <label>
+              Tipo
+              <select id="tipoFiltro">
+                <option value="">Todos</option>
+                <option>Camión 0 km</option>
+                <option>Camión usado</option>
+                <option>Semi</option>
+                <option>Batea</option>
+                <option>Utilitario</option>
+                <option>Auto/Camioneta</option>
+              </select>
+            </label>
+            <label>
+              Marca
+              <select id="marcaFiltro">
+                <option value="">Todas</option>
+                <option>Volvo</option>
+                <option>Randon</option>
+                <option>Iveco</option>
+                <option>Ford</option>
+                <option>Mercedes-Benz</option>
+                <option>Volkswagen</option>
+              </select>
+            </label>
+            <label>
+              Sucursal
+              <select id="sucursalFiltro">
+                <option value="">Todas</option>
+                <option>Bahía Blanca</option>
+                <option>Quequén</option>
+                <option>Mar del Plata</option>
+                <option>Allen</option>
+                <option>Comodoro Rivadavia</option>
+              </select>
+            </label>
+            <button type="submit" class="btn primary full">Buscar unidad</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="stock">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Catálogo Decker</span>
+          <h2>Unidades seleccionadas</h2>
+          <p>Catálogo visual con imágenes reales de camiones, ficha técnica, financiación y contacto directo con un asesor.</p>
+        </div>
+
+        <div class="filters">
+          <button class="chip active" data-filter="todos">Todos</button>
+          <button class="chip" data-filter="Camión 0 km">Camiones 0 km</button>
+          <button class="chip" data-filter="Camión usado">Usados</button>
+          <button class="chip" data-filter="Semi">Semis</button>
+          <button class="chip" data-filter="Batea">Bateas</button>
+          <button class="chip" data-filter="Utilitario">Utilitarios</button>
+        </div>
+
+        <div class="stock-grid" id="stockGrid"></div>
+      </div>
+    </section>
+
+    <section class="section soft" id="respaldo">
+      <div class="container benefits-grid">
+        <div class="benefit-copy">
+          <span class="eyebrow">Compra segura</span>
+          <h2>Una compra más clara, segura y profesional.</h2>
+          <p>
+            Inspirada en la presencia de los camiones Volvo actuales: diseño limpio, información precisa, visuales grandes y asesoramiento comercial directo.
+          </p>
+        </div>
+        <div class="benefit-list">
+          <article>
+            <span>✓</span>
+            <div>
+              <h3>Unidades verificadas</h3>
+              <p>Ficha técnica, fotos, estado general y documentación de cada unidad.</p>
+            </div>
+          </article>
+          <article>
+            <span>✓</span>
+            <div>
+              <h3>Financiación disponible</h3>
+              <p>Opciones en pesos, cheques y cuotas según la operación vigente.</p>
+            </div>
+          </article>
+          <article>
+            <span>✓</span>
+            <div>
+              <h3>Toma de usados</h3>
+              <p>Formulario para cargar datos de la unidad y usarla como parte de pago.</p>
+            </div>
+          </article>
+          <article>
+            <span>✓</span>
+            <div>
+              <h3>Atención por agencia</h3>
+              <p>Derivación directa a Bahía Blanca, Quequén, Mar del Plata, Allen o Comodoro Rivadavia.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="financiacion">
+      <div class="container finance-grid">
+        <div>
+          <span class="eyebrow">Financiación</span>
+          <h2>Simulá tu operación</h2>
+          <p>
+            Una herramienta simple para iniciar la consulta comercial y avanzar con un asesor Decker.
+          </p>
+
+          <form class="calculator" id="calcForm">
+            <label>
+              Valor estimado de la unidad
+              <input id="valorUnidad" type="number" placeholder="Ej: 85000000" min="0" />
+            </label>
+            <label>
+              Entrega inicial
+              <input id="entregaInicial" type="number" placeholder="Ej: 25000000" min="0" />
+            </label>
+            <label>
+              Plazo
+              <select id="plazo">
+                <option value="12">12 cuotas</option>
+                <option value="24">24 cuotas</option>
+                <option value="36">36 cuotas</option>
+                <option value="48">48 cuotas</option>
+              </select>
+            </label>
+            <label>
+              Tasa anual orientativa
+              <input id="tasa" type="number" value="28" min="0" />
+            </label>
+            <button class="btn primary full" type="submit">Simular financiación</button>
+          </form>
+        </div>
+
+        <div class="result-card">
+          <h3>Resultado estimado</h3>
+          <div id="calcResult" class="calc-result">
+            Completá los datos para ver una cuota aproximada.
+          </div>
+          <a class="btn secondary full" id="financeWhatsapp" href="#" target="_blank" rel="noopener">Consultar con asesor</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft" id="cotizar">
+      <div class="container form-grid">
+        <div>
+          <span class="eyebrow">Parte de pago</span>
+          <h2>Entregá tu usado y subite a otra unidad</h2>
+          <p>
+            Cargá los datos de tu unidad y generá una consulta directa para que el equipo comercial evalúe la operación.
+          </p>
+        </div>
+
+        <form class="lead-form" id="usedForm">
+          <div class="two-cols">
+            <label>Nombre y apellido <input id="nombre" required placeholder="Tu nombre" /></label>
+            <label>Teléfono <input id="telefono" required placeholder="Tu WhatsApp" /></label>
+          </div>
+          <div class="two-cols">
+            <label>Marca <input id="marcaUsado" required placeholder="Ej: Volvo" /></label>
+            <label>Modelo <input id="modeloUsado" required placeholder="Ej: FH 460" /></label>
+          </div>
+          <div class="two-cols">
+            <label>Año <input id="anioUsado" type="number" placeholder="Ej: 2018" /></label>
+            <label>Kilómetros <input id="kmUsado" placeholder="Ej: 450.000 km" /></label>
+          </div>
+          <label>Estado general <textarea id="estadoUsado" rows="4" placeholder="Contanos brevemente el estado de la unidad"></textarea></label>
+          <label>Sucursal preferida
+            <select id="sucursalUsado">
+              <option>Bahía Blanca</option>
+              <option>Quequén</option>
+              <option>Mar del Plata</option>
+              <option>Allen</option>
+              <option>Comodoro Rivadavia</option>
+            </select>
+          </label>
+          <button class="btn primary full" type="submit">Enviar consulta por WhatsApp</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" id="agencias">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Red Decker</span>
+          <h2>Agencias Decker</h2>
+          <p>Atención comercial en Bahía Blanca, Quequén, Mar del Plata, Allen y Comodoro Rivadavia.</p>
+        </div>
+
+        <div class="agency-grid">
+          <article class="agency-card">
+            <h3>Bahía Blanca</h3>
+            <p>Ruta 3 km 696</p>
+            <a href="https://wa.me/5492262414590" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+          </article>
+          <article class="agency-card">
+            <h3>Quequén</h3>
+            <p>Av. Circunvalación 2815</p>
+            <a href="https://wa.me/5492262615392" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+          </article>
+          <article class="agency-card">
+            <h3>Mar del Plata</h3>
+            <p>Ruta 88 km 1271</p>
+            <a href="https://wa.me/5492235927668" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+          </article>
+          <article class="agency-card">
+            <h3>Allen</h3>
+            <p>Ruta 22 km 1195,5</p>
+            <a href="https://wa.me/5492994534291" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+          </article>
+          <article class="agency-card">
+            <h3>Comodoro Rivadavia</h3>
+            <p>Hipólito Yrigoyen 5620</p>
+            <a href="https://wa.me/5492974433415" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dark" id="contacto">
+      <div class="container cta-section">
+        <div>
+          <span class="eyebrow">Decker Camiones</span>
+          <h2>Stock, financiación y asesoramiento en un solo lugar.</h2>
+          <p>Camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas.</p>
+        </div>
+        <a class="btn primary" href="https://wa.me/5492262414590?text=Hola%20Decker%2C%20quiero%20consultar%20por%20una%20unidad" target="_blank" rel="noopener">Hablar con un asesor</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <img src="assets/logo-decker.png" alt="Decker Camiones" />
+        <p>Decker Camiones. Nuestro motor es el trabajo.</p>
+      </div>
+      <div>
+        <a href="#stock">Stock</a>
+        <a href="#financiacion">Financiación</a>
+        <a href="#cotizar">Cotizar usado</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
