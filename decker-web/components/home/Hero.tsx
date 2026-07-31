@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import heroImage from '@/public/marca/nuevaimagenhero2.png';
+import heroImage from '@/public/marca/camiones.png';
 import Link from 'next/link';
 import BuscadorRapido from '@/components/home/BuscadorRapido';
 import type { Sucursal, SugerenciaUnidad } from '@/lib/types';
