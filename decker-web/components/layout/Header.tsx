@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -13,6 +13,29 @@ const ENLACES = [
   { href: '/#cotizar', texto: 'Cotizar usado' },
   { href: '/#agencias', texto: 'Agencias' },
 ];
+
+/** Aire sobre el título al aterrizar: los 80px de la nav más un respiro. */
+const AIRE_SOBRE_TITULO = 128;
+
+/**
+ * Deja el título de la sección arriba de todo pero despegado de la nav. El
+ * salto nativo del ancla alinea el borde de la sección, que arranca con el
+ * padding vertical del bloque: se ve una franja vacía en vez del contenido.
+ * Devuelve false si el id no existe en la página.
+ */
+function enfocarSeccion(id: string) {
+  const seccion = document.getElementById(id);
+  if (!seccion) return false;
+
+  // El encabezado, no la sección: es donde el usuario espera aterrizar. La
+  // etiqueta chica va arriba del h2, así que si está es ella la que manda.
+  const ancla = seccion.querySelector('.etiqueta, h2') ?? seccion;
+  const destino = ancla.getBoundingClientRect().top + window.scrollY - AIRE_SOBRE_TITULO;
+  const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  window.scrollTo({ top: Math.max(0, destino), behavior: suave ? 'smooth' : 'auto' });
+  return true;
+}
 
 /**
  * Nav sticky.
@@ -42,6 +65,33 @@ export default function Header() {
       document.body.style.overflow = '';
     };
   }, [abierto]);
+
+  // Llegada desde otra página (/catalogo → /#agencias) o recarga con hash: el
+  // navegador ya hizo su salto al borde de la sección, así que se reubica una
+  // vez montado, cuando el layout de la sección ya está medido.
+  useEffect(() => {
+    if (!sobreHero) return;
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const tarea = window.setTimeout(() => enfocarSeccion(id), 0);
+    return () => window.clearTimeout(tarea);
+  }, [sobreHero, pathname]);
+
+  const alClickEnlace = (evento: MouseEvent<HTMLAnchorElement>, href: string) => {
+    setAbierto(false);
+
+    // Sólo los anclas de la home se ubican a mano; el resto navega normal y
+    // el efecto de arriba se encarga al aterrizar.
+    if (!sobreHero || !href.startsWith('/#')) return;
+    if (evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.button !== 0) return;
+
+    evento.preventDefault();
+    // Diferido un tick: con el menú mobile abierto el body está en
+    // `overflow: hidden` y el scroll no llegaría a aplicarse.
+    window.setTimeout(() => {
+      if (enfocarSeccion(href.slice(2))) window.history.replaceState(null, '', href);
+    }, 0);
+  };
 
   const solida = scrolleado || abierto || !sobreHero;
 
@@ -81,6 +131,7 @@ export default function Header() {
             <Link
               key={enlace.href}
               href={enlace.href}
+              onClick={(evento) => alClickEnlace(evento, enlace.href)}
               className="rounded-sm px-3.5 py-2 text-sm font-semibold text-white/90 transition-colors hover:bg-white/10 hover:text-white"
             >
               {enlace.texto}
@@ -119,7 +170,7 @@ export default function Header() {
               <Link
                 key={enlace.href}
                 href={enlace.href}
-                onClick={() => setAbierto(false)}
+                onClick={(evento) => alClickEnlace(evento, enlace.href)}
                 className="border-b border-negro-800 py-4 text-[17px] font-semibold text-white"
               >
                 {enlace.texto}
