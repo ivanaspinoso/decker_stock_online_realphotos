@@ -162,8 +162,7 @@ export default function CatalogoCliente({
           <div className="rounded-lg bg-white p-12 text-center shadow-tarjeta">
             <p className="text-[19px] font-semibold text-negro">Sin resultados</p>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-gris-500">
-              Ninguna unidad coincide con esa combinación de filtros. Probá ampliar el rango
-              de precio o quitar la sucursal.
+              Ninguna unidad coincide con esa combinación de filtros. Probá quitar la sucursal.
             </p>
             <button
               type="button"

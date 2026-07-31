@@ -35,7 +35,7 @@ export function linkConsultaUnidad(unidad: Unidad): string {
     ...(unidad.anio !== null ? [`Año: ${unidad.anio}`] : []),
     ...(unidad.km !== null && unidad.km > 0 ? [`Kilómetros: ${formatearKm(unidad.km)}`] : []),
     `Estado: ${unidad.estado}`,
-    ...(unidad.precio !== null ? [`Precio publicado: ${formatearPrecio(unidad.precio)}`] : []),
+    ...(unidad.financiacion !== null ? [`Financiación: ${unidad.financiacion}`] : []),
     `Sucursal: ${sucursal}`,
   ];
 

@@ -150,14 +150,17 @@ export default function Agencias({
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-semibold text-white transition-colors hover:bg-rojo-700"
+                // `sm:flex-1` y no `flex-1`: en mobile el contenedor es
+                // `flex-col`, y ahí `flex-1` fija la base sobre el eje
+                // vertical, pisando el `h-11` y aplastando el botón a ~22px.
+                className="inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-semibold text-white transition-colors hover:bg-rojo-700 sm:flex-1"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar por WhatsApp
               </a>
               <Link
                 href={`/catalogo?sucursal=${sucursal.id}`}
-                className="group inline-flex h-11 flex-1 items-center justify-center gap-2 rounded bg-gris-100 px-4 text-sm font-semibold text-negro transition-colors hover:bg-gris-200"
+                className="group inline-flex h-11 items-center justify-center gap-2 rounded bg-gris-100 px-4 text-sm font-semibold text-negro transition-colors hover:bg-gris-200 sm:flex-1"
               >
                 Ver su stock
                 <IconoFlecha className="h-4 w-4 transition-transform duration-200 ease-suave group-hover:translate-x-0.5" />

@@ -87,11 +87,11 @@ export default async function FichaUnidad({ params }: Props) {
           En desktop la tarjeta se corre a la columna derecha y ocupa las dos
           filas, quedando sticky al costado. */}
       <div className="contenedor grid gap-10 py-10 lg:grid-cols-[1.3fr_1fr] lg:gap-x-14 lg:gap-y-12 lg:py-14">
-        <div className="lg:col-start-1 lg:row-start-1">
+        <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
           <GaleriaUnidad fotos={unidad.galeria} nombre={unidad.nombre} estado={unidad.estado} />
         </div>
 
-        <div className="lg:col-start-1 lg:row-start-2">
+        <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2">
           <section>
             <h2 className="font-display text-[26px] font-semibold leading-none tracking-[-0.01em]">
               Ficha técnica
@@ -122,8 +122,8 @@ export default async function FichaUnidad({ params }: Props) {
         </div>
 
         {/* Columna de decisión: precio, contacto y sucursal, siempre a mano.
-            `order-first` la sube justo debajo de la galería en mobile. */}
-        <div className="order-first lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
+            En mobile va segunda, justo debajo de la galería. */}
+        <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-lg bg-white p-6 shadow-tarjeta sm:p-7">
             <div className="flex flex-wrap items-center gap-2.5">
               <EstadoBadge estado={unidad.estado} />
@@ -136,19 +136,7 @@ export default async function FichaUnidad({ params }: Props) {
               {unidad.nombre}
             </h1>
 
-            <div className="mt-6 border-t border-gris-200 pt-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
-                Precio
-              </p>
-              <p className="dato mt-2 text-[36px] font-semibold leading-none tracking-tight text-negro">
-                {formatearPrecio(unidad.precio)}
-              </p>
-              {unidad.precio === null && (
-                <p className="mt-2 text-[13px] text-gris-500">
-                  Consultá el precio con el asesor de la sucursal.
-                </p>
-              )}
-            </div>
+           
 
             <dl className="mt-6 flex gap-10">
               <div>

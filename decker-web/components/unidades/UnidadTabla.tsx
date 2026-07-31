@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import EstadoBadge from '@/components/ui/EstadoBadge';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
-import { formatearAnio, formatearKm, formatearPrecio, tieneKilometraje } from '@/lib/format';
+import { formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
 
@@ -17,7 +17,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
   return (
     <>
       <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400 lg:hidden">
-        Deslizá la tabla para ver año, km y precio →
+        Deslizá la tabla para ver año, km y financiación →
       </p>
       {/* El encabezado va `top-0` y no `top-20`: `overflow-x-auto` convierte a
           este div en contenedor de scroll, así que el `sticky` se mide contra
@@ -31,7 +31,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
       <div className="overflow-x-auto rounded-md bg-white shadow-tarjeta">
         <table className="w-full min-w-[880px] border-collapse text-left">
           <caption className="sr-only">
-            Listado de unidades con sucursal, año, kilómetros, precio y estado
+            Listado de unidades con sucursal, año, kilómetros, financiación y estado
           </caption>
           <thead className="sticky top-0 z-10">
             <tr className="bg-negro text-white">
@@ -43,7 +43,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                 { texto: 'Sucursal', clase: '' },
                 { texto: 'Año', clase: 'text-right' },
                 { texto: 'Km / uso', clase: 'text-right' },
-                { texto: 'Precio', clase: 'text-right' },
+                { texto: 'Financiación', clase: 'text-right' },
                 { texto: 'Estado', clase: '' },
                 { texto: 'Acción', clase: 'rounded-tr-md text-right' },
               ].map((col) => (
@@ -88,8 +88,10 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                 <td className="dato px-3 py-3 text-right text-sm text-gris-600">
                   {tieneKilometraje(unidad.tipo) ? formatearKm(unidad.km) : (unidad.potencia ?? '—')}
                 </td>
-                <td className="dato px-3 py-3 text-right text-sm font-semibold text-negro">
-                  {formatearPrecio(unidad.precio)}
+                {/* Sin `dato`: la monoespaciada está reservada para datos
+                    numéricos. Esto es un estado, no una cifra. */}
+                <td className="px-3 py-3 text-right text-sm font-semibold text-negro">
+                  {unidad.financiacion}
                 </td>
                 <td className="px-3 py-3">
                   <EstadoBadge estado={unidad.estado} />
