@@ -50,11 +50,67 @@ const config: Config = {
           50: '#FFF8E1',
         },
       },
+      /**
+       * UNA familia para todo el sitio: Overpass, más su monoespaciada.
+       *
+       * `display` y `sans` apuntan al MISMO archivo a propósito. Ya no son dos
+       * dibujos distintos —antes eran la condensada y la normal de IBM Plex—:
+       * ahora la diferencia entre un título y un párrafo la hace el peso, que
+       * es de donde tiene que salir. Se conservan las dos claves porque
+       * `font-display` sigue nombrando un ROL —"esto es un título"— y eso vale
+       * aunque hoy las dos resuelvan al mismo lugar.
+       *
+       * El respaldo es Helvetica/Arial y no una condensada: Overpass es una
+       * grotesca de ancho normal, así que si la fuente todavía no llegó el
+       * texto tiene que ocupar más o menos lo mismo. Un respaldo angosto haría
+       * saltar el ancho de cada titular al cargar.
+       */
       fontFamily: {
-        display: ['var(--font-display)', 'Oswald', 'Impact', 'sans-serif'],
-        sans: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        display: ['var(--font-overpass)', 'Helvetica Neue', 'Arial', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-overpass)', 'Helvetica Neue', 'Arial', 'system-ui', 'sans-serif'],
+        // `mono` NO es una segunda cara: apunta a Overpass como el resto. La
+        // clave se conserva porque el preflight de Tailwind la usa para
+        // `code`, `kbd` y `pre`; si se borrara, esos elementos caerían en la
+        // monoespaciada del sistema y volvería a haber dos tipografías.
+        mono: ['var(--font-overpass)', 'Helvetica Neue', 'Arial', 'system-ui', 'sans-serif'],
       },
+
+      /**
+       * Escala tipográfica del sitio. DOCE escalones, ninguno más.
+       *
+       * Antes convivían veinte tamaños distintos escritos a mano
+       * (`text-[34px]`, `text-[36px]`, `text-[38px]`…): diferencias de 2px que
+       * nadie lee como jerarquía, sólo como descuido. Acá cada paso es
+       * ~1,15-1,25x el anterior, que es la distancia mínima para que el ojo
+       * registre "esto es otro nivel".
+       *
+       * Los interlineados obedecen una regla, no un capricho: NINGÚN escalón de
+       * texto corrido baja de 1.5, y todos los titulares grandes caen entre 1.15
+       * y 1.2. El aire entre renglones es la mitad de lo que hace que una página
+       * densa de datos se lea cómoda; la otra mitad es el espacio entre bloques.
+       *
+       * El escalón más chico es la excepción declarada: son rótulos en
+       * versalitas de una sola línea, donde 1.5 abriría un renglón que nunca
+       * llega a existir.
+       *
+       * Los títulos traen tracking negativo incorporado —a mayor cuerpo, más
+       * cerrado— así no hay que acordarse de agregarlo en cada uso.
+       */
+      fontSize: {
+        '2xs': ['11px', { lineHeight: '16px' }],
+        xs: ['12px', { lineHeight: '18px' }],
+        sm: ['14px', { lineHeight: '22px' }],
+        base: ['16px', { lineHeight: '24px' }],
+        md: ['18px', { lineHeight: '28px' }],
+        lg: ['20px', { lineHeight: '28px' }],
+        xl: ['22px', { lineHeight: '30px', letterSpacing: '-0.01em' }],
+        '2xl': ['26px', { lineHeight: '32px', letterSpacing: '-0.01em' }],
+        '3xl': ['32px', { lineHeight: '38px', letterSpacing: '-0.015em' }],
+        '4xl': ['40px', { lineHeight: '46px', letterSpacing: '-0.02em' }],
+        '5xl': ['52px', { lineHeight: '60px', letterSpacing: '-0.02em' }],
+        '6xl': ['64px', { lineHeight: '72px', letterSpacing: '-0.025em' }],
+      },
+
       borderRadius: {
         none: '0',
         sm: '6px',
@@ -64,13 +120,25 @@ const config: Config = {
         xl: '20px',
         '2xl': '28px',
       },
+
+      /**
+       * Elevación: TRES niveles, y ninguna sombra escrita a mano fuera de acá.
+       *
+       * - nivel-1: reposo. Una tarjeta apoyada sobre el lienzo.
+       * - nivel-2: foco. La misma tarjeta bajo el cursor, o un panel activo.
+       * - nivel-3: flotante. Lo que se despega del plano: el simulador, el
+       *   panel de búsqueda abierto.
+       *
+       * Cada nivel son dos capas —contacto + profundidad— porque una sola
+       * sombra grande y difusa es lo que da aspecto de plantilla. La diferencia
+       * entre nivel 1 y 2 se nota, pero no salta: la tarjeta sube, no despega.
+       */
       boxShadow: {
-        // Dos capas: una de contacto, una de profundidad. Nunca una sombra
-        // grande y difusa sola, que es lo que da aspecto de plantilla.
-        tarjeta: '0 1px 2px rgba(11,11,12,.04), 0 4px 16px rgba(11,11,12,.05)',
-        'tarjeta-hover': '0 2px 4px rgba(11,11,12,.06), 0 16px 40px rgba(11,11,12,.12)',
-        flotante: '0 8px 32px rgba(11,11,12,.12)',
+        'nivel-1': '0 1px 2px rgba(11,11,12,.04), 0 4px 16px rgba(11,11,12,.05)',
+        'nivel-2': '0 2px 4px rgba(11,11,12,.06), 0 16px 40px rgba(11,11,12,.12)',
+        'nivel-3': '0 4px 8px rgba(11,11,12,.08), 0 24px 64px rgba(11,11,12,.16)',
       },
+
       maxWidth: {
         // Ancho útil del sitio. A 1440 el contenido llega a ~1376px: la grilla
         // de tres tarjetas respira y la página se lee extendida en vez de
@@ -78,17 +146,77 @@ const config: Config = {
         // párrafos no se estiren a líneas ilegibles.
         contenido: '1520px',
       },
+
       transitionTimingFunction: {
         suave: 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
+
+      /**
+       * Duraciones. El sitio tiene DOS: 150ms para lo que responde al dedo o al
+       * cursor (color, sombra, foco) y 200ms para lo que además se mueve. Nada
+       * de 300 ni 500: en un teléfono viejo una transición larga no se lee como
+       * elegante, se lee como que el sitio tarda.
+       */
+      transitionDuration: {
+        DEFAULT: '150ms',
+        rapido: '150ms',
+        medio: '200ms',
+      },
+
       keyframes: {
-        'aparecer': {
+        aparecer: {
           from: { opacity: '0', transform: 'translateY(4px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Entrada de las tarjetas del catálogo. 8px, no 24: a más recorrido,
+        // más se parece a una presentación y menos a una lista que se acomoda.
+        entrar: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Barrido del esqueleto de carga. Recorre el doble del ancho del
+        // bloque, así el brillo entra y sale en vez de latir en el lugar.
+        brillo: {
+          from: { transform: 'translateX(-100%)' },
+          to: { transform: 'translateX(100%)' },
+        },
+        // Un dígito girando en su casilla. Entra desde arriba y lo recorta la
+        // caja del número: es un tambor de odómetro, no un texto que aparece.
+        tick: {
+          from: { opacity: '0', transform: 'translateY(-60%)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Panel de búsqueda. La escala arranca en 0.985 y no en 0.9: a 0.9 se
+        // lee como una ventana que "explota" hacia el usuario; a 0.985 se lee
+        // como una superficie que se acomoda en su lugar.
+        'entrar-panel': {
+          from: { opacity: '0', transform: 'translateY(8px) scale(0.985)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        // El velo entra solo y más rápido que el panel: primero se apaga el
+        // fondo, después se apoya la ventana. Los dos juntos leen como un corte.
+        velo: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        // Acuse de que el toque entró, en el corazón de guardar. Un solo golpe
+        // de ida y vuelta: crece 20% y baja. Sin rebote —nada de pasar de largo
+        // y volver—, que es lo que separa una confirmación de un juguete.
+        pop: {
+          '0%': { transform: 'scale(1)' },
+          '45%': { transform: 'scale(1.2)' },
+          '100%': { transform: 'scale(1)' },
         },
       },
       animation: {
         aparecer: 'aparecer 180ms cubic-bezier(0.22, 1, 0.36, 1)',
+        entrar: 'entrar 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        brillo: 'brillo 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        // Curva casi lineal con frenada seca al final: el dígito no flota.
+        tick: 'tick 110ms cubic-bezier(0.2, 0, 0, 1) both',
+        'entrar-panel': 'entrar-panel 200ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        velo: 'velo 150ms linear both',
+        pop: 'pop 150ms cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
   },

@@ -39,10 +39,10 @@ export default function CtaDecker() {
       <div className="contenedor relative py-16 sm:py-20">
         <div className="max-w-2xl">
           <p className="etiqueta text-amarillo">Decker Camiones</p>
-          <h2 className="mt-3 font-display text-[32px] font-semibold leading-[1.05] tracking-[-0.01em] text-white sm:text-[42px]">
+          <h2 className="mt-3 font-display text-3xl font-extrabold leading-[1.05] tracking-[-0.01em] text-white sm:text-4xl">
             Stock, financiación y asesoramiento en un solo lugar.
           </h2>
-          <p className="mt-4 text-[15px] text-gris-200">
+          <p className="mt-4 text-base text-gris-200">
             Camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas.
           </p>
 
@@ -53,14 +53,14 @@ export default function CtaDecker() {
               href={linkConsultaGeneral()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-[52px] items-center justify-center gap-2.5 rounded bg-rojo px-7 text-[15px] font-semibold text-white transition-colors hover:bg-rojo-700"
+              className="inline-flex h-[52px] items-center justify-center gap-2.5 rounded bg-rojo px-7 text-base font-medium text-white transition-colors hover:bg-rojo-700"
             >
               <IconoWhatsapp className="h-5 w-5" />
               Hablar con un asesor
             </a>
             <Link
               href="/catalogo"
-              className="inline-flex h-[52px] items-center justify-center rounded px-7 text-[15px] font-semibold text-white ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/10 hover:ring-white/50"
+              className="inline-flex h-[52px] items-center justify-center rounded px-7 text-base font-medium text-white ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/10 hover:ring-white/50"
             >
               Ver stock
             </Link>

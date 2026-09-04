@@ -2,6 +2,7 @@ import Image from 'next/image';
 import heroImage from '@/public/marca/camiones.png';
 import Link from 'next/link';
 import BuscadorRapido from '@/components/home/BuscadorRapido';
+import NumeroAnimado from '@/components/ui/NumeroAnimado';
 import type { Sucursal, SugerenciaUnidad } from '@/lib/types';
 
 /**
@@ -43,13 +44,22 @@ export default function Hero({
       <div className="absolute inset-0">
         {/* Con el contenido centrado, el camión va al centro: es lo que queda
             detrás del titular y lo que sostiene la composición. */}
+        {/* `placeholder="blur"`: es la imagen LCP de la home y pesa ~1,7 MB.
+            Mientras baja, el visitante ve la miniatura difusa en vez del negro
+            plano, y el velo de abajo ya apoya sobre algo. El blur lo genera el
+            build a partir del import estático: no agrega pedidos de red.
+
+            `preload` y no `priority`: desde Next 16 `priority` está deprecado y
+            esta es la única candidata a LCP de la home, que es justo el caso
+            en el que el <link> en el head vale la pena. */}
         <Image
           src={heroImage}
           alt=""
           fill
           sizes="100vw"
           className="object-cover object-[60%_center] lg:object-center"
-          priority
+          placeholder="blur"
+          preload
         />
         {/* El texto ya no vive en una banda lateral: cruza el centro de la foto,
             así que el velo tiene que ser parejo y no direccional. Va un plano
@@ -69,13 +79,16 @@ export default function Hero({
           encima y mide 80px. */}
       <div className="contenedor relative flex flex-1 items-center pb-12 pt-28 sm:pt-32">
         <div className="mx-auto w-full max-w-3xl text-center">
-          <h1 className="font-display text-[36px] font-semibold leading-[1.02] tracking-[-0.015em] text-white sm:text-[52px] lg:text-[60px]">
-            Elegí tu próxima unidad con respaldo Decker.
+          {/* Tres escalones de la escala, no tres tamaños inventados: 32 en
+              teléfono, 40 en tablet, 52 en monitor. La caja alta, el peso 700 y
+              el tracking los pone `titulo-expresivo`. */}
+          <h1 className="titulo-expresivo text-3xl text-white sm:text-4xl lg:text-5xl">
+            Elegí tu próxima unidad con respaldo Decker
           </h1>
 
           {/* gris-200 y no gris-300: centrado, el texto cae sobre la parte más
               clara de la foto y el gris medio no llega a 4.5:1. */}
-          <p className="mx-auto mt-5 max-w-xl text-[16px] leading-relaxed text-gris-200 sm:text-[17px]">
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-gris-200 sm:text-md">
             Camiones 0 km y usados seleccionados, semis, bateas y utilitarios. Buscá por tipo,
             marca o agencia.
           </p>
@@ -83,7 +96,7 @@ export default function Hero({
           {/* El buscador es la acción principal, pero las dos salidas de abajo
               no dependen de él: están siempre visibles, sin tener que abrir ni
               completar nada. */}
-          <div className="mx-auto mt-9 max-w-xl">
+          <div className="mx-auto mt-8 max-w-xl">
             <BuscadorRapido
               sucursales={sucursales}
               sugerencias={sugerencias}
@@ -93,24 +106,45 @@ export default function Hero({
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/catalogo"
-                className="inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors hover:bg-white/20 hover:ring-white/50"
+                className="inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors duration-rapido hover:bg-white/20 hover:ring-white/50"
               >
                 Explorar unidades
               </Link>
               <Link
                 href="/#cotizar"
-                className="inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors hover:bg-white/20 hover:ring-white/50"
+                className="inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors duration-rapido hover:bg-white/20 hover:ring-white/50"
               >
                 Parte de pago
               </Link>
             </div>
           </div>
 
-          <p className="mt-8 text-[13px] text-gris-200">
-            <span className="dato font-semibold text-white">{totalUnidades}</span> unidades
-            publicadas en{' '}
-            <span className="dato font-semibold text-white">{sucursales.length}</span> agencias
-          </p>
+          {/**
+           * Las dos cifras del stock. Antes eran dos números embebidos en una
+           * oración de 13px: información verdadera con formato de nota al pie.
+           *
+           * Ahora son el dato y su rótulo, con el peso repartido al revés que en
+           * el titular —el número manda, el rótulo lo nombra en chico—. Es el
+           * único lugar de la home donde un número cuenta al entrar en pantalla:
+           * es lo último que se lee del hero y lo que responde "¿tienen stock?".
+           */}
+          <dl className="mt-8 flex items-center justify-center gap-6 sm:gap-8">
+            <div>
+              <dd className="dato text-xl font-medium text-white">
+                <NumeroAnimado valor={totalUnidades} formato="miles" desdeViewport />
+              </dd>
+              <dt className="rotulo-dato mt-1 text-gris-300">Unidades publicadas</dt>
+            </div>
+
+            <span aria-hidden="true" className="h-8 w-px bg-white/20" />
+
+            <div>
+              <dd className="dato text-xl font-medium text-white">
+                <NumeroAnimado valor={sucursales.length} desdeViewport />
+              </dd>
+              <dt className="rotulo-dato mt-1 text-gris-300">Agencias</dt>
+            </div>
+          </dl>
         </div>
       </div>
     </section>

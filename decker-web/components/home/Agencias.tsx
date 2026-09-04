@@ -85,7 +85,7 @@ export default function Agencias({
               aria-controls={`panel-${item.id}`}
               tabIndex={indice === activa ? 0 : -1}
               onClick={() => setActiva(indice)}
-              className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold transition-colors duration-150 ${
+              className={`inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors duration-rapido ${
                 indice === activa
                   ? 'bg-negro text-white'
                   : 'bg-gris-100 text-gris-600 hover:bg-gris-200 hover:text-negro'
@@ -93,8 +93,8 @@ export default function Agencias({
             >
               {item.nombre}
               <span
-                className={`dato text-[11px] ${
-                  indice === activa ? 'text-amarillo' : 'text-gris-400'
+                className={`dato text-2xs ${
+                  indice === activa ? 'text-amarillo' : 'text-gris-500'
                 }`}
               >
                 {conteo[item.id] ?? 0}
@@ -107,17 +107,17 @@ export default function Agencias({
           role="tabpanel"
           id={`panel-${sucursal.id}`}
           aria-labelledby={`tab-${sucursal.id}`}
-          className="mt-6 grid animate-aparecer gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-tarjeta lg:grid-cols-[minmax(0,1fr)_1.4fr] lg:p-8"
+          className="mt-6 grid animate-aparecer gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-nivel-1 lg:grid-cols-[minmax(0,1fr)_1.4fr] lg:p-8"
         >
           <div className="flex flex-col">
             <div className="flex items-start gap-3">
               <IconoPin className="mt-1 h-6 w-6 shrink-0 text-rojo" />
               <div>
-                <h3 className="font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">
+                <h3 className="font-display text-2xl font-extrabold leading-none tracking-[-0.01em]">
                   {sucursal.nombre}
                 </h3>
-                <p className="mt-3 text-[15px] text-gris-600">{sucursal.direccion}</p>
-                <p className="text-sm text-gris-400">
+                <p className="mt-3 text-base text-gris-600">{sucursal.direccion}</p>
+                <p className="text-sm text-gris-500">
                   {sucursal.localidad}, {sucursal.provincia}
                 </p>
               </div>
@@ -125,18 +125,18 @@ export default function Agencias({
 
             <dl className="mt-7 flex gap-8">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
+                <dt className="rotulo-dato">
                   Unidades acá
                 </dt>
-                <dd className="dato mt-1 text-3xl font-semibold leading-none">
+                <dd className="dato mt-1 text-3xl font-medium leading-none">
                   {conteo[sucursal.id] ?? 0}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
+                <dt className="rotulo-dato">
                   WhatsApp
                 </dt>
-                <dd className="dato mt-1 text-[15px] font-semibold leading-none">
+                <dd className="dato mt-1 text-base font-medium leading-none">
                   +{sucursal.asesor.whatsapp}
                 </dd>
               </div>
@@ -153,17 +153,17 @@ export default function Agencias({
                 // `sm:flex-1` y no `flex-1`: en mobile el contenedor es
                 // `flex-col`, y ahí `flex-1` fija la base sobre el eje
                 // vertical, pisando el `h-11` y aplastando el botón a ~22px.
-                className="inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-semibold text-white transition-colors hover:bg-rojo-700 sm:flex-1"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-medium text-white transition-colors hover:bg-rojo-700 sm:flex-1"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar por WhatsApp
               </a>
               <Link
                 href={`/catalogo?sucursal=${sucursal.id}`}
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded bg-gris-100 px-4 text-sm font-semibold text-negro transition-colors hover:bg-gris-200 sm:flex-1"
+                className="group inline-flex h-11 items-center justify-center gap-2 rounded bg-gris-100 px-4 text-sm font-medium text-negro transition-colors hover:bg-gris-200 sm:flex-1"
               >
                 Ver su stock
-                <IconoFlecha className="h-4 w-4 transition-transform duration-200 ease-suave group-hover:translate-x-0.5" />
+                <IconoFlecha className="h-4 w-4 transition-transform duration-medio ease-suave group-hover:translate-x-0.5" />
               </Link>
             </div>
           </div>
@@ -180,17 +180,17 @@ export default function Agencias({
               />
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
+              <p className="rotulo-dato">
                 Ubicación de referencia
               </p>
               <a
                 href={comoLlegar}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-1.5 text-sm font-semibold text-negro hover:text-rojo"
+                className="group inline-flex items-center gap-1.5 text-sm font-medium text-negro hover:text-rojo"
               >
                 Cómo llegar
-                <IconoFlecha className="h-4 w-4 transition-transform duration-200 ease-suave group-hover:translate-x-0.5" />
+                <IconoFlecha className="h-4 w-4 transition-transform duration-medio ease-suave group-hover:translate-x-0.5" />
               </a>
             </div>
           </div>

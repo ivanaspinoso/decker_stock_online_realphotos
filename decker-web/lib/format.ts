@@ -35,3 +35,26 @@ export function formatearNumero(valor: number): string {
 export function tieneKilometraje(tipo: string): boolean {
   return tipo !== 'Semi' && tipo !== 'Batea';
 }
+
+/**
+ * ¿Este valor es una CIFRA o es una palabra?
+ *
+ * Decide si un valor de ficha va en la monoespaciada. La regla del sistema es
+ * que la mono está reservada para datos numéricos —precios, años, kilómetros,
+ * potencia, tasas—, porque su ancho fijo es lo que hace que una columna de
+ * números se compare de un vistazo.
+ *
+ * Sobre una palabra ese mismo ancho fijo no aporta nada y encima se lee como
+ * otra tipografía: "Volvo", "Bahía Blanca" o "Consultar" en mono, al lado de un
+ * párrafo en la normal, rompen la unidad de la página aunque sean cortes de la
+ * misma familia. La tabla del catálogo ya aplicaba este criterio a mano; esto
+ * lo vuelve una sola regla para las tres superficies.
+ *
+ * El corte es simple a propósito: empieza con dígito, es cifra. Alcanza para
+ * todo lo que publica el sitio —"2022", "298.000 km", "420 CV" van a mono;
+ * "Volvo", "Camión", "Carga pesada", "Disponible", "Consultar" no— y no hay que
+ * acordarse de marcar campo por campo cuando se agrega uno nuevo.
+ */
+export function esCifra(valor: string): boolean {
+  return /^\d/.test(valor.trim());
+}

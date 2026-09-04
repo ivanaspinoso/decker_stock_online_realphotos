@@ -4,9 +4,17 @@ import type { Unidad } from '@/lib/types';
 export default function UnidadGrilla({
   unidades,
   columnas = 3,
+  animar = false,
 }: {
   unidades: Unidad[];
   columnas?: 2 | 3;
+  /**
+   * Escalona la entrada de las tarjetas. Lo prende el catálogo, donde el
+   * listado se rearma al tocar un filtro y hace falta que se note que respondió.
+   * En la home las tarjetas ya están cuando la sección aparece: animarlas ahí
+   * sería el mismo efecto sin nada que anunciar.
+   */
+  animar?: boolean;
 }) {
   const clase =
     columnas === 2
@@ -15,8 +23,8 @@ export default function UnidadGrilla({
 
   return (
     <div className={clase}>
-      {unidades.map((unidad) => (
-        <UnidadCard key={unidad.slug} unidad={unidad} />
+      {unidades.map((unidad, indice) => (
+        <UnidadCard key={unidad.slug} unidad={unidad} indice={animar ? indice : undefined} />
       ))}
     </div>
   );

@@ -17,7 +17,7 @@
    * alternancia blanco/gris.
    */
   body {
-    @apply bg-gris-100 text-negro antialiased;
+    @apply bg-gris-100 text-base text-negro antialiased;
     text-rendering: optimizeLegibility;
   }
 
@@ -30,10 +30,34 @@
     @apply ring-amarillo ring-offset-negro-950;
   }
 
-  /* Datos numéricos: mono + tabular para que las columnas queden alineadas. */
+  /**
+   * Dato técnico: cifras de ancho fijo, MISMA cara que todo lo demás.
+   *
+   * Ya no cambia de tipografía. Antes esto ponía la monoespaciada, y ahí estaba
+   * el problema: un "420 CV" en ancho fijo al lado de un "Bahía Blanca" en
+   * ancho normal, dentro de la misma tarjeta, se lee como dos tipografías por
+   * más que sean cortes de la misma familia.
+   *
+   * Lo único que hacía falta de la mono era la ALINEACIÓN, y eso lo da
+   * `tabular-nums` sin tocar la cara: fuerza a que todos los dígitos midan lo
+   * mismo —sin él el 1 ocupa menos que el 8 y una columna de importes queda
+   * despareja aunque el bloque esté alineado a la derecha— y deja las letras
+   * con su ancho natural.
+   *
+   * Sin tracking negativo: ese ajuste existía para compensar el ancho fijo de
+   * la mono, que estiraba un precio de siete dígitos. Con la cifra en Overpass
+   * normal no hay nada que compensar.
+   */
   .dato {
-    @apply font-mono tabular-nums;
-    font-feature-settings: 'zero' 1;
+    @apply tabular-nums;
+  }
+
+  /* Dato dentro de una columna: alineado a la derecha para que las unidades
+     —los "km", el "$"— queden una debajo de la otra. Con `tabular-nums`, el
+     borde derecho alcanza para que los importes se comparen de un vistazo. */
+  .dato-columna {
+    @apply dato text-right;
+    font-variant-numeric: tabular-nums;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -46,6 +70,11 @@
     *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
+      /* Sin esto, una tarjeta con `animation-delay` y `fill-mode: both` queda
+         invisible durante el retardo aunque la animación ya no dure nada: el
+         listado del catálogo aparecería vacío y se llenaría de a poco. */
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
     }
   }
 }
@@ -58,42 +87,246 @@
     @apply mx-auto w-full max-w-contenido px-5 sm:px-6 lg:px-8;
   }
 
-  /* Ritmo vertical único para todas las secciones. */
+  /* Ritmo vertical único para todas las secciones. 64/80/96: tres escalones de
+     la grilla de 8, no tres números sueltos. */
   .seccion {
     @apply py-16 sm:py-20 lg:py-24;
   }
 
-  /* Título de sección. La display condensada se reserva para este nivel:
-     usarla también en cada tarjeta es lo que apelmaza la página. */
+  /**
+   * Titular expresivo: Overpass 900, en caja normal.
+   *
+   * Es el momento de más voz del sitio y por eso está racionado. Se usa
+   * ÚNICAMENTE en el h1 de cada página y en el título de cada sección. No baja
+   * a subtítulos, ni a títulos de tarjeta, ni al cuerpo.
+   *
+   * La voz la da el PESO, no la caja alta. Un titular en mayúsculas sostenida
+   * grita en toda la página y, repetido en cada sección, deja de leerse como
+   * acento: pasa a ser el tono normal, que es cuando deja de significar algo.
+   * Además la caja alta borra el perfil de la palabra —las ascendentes y
+   * descendentes que el ojo usa para reconocerla de un vistazo— y un titular
+   * largo se lee más lento. El 900 de Overpass tiene presencia de sobra para
+   * sostener el h1 sin ese recurso.
+   *
+   * NO se declara tracking. Cada escalón de la escala trae el suyo, negativo y
+   * más cerrado a mayor cuerpo, que es lo correcto en caja baja: las letras ya
+   * se separan solas por su dibujo. (En caja alta hacía falta forzarlo en
+   * positivo, y era el único lugar del sistema donde se pisaba una propiedad
+   * con `!`. Al sacar la mayúscula, esa excepción se fue con ella.)
+   *
+   * El interlineado tampoco se fuerza: los escalones grandes ya vienen entre
+   * 1.15 y 1.2, que es lo que pide un titular de dos o tres renglones.
+   *
+   * 900 y no 700: Overpass es una grotesca de ancho normal, no una condensada.
+   * Donde antes el peso fuerte venía acompañado por el ancho angosto, ahora
+   * tiene que sostener el titular solo, y el 900 es el peso en el que la letra
+   * deja de parecerse a un Arial en negrita y muestra el dibujo que tiene.
+   */
+  .titulo-expresivo {
+    @apply font-display font-black;
+  }
+
+  /**
+   * Título de sección: el mismo titular expresivo, un escalón más chico que el
+   * h1 de la página.
+   *
+   * Trae su propio tamaño y por eso también su propio tracking, el que viene
+   * con cada escalón de la escala. No hay nada que declarar a mano.
+   */
   .titulo-seccion {
-    @apply font-display text-[32px] font-semibold leading-[1.05] tracking-[-0.01em] sm:text-[44px];
+    @apply font-display text-3xl font-black sm:text-4xl;
   }
 
+  /**
+   * Título chico: nombre de unidad en la tarjeta, título de una tarjeta de
+   * beneficio, rótulo de un panel.
+   *
+   * Frena en 20px y no baja. Es el cuerpo mínimo en el que el 800 se lee como
+   * un peso elegido y no como un texto en negrita: más chico, la diferencia
+   * contra el 500 del párrafo que tiene debajo se pierde y el bloque entero
+   * queda plano.
+   *
+   * 800 y no 900: el 900 es el registro de los titulares en caja alta y está
+   * racionado. Acá alcanza con separarse del cuerpo, no con gritar.
+   */
+  .titulo-tarjeta {
+    @apply font-display text-lg font-extrabold leading-tight tracking-[0.01em];
+  }
+
+  /* Volanta de sección: nombra el bloque arriba del título, en rojo o amarillo.
+     En caja normal como todo el resto: no queda una sola mayúscula sostenida en
+     el sitio. El color y el cuerpo chico ya la separan del título. */
   .etiqueta {
-    @apply text-[11px] font-semibold uppercase tracking-[0.16em];
+    @apply text-2xs font-medium tracking-[0.06em];
   }
 
+  /**
+   * Rótulo de un dato: dice QUÉ es el valor que tiene debajo o al lado.
+   *
+   * Deliberadamente liviano y gris: el peso va en el dato, no en su nombre.
+   *
+   * En caja normal, no alta. Un rótulo en mayúsculas sostenida grita un texto
+   * que justamente no tiene que competir con el dato, y en una tarjeta con seis
+   * pares rótulo/valor esas seis mayúsculas pesan más que los seis valores.
+   * El tracking baja de 0.14em a 0.06em con la caja: el aire entre letras hacía
+   * falta para que la mayúscula no se cerrara en un bloque; en caja baja las
+   * ascendentes y descendentes ya separan las palabras solas, y un tracking
+   * alto acá desarmaría la palabra.
+   */
+  .rotulo-dato {
+    @apply text-2xs font-medium tracking-[0.06em] text-gris-500;
+  }
+
+  /**
+   * Campo de formulario.
+   *
+   * 44px de alto mínimo: es el tamaño de toque que pide WCAG 2.5.8 y el que
+   * necesita un dedo en la cabina de un camión. El cuerpo del texto es el
+   * mismo del contenido (15px) y no uno chico: a los 55 años, un campo de 13px
+   * en un teléfono al sol no se lee.
+   *
+   * El placeholder es texto y cuenta para contraste: dice qué va en el campo.
+   * Sobre blanco, gris-400 daba 2.6:1 —abajo del 4.5:1 de AA—; gris-500 da
+   * 5.0:1. En el campo oscuro el arreglo va al revés: sobre negro-800,
+   * gris-500 daba 3.4:1 y gris-400 da 6.5:1. La misma escala, leída desde el
+   * otro lado.
+   */
   .campo {
-    @apply block w-full rounded-sm border border-gris-200 bg-white px-3.5 py-2.5 text-sm
-           text-negro transition-colors placeholder:text-gris-400
+    @apply block min-h-11 w-full rounded-sm border border-gris-200 bg-white px-4 py-3 text-base
+           text-negro transition-colors duration-rapido placeholder:text-gris-500
            hover:border-gris-300 focus:border-negro focus:outline-none focus:ring-0;
   }
 
   .campo-oscuro {
-    @apply border-negro-700 bg-negro-800 text-white placeholder:text-gris-500
+    @apply border-negro-700 bg-negro-800 text-white placeholder:text-gris-400
            hover:border-negro-600 focus:border-amarillo;
   }
 
+  /* Mismo criterio que `rotulo-dato`, y a propósito los mismos valores: el
+     rótulo de un campo y el rótulo de un dato son la misma cosa —el nombre de
+     un valor— en dos momentos distintos, antes y después de cargarlo. */
   .campo-label {
-    @apply mb-2 block text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-500;
+    @apply mb-2 block text-2xs font-medium tracking-[0.06em] text-gris-500;
   }
 
   /* Superficie base de tarjeta: sin borde duro, con elevación de contacto. */
   .tarjeta {
-    @apply rounded-md bg-white shadow-tarjeta transition-shadow duration-200 ease-suave;
+    @apply rounded-md bg-white shadow-nivel-1 transition-shadow duration-medio ease-suave;
   }
 
   .tarjeta-interactiva {
-    @apply tarjeta hover:shadow-tarjeta-hover;
+    @apply tarjeta hover:shadow-nivel-2;
+  }
+
+  /**
+   * Tratamiento único de las fotos de unidades: mismo encuadre (4:3) en la
+   * tarjeta, en la miniatura y en la galería, así la foto no se re-recorta al
+   * abrir la ficha —es la misma imagen, más grande—.
+   *
+   * El fondo gris no es decorativo: es lo que se ve mientras la foto baja, y
+   * evita el salto de una caja de alto cero a una foto.
+   */
+  /* Sin fondo propio: el marco sólo reserva el encuadre. El gris que tenía se
+     veía como una caja detrás de la foto —en la tarjeta, un rectángulo más
+     oscuro que el blanco de alrededor— y no cumplía ninguna función: las fotos
+     son opacas y cubren el 4:3 entero. Lo que hay detrás ahora es la superficie
+     de la tarjeta, y el estado de carga lo sigue contando el esqueleto. */
+  .foto-unidad {
+    @apply relative aspect-[4/3] overflow-hidden;
+  }
+
+  /**
+   * Corazón de guardar montado sobre una foto, sin caja.
+   *
+   * Antes iba dentro de una pastilla: negra translúcida en reposo y BLANCA con
+   * el corazón rojo al guardar. El bloque blanco era lo que más se veía de la
+   * tarjeta —más que la foto— y el conjunto se leía como un botón viejo pegado
+   * encima de la imagen.
+   *
+   * Ahora sólo está el dibujo. El problema que resolvía la caja era el
+   * contraste: un ícono suelto cae sobre lo que haya en la foto —un cielo
+   * blanco, un paragolpes cromado, una sombra— y no hay un fondo del que
+   * despegarse. Eso lo resuelve el contorno: una sombra dura de 1px que rodea
+   * el trazo y una difusa debajo. La dura da el borde que pide WCAG 1.4.11
+   * —3:1 contra lo adyacente— sin pintar ninguna superficie; la difusa lo
+   * asienta para que no parezca recortado y pegado.
+   *
+   * Las dos sombras son oscuras: el corazón está en blanco cuando no se guardó
+   * y en rojo cuando sí, y los dos son colores claros que necesitan un borde
+   * oscuro. Es lo contrario del corazón que vuela al header, que arranca sobre
+   * la foto pero termina sobre la barra negra y por eso lleva halo blanco.
+   */
+  .corazon-foto {
+    filter: drop-shadow(0 0 1px rgba(11, 11, 12, 0.9))
+            drop-shadow(0 1px 3px rgba(11, 11, 12, 0.45));
+  }
+
+  /**
+   * Velo inferior de la foto. Las etiquetas que van encima (estado, tipo,
+   * cantidad de fotos) caen sobre lo que haya en la imagen: un cielo blanco, un
+   * paragolpes cromado. Este degradé garantiza el contraste del texto sin
+   * oscurecer la foto entera —arriba es transparente del todo—.
+   */
+  .velo-foto {
+    @apply pointer-events-none absolute inset-x-0 bottom-0 h-1/3
+           bg-gradient-to-t from-negro-950/55 to-transparent;
+  }
+
+  /**
+   * Esqueleto de carga. Un bloque gris con un barrido claro que lo cruza.
+   *
+   * Es lo que separa "el sitio está trayendo la foto" de "el sitio está roto":
+   * ocupa exactamente el lugar que va a ocupar el contenido, así nada salta
+   * cuando llega (CLS 0).
+   */
+  .esqueleto {
+    @apply relative overflow-hidden bg-gris-200;
+  }
+
+  .esqueleto::after {
+    content: '';
+    @apply absolute inset-0 animate-brillo;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 100%
+    );
+  }
+
+  .oscuro .esqueleto {
+    @apply bg-negro-800;
+  }
+
+  .oscuro .esqueleto::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+  }
+
+  /**
+   * Fila de ficha técnica: rótulo a la izquierda, guía punteada, dato a la
+   * derecha. La guía es lo que hace que la fila se lea como una ficha de
+   * fábrica y no como dos textos sueltos separados por aire —y sobre todo, es
+   * lo que evita perder el renglón al recorrer una columna larga en el
+   * teléfono—.
+   *
+   * 44px de alto: la misma altura de toque del resto del sitio, así la ficha
+   * cae en la misma grilla vertical.
+   */
+  /* 16px arriba y abajo, no 12: es la tabla de datos más densa del sitio y el
+     aire entre renglones es lo único que la separa de una planilla. */
+  .ficha-fila {
+    @apply flex min-h-12 items-baseline gap-3 border-b border-gris-200 py-4;
+  }
+
+  .ficha-guia {
+    @apply mb-1 h-px flex-1 self-end;
+    background-image: radial-gradient(circle, theme('colors.gris.300') 1px, transparent 1px);
+    background-size: 5px 1px;
+    background-repeat: repeat-x;
   }
 }

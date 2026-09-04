@@ -19,7 +19,8 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Record<string, string | undefined>;
+  // Promise desde Next 15: se espera junto con los datos, no antes.
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 /** Convierte un parámetro de URL a número, ignorando basura. */
@@ -30,7 +31,8 @@ function aNumero(valor: string | undefined): number | undefined {
 }
 
 export default async function CatalogoPage({ searchParams }: Props) {
-  const [unidades, opciones, sucursales] = await Promise.all([
+  const [parametrosUrl, unidades, opciones, sucursales] = await Promise.all([
+    searchParams,
     getCatalogoCompleto(),
     getOpcionesCatalogo(),
     getSucursales(),
@@ -39,17 +41,17 @@ export default async function CatalogoPage({ searchParams }: Props) {
   // Los filtros llegan por URL (desde el buscador de la home o un link
   // compartido) y arrancan el catálogo ya aplicados.
   const filtrosIniciales: FiltrosCatalogo = {
-    busqueda: searchParams.q ?? '',
-    tipo: (searchParams.tipo ?? '') as TipoUnidad | '',
-    marca: searchParams.marca ?? '',
-    sucursalId: (searchParams.sucursal ?? '') as IdSucursal | '',
-    estado: (searchParams.estado ?? '') as EstadoUnidad | '',
-    financiacion: searchParams.financiacion === 'Disponible' ? 'Disponible' : '',
-    anioDesde: aNumero(searchParams.anioDesde),
-    anioHasta: aNumero(searchParams.anioHasta),
-    precioDesde: aNumero(searchParams.precioDesde),
-    precioHasta: aNumero(searchParams.precioHasta),
-    orden: (searchParams.orden as OrdenCatalogo) ?? 'relevancia',
+    busqueda: parametrosUrl.q ?? '',
+    tipo: (parametrosUrl.tipo ?? '') as TipoUnidad | '',
+    marca: parametrosUrl.marca ?? '',
+    sucursalId: (parametrosUrl.sucursal ?? '') as IdSucursal | '',
+    estado: (parametrosUrl.estado ?? '') as EstadoUnidad | '',
+    financiacion: parametrosUrl.financiacion === 'Disponible' ? 'Disponible' : '',
+    anioDesde: aNumero(parametrosUrl.anioDesde),
+    anioHasta: aNumero(parametrosUrl.anioHasta),
+    precioDesde: aNumero(parametrosUrl.precioDesde),
+    precioHasta: aNumero(parametrosUrl.precioHasta),
+    orden: (parametrosUrl.orden as OrdenCatalogo) ?? 'relevancia',
   };
 
   return (
@@ -57,7 +59,10 @@ export default async function CatalogoPage({ searchParams }: Props) {
       {/* Banda de encabezado con la foto DE FONDO, detrás del título y la
           bajada. El texto vive en la mitad izquierda, así que el velo es
           direccional: opaco donde apoya el texto y abierto sobre el patio de la
-          derecha. En mobile, donde el texto cruza todo el ancho, va plano. */}
+          derecha. En mobile, donde el texto cruza todo el ancho, va plano.
+
+          Es el LCP de la página: `preload` reemplaza al `priority` que Next 16
+          dejó deprecado. */}
       <div className="oscuro relative overflow-hidden bg-negro-950">
         <Image
           src={herostockImage}
@@ -66,19 +71,21 @@ export default async function CatalogoPage({ searchParams }: Props) {
           sizes="100vw"
           className="object-cover object-center"
           placeholder="blur"
-          priority
+          preload
         />
         <div className="absolute inset-0 hidden bg-gradient-to-r from-negro-950 from-30% via-negro-950/85 via-60% to-negro-950/30 lg:block" />
         <div className="absolute inset-0 bg-negro-950/85 lg:hidden" />
 
-        <div className="contenedor relative py-14 sm:py-20">
+        {/* La nav va montada encima y mide 80px: el padding superior es el que
+            despeja el título en vez de dejarlo debajo de la barra. */}
+        <div className="contenedor relative pb-14 pt-28 sm:pb-20 sm:pt-32">
           <p className="etiqueta text-amarillo">Catálogo Decker</p>
-          <h1 className="mt-3 font-display text-[38px] font-semibold leading-none tracking-[-0.015em] text-white sm:text-[52px]">
+          <h1 className="titulo-expresivo mt-3 text-4xl text-white sm:text-5xl">
             Stock online
           </h1>
           {/* gris-200 y no gris-400: sobre la foto, el gris medio no llega a
               4.5:1 contra los techos blancos de los camiones. */}
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-gris-200">
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-gris-200">
             {unidades.length} unidades publicadas entre las cinco agencias. Filtrá por tipo,
             marca, año, precio, sucursal o estado, y cambiá a vista lista para comparar varias
             de un vistazo.

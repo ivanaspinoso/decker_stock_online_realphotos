@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import BotonCompartir from '@/components/unidades/BotonCompartir';
+import BotonFavorito from '@/components/unidades/BotonFavorito';
 import GaleriaUnidad from '@/components/unidades/GaleriaUnidad';
 import UnidadGrilla from '@/components/unidades/UnidadGrilla';
 import CalculadoraFinanciacion from '@/components/financiacion/CalculadoraFinanciacion';
@@ -14,12 +16,14 @@ import {
   getUnidadPorSlug,
   getUnidadesRelacionadas,
 } from '@/lib/api';
-import { formatearAnio, formatearKm, formatearPrecio, tieneKilometraje } from '@/lib/format';
+import { esCifra, formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
 import { linkConsultaUnidad, linkWhatsapp } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
 
 interface Props {
-  params: { slug: string };
+  // Promise desde Next 15. `generateStaticParams` sigue devolviendo objetos
+  // planos: el cambio es sólo en lo que recibe la página.
+  params: Promise<{ slug: string }>;
 }
 
 /** Todas las fichas se generan estáticas en el build. */
@@ -29,7 +33,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const unidad = await getUnidadPorSlug(params.slug);
+  const { slug } = await params;
+  const unidad = await getUnidadPorSlug(slug);
   if (!unidad) return { title: 'Unidad no encontrada' };
 
   const sucursal = await getSucursalPorId(unidad.sucursalId);
@@ -46,7 +51,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function FichaUnidad({ params }: Props) {
-  const unidad = await getUnidadPorSlug(params.slug);
+  const { slug } = await params;
+  const unidad = await getUnidadPorSlug(slug);
   if (!unidad) notFound();
 
   const [sucursal, parametros, relacionadas] = await Promise.all([
@@ -60,17 +66,26 @@ export default async function FichaUnidad({ params }: Props) {
   return (
     <>
       <nav aria-label="Miga de pan">
-        <div className="contenedor flex items-center gap-2 py-4 text-[13px] text-gris-500">
-          <Link href="/" className="transition-colors hover:text-negro">
+        <div className="contenedor flex items-center gap-2 pb-4 pt-24 text-sm text-gris-500">
+          {/* `-my-1 py-1`: los enlaces de la miga medían 20px de alto, abajo de
+              los 24 que pide WCAG 2.5.8. El margen negativo devuelve el espacio,
+              así que crece el área tocable y la fila se ve igual. */}
+          <Link href="/" className="-my-1 py-1 transition-colors hover:text-negro">
             Inicio
           </Link>
-          <span aria-hidden="true" className="text-gris-300">
+          {/* gris-300 sobre el lienzo daba 1.4:1: la barra se veía como un
+              renglón vacío entre los dos enlaces. gris-500 la deja legible sin
+              que compite con el nombre de la unidad, que es lo que manda acá. */}
+          <span aria-hidden="true" className="text-gris-500">
             /
           </span>
-          <Link href="/catalogo" className="transition-colors hover:text-negro">
+          <Link href="/catalogo" className="-my-1 py-1 transition-colors hover:text-negro">
             Stock
           </Link>
-          <span aria-hidden="true" className="text-gris-300">
+          {/* gris-300 sobre el lienzo daba 1.4:1: la barra se veía como un
+              renglón vacío entre los dos enlaces. gris-500 la deja legible sin
+              que compite con el nombre de la unidad, que es lo que manda acá. */}
+          <span aria-hidden="true" className="text-gris-500">
             /
           </span>
           <span className="truncate text-negro">{unidad.nombre}</span>
@@ -86,36 +101,60 @@ export default async function FichaUnidad({ params }: Props) {
 
           En desktop la tarjeta se corre a la columna derecha y ocupa las dos
           filas, quedando sticky al costado. */}
-      <div className="contenedor grid gap-10 py-10 lg:grid-cols-[1.3fr_1fr] lg:gap-x-14 lg:gap-y-12 lg:py-14">
+      <div className="contenedor grid gap-12 py-12 lg:grid-cols-[1.3fr_1fr] lg:gap-x-16 lg:gap-y-16 lg:py-16">
         <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
           <GaleriaUnidad fotos={unidad.galeria} nombre={unidad.nombre} estado={unidad.estado} />
         </div>
 
         <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2">
+          {/**
+           * Ficha técnica.
+           *
+           * Es el elemento más distintivo del sitio y acá se lleva hasta el
+           * final: superficie propia, cabecera con la referencia de la unidad,
+           * rótulos en versalitas y valores en mono alineados a la derecha.
+           * Con `tabular-nums`, los años y los kilómetros caen uno debajo del
+           * otro dígito por dígito, que es lo que hace que se lean como una
+           * planilla de fábrica y no como texto suelto.
+           *
+           * La guía punteada no es adorno: en el teléfono, con las filas a lo
+           * ancho de la pantalla, es lo que evita perder el renglón entre el
+           * rótulo y el número.
+           */}
           <section>
-            <h2 className="font-display text-[26px] font-semibold leading-none tracking-[-0.01em]">
-              Ficha técnica
-            </h2>
-            <dl className="mt-6 grid gap-x-10 sm:grid-cols-2">
-              {especificaciones.map((spec) => (
-                <div
-                  key={spec.etiqueta}
-                  className="flex items-baseline justify-between gap-4 border-b border-gris-200 py-3.5"
-                >
-                  <dt className="text-sm text-gris-500">{spec.etiqueta}</dt>
-                  <dd className="dato text-right text-sm font-semibold text-negro">
-                    {spec.valor}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <h2 className="font-display text-2xl font-extrabold">Ficha técnica</h2>
+
+            <div className="mt-8 rounded-md bg-white p-8 shadow-nivel-1 sm:p-10">
+              <div className="flex items-baseline justify-between gap-4 border-b-2 border-negro pb-3">
+                <p className="etiqueta text-negro">Especificaciones</p>
+                <p className="text-2xs text-gris-500">Ref · {unidad.slug}</p>
+              </div>
+
+              <dl className="sm:grid sm:grid-cols-2 sm:gap-x-16">
+                {especificaciones.map((spec) => (
+                  <div key={spec.etiqueta} className="ficha-fila">
+                    <dt className="rotulo-dato shrink-0">{spec.etiqueta}</dt>
+                    <span aria-hidden="true" className="ficha-guia" />
+                    {/* Mono SÓLO para cifras: ver `esCifra`. "Volvo" o
+                        "Disponible" en ancho fijo se leen como otra tipografía.
+                        La alineación a la derecha se mantiene en los dos casos,
+                        que es lo que sostiene la columna. */}
+                    <dd
+                      className={`shrink-0 text-right text-sm font-medium text-negro ${
+                        esCifra(spec.valor) ? 'dato-columna' : ''
+                      }`}
+                    >
+                      {spec.valor}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </section>
 
-          <section className="mt-12">
-            <h2 className="font-display text-[26px] font-semibold leading-none tracking-[-0.01em]">
-              Descripción
-            </h2>
-            <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-gris-600">
+          <section className="mt-16">
+            <h2 className="font-display text-2xl font-extrabold">Descripción</h2>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-gris-600">
               {unidad.descripcion}
             </p>
           </section>
@@ -124,36 +163,62 @@ export default async function FichaUnidad({ params }: Props) {
         {/* Columna de decisión: precio, contacto y sucursal, siempre a mano.
             En mobile va segunda, justo debajo de la galería. */}
         <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-lg bg-white p-6 shadow-tarjeta sm:p-7">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <EstadoBadge estado={unidad.estado} />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
-                {unidad.marca} · {unidad.tipo}
-              </span>
+          {/* Nivel 2 de elevación, un escalón por encima del resto de la
+              página: es la columna con la que se decide, y tiene que leerse
+              como que está apoyada más arriba que la ficha. */}
+          <div className="rounded-lg bg-white p-8 shadow-nivel-2 sm:p-10">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <EstadoBadge estado={unidad.estado} />
+                <span className="rotulo-dato">
+                  {unidad.marca} · {unidad.tipo}
+                </span>
+              </div>
+              {/* Guardar está arriba, a la altura del nombre: es una decisión
+                  que se toma al leer la unidad, no después de bajar hasta los
+                  botones de contacto. */}
+              <BotonFavorito
+                slug={unidad.slug}
+                nombre={unidad.nombre}
+                variante="superficie"
+                className="-mr-1 -mt-1 shrink-0"
+              />
             </div>
 
-            <h1 className="mt-4 font-display text-[34px] font-semibold leading-[1.05] tracking-[-0.015em] sm:text-[40px]">
+            <h1 className="titulo-expresivo mt-4 text-3xl sm:text-4xl">
               {unidad.nombre}
             </h1>
 
-           
-
-            <dl className="mt-6 flex gap-10">
+            <dl className="mt-6 flex gap-8">
+              {/* Los dos valores caen en palabra más seguido de lo que parece:
+                  "Consultar" cuando el dato no está cargado, y la configuración
+                  —"Carga pesada"— en un semi o una batea, que no llevan
+                  kilometraje. Por eso el ancho fijo se decide por el valor y no
+                  por la fila. */}
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
-                  Año
-                </dt>
-                <dd className="dato mt-1 text-lg font-semibold">{formatearAnio(unidad.anio)}</dd>
+                <dt className="rotulo-dato">Año</dt>
+                <dd
+                  className={`mt-1 text-lg font-medium ${
+                    esCifra(formatearAnio(unidad.anio)) ? 'dato' : ''
+                  }`}
+                >
+                  {formatearAnio(unidad.anio)}
+                </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
+                <dt className="rotulo-dato">
                   {tieneKilometraje(unidad.tipo) ? 'Kilómetros' : 'Configuración'}
                 </dt>
-                <dd className="dato mt-1 text-lg font-semibold">
-                  {tieneKilometraje(unidad.tipo)
+                {(() => {
+                  const valor = tieneKilometraje(unidad.tipo)
                     ? formatearKm(unidad.km)
-                    : (unidad.potencia ?? '—')}
-                </dd>
+                    : (unidad.potencia ?? '—');
+                  return (
+                    <dd className={`mt-1 text-lg font-medium ${esCifra(valor) ? 'dato' : ''}`}>
+                      {valor}
+                    </dd>
+                  );
+                })()}
               </div>
             </dl>
 
@@ -161,30 +226,35 @@ export default async function FichaUnidad({ params }: Props) {
               href={linkConsultaUnidad(unidad)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-[15px] font-semibold text-white transition-colors hover:bg-rojo-700 active:translate-y-px"
+              className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-base font-medium text-white transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
             >
               <IconoWhatsapp className="h-5 w-5" />
               Consultar por WhatsApp
             </a>
             <a
               href="#financiar-unidad"
-              className="mt-2.5 inline-flex h-12 w-full items-center justify-center rounded bg-gris-100 text-[15px] font-semibold text-negro transition-colors hover:bg-gris-200"
+              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
             >
               Simular financiación
             </a>
+
+            <BotonCompartir
+              titulo={`${unidad.nombre} | Decker Camiones`}
+              descripcion={unidad.descripcion}
+              ruta={`/unidad/${unidad.slug}`}
+              className="mt-2"
+            />
           </div>
 
           {sucursal && (
-            <div className="mt-4 rounded-lg bg-white p-6 shadow-tarjeta">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
-                Disponible en
-              </p>
+            <div className="mt-6 rounded-lg bg-white p-8 shadow-nivel-1">
+              <p className="rotulo-dato">Disponible en</p>
               <div className="mt-3 flex items-start gap-3">
                 <IconoPin className="mt-0.5 h-5 w-5 shrink-0 text-rojo" />
                 <div>
-                  <p className="text-[17px] font-semibold leading-tight">{sucursal.nombre}</p>
+                  <p className="text-md font-medium leading-tight">{sucursal.nombre}</p>
                   <p className="mt-1 text-sm text-gris-600">{sucursal.direccion}</p>
-                  <p className="text-[13px] text-gris-400">
+                  <p className="text-sm text-gris-500">
                     {sucursal.localidad}, {sucursal.provincia}
                   </p>
                 </div>
@@ -196,7 +266,7 @@ export default async function FichaUnidad({ params }: Props) {
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-semibold text-negro transition-colors hover:bg-gris-200"
+                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
               >
                 <IconoWhatsapp className="h-4 w-4 text-[#1FA855]" />
                 Coordinar visita
@@ -232,7 +302,7 @@ export default async function FichaUnidad({ params }: Props) {
               accion={
                 <Link
                   href="/catalogo"
-                  className="inline-flex h-11 items-center rounded bg-gris-100 px-5 text-sm font-semibold text-negro transition-colors hover:bg-gris-200"
+                  className="inline-flex h-11 items-center rounded bg-gris-100 px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
                 >
                   Ver stock
                 </Link>

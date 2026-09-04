@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from 'react';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
+import NumeroAnimado from '@/components/ui/NumeroAnimado';
 import { calcularFinanciacion } from '@/lib/financiacion';
 import { formatearNumero, formatearPrecio } from '@/lib/format';
 import { linkConsultaFinanciacion } from '@/lib/whatsapp';
@@ -80,7 +81,7 @@ export default function CalculadoraFinanciacion({
     valorNum > 0 && anticipoNum > 0 ? Math.round((anticipoNum / valorNum) * 100) : null;
 
   return (
-    <div className="oscuro overflow-hidden rounded-lg bg-negro-950 shadow-flotante">
+    <div className="oscuro overflow-hidden rounded-lg bg-negro-950 shadow-nivel-3">
       <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
         <form
           className="p-6 sm:p-8 lg:p-10"
@@ -94,13 +95,13 @@ export default function CalculadoraFinanciacion({
             <div className="relative">
               <span
                 aria-hidden="true"
-                className="dato pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[19px] text-gris-500"
+                className="dato pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gris-400"
               >
                 $
               </span>
               <input
                 id={`${id}-valor`}
-                className="campo campo-oscuro dato h-14 pl-9 text-[19px]"
+                className="campo campo-oscuro dato h-14 pl-9 text-lg"
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
@@ -116,9 +117,12 @@ export default function CalculadoraFinanciacion({
               <label htmlFor={`${id}-anticipo`} className="campo-label text-gris-400">
                 Entrega inicial
               </label>
+              {/* La mono se queda con la cifra; "del valor" es texto y va en la
+                  normal. Envolver la frase entera en ancho fijo la hace parecer
+                  de otra tipografía por un número de dos dígitos. */}
               {porcentajeAnticipo !== null && (
-                <span className="dato text-[12px] text-gris-400">
-                  {porcentajeAnticipo}% del valor
+                <span className="text-xs text-gris-400">
+                  <span className="dato">{porcentajeAnticipo}%</span> del valor
                 </span>
               )}
             </div>
@@ -126,13 +130,13 @@ export default function CalculadoraFinanciacion({
             <div className="relative">
               <span
                 aria-hidden="true"
-                className="dato pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[19px] text-gris-500"
+                className="dato pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gris-400"
               >
                 $
               </span>
               <input
                 id={`${id}-anticipo`}
-                className="campo campo-oscuro dato h-14 pl-9 text-[19px]"
+                className="campo campo-oscuro dato h-14 pl-9 text-lg"
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
@@ -157,7 +161,7 @@ export default function CalculadoraFinanciacion({
                     onClick={() =>
                       setAnticipo(String(Math.round((valorNum * porcentaje) / 100)))
                     }
-                    className={`dato inline-flex h-9 items-center rounded-sm px-3.5 text-[13px] font-semibold transition-colors disabled:pointer-events-none disabled:opacity-30 ${
+                    className={`dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-30 ${
                       activo
                         ? 'bg-amarillo text-negro'
                         : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
@@ -169,7 +173,7 @@ export default function CalculadoraFinanciacion({
               })}
             </div>
 
-            <p id={`${id}-anticipo-ayuda`} className="mt-3 text-[13px] text-gris-400">
+            <p id={`${id}-anticipo-ayuda`} className="mt-3 text-sm text-gris-400">
               {valorNum > 0 ? (
                 <>
                   Entrega mínima sugerida ({parametros.anticipoMinimoPorcentaje}%):{' '}
@@ -183,12 +187,12 @@ export default function CalculadoraFinanciacion({
             </p>
 
             {anticipoExcedido && (
-              <p className="mt-2 text-[13px] font-medium text-amarillo" role="status">
+              <p className="mt-2 text-sm font-medium text-amarillo" role="status">
                 La entrega supera el valor de la unidad: no queda saldo a financiar.
               </p>
             )}
             {!anticipoExcedido && anticipoInsuficiente && (
-              <p className="mt-2 text-[13px] font-medium text-amarillo" role="status">
+              <p className="mt-2 text-sm font-medium text-amarillo" role="status">
                 Con menos del {parametros.anticipoMinimoPorcentaje}% la operación queda sujeta a
                 evaluación del equipo comercial.
               </p>
@@ -206,14 +210,16 @@ export default function CalculadoraFinanciacion({
                     type="button"
                     aria-pressed={activo}
                     onClick={() => setPlazo(cuotas)}
-                    className={`dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-semibold transition-colors ${
+                    className={`inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido ${
                       activo
                         ? 'bg-white text-negro'
                         : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
                     }`}
                   >
-                    {cuotas}
-                    <span className="ml-1 text-[11px] font-medium opacity-60">cuotas</span>
+                    {/* El ancho fijo va en el número, que es lo que tiene que
+                        medir igual en los cuatro botones; el rótulo es texto. */}
+                    <span className="dato">{cuotas}</span>
+                    <span className="ml-1 text-2xs font-medium opacity-60">cuotas</span>
                   </button>
                 );
               })}
@@ -247,7 +253,7 @@ export default function CalculadoraFinanciacion({
             /* my-auto: sin resultado el panel queda vacío, y el mensaje pegado
                arriba deja un hueco raro. Centrado se lee como un estado, no
                como contenido faltante. */
-            <p className="my-auto max-w-xs text-[15px] leading-relaxed text-gris-300">
+            <p className="my-auto max-w-xs text-base leading-relaxed text-gris-300">
               {valorNum > 0 && resultado
                 ? 'No queda saldo a financiar con esa entrega inicial.'
                 : 'Cargá el valor de la unidad para ver el monto a financiar y una cuota aproximada.'}
@@ -255,14 +261,30 @@ export default function CalculadoraFinanciacion({
           ) : (
             <>
               <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400">
-                  Cuota aproximada
+                <p className="rotulo-dato text-gris-400">Cuota aproximada</p>
+                {/**
+                 * La cuota es el número por el que se abrió el simulador, y el
+                 * único de esta pantalla que se mueve: recorre desde el valor
+                 * anterior hasta el nuevo en 400ms cada vez que se cambia un
+                 * dato. Es lo que conecta "toqué 40%" con "la cuota bajó" sin
+                 * tener que leer dos veces.
+                 *
+                 * El resto de la columna —monto, total, costo— se actualiza sin
+                 * animación: si se movieran los cuatro, no se movería ninguno.
+                 */}
+                <p className="dato mt-2 text-4xl font-medium text-amarillo sm:text-5xl">
+                  <NumeroAnimado
+                    valor={Math.round(resultado.cuotaMensual)}
+                    formato="precio"
+                    duracion={400}
+                    desdeViewport
+                  />
                 </p>
-                <p className="dato mt-2 text-[42px] font-semibold leading-none tracking-tight text-amarillo sm:text-[52px]">
-                  {formatearPrecio(Math.round(resultado.cuotaMensual))}
-                </p>
-                <p className="dato mt-3 text-[13px] text-gris-400">
-                  {resultado.plazo} cuotas · tasa anual {formatearNumero(resultado.tasaAnual)}%
+                {/* Misma regla: en ancho fijo van las dos cifras, no la frase
+                    que las une. */}
+                <p className="mt-3 text-sm text-gris-400">
+                  <span className="dato">{resultado.plazo}</span> cuotas · tasa anual{' '}
+                  <span className="dato">{formatearNumero(resultado.tasaAnual)}%</span>
                 </p>
               </div>
 
@@ -274,7 +296,7 @@ export default function CalculadoraFinanciacion({
                 ].map((fila) => (
                   <div key={fila.t} className="flex items-baseline justify-between gap-4">
                     <dt className="text-sm text-gris-400">{fila.t}</dt>
-                    <dd className="dato text-[15px] font-semibold text-white">
+                    <dd className="dato-columna text-base font-medium text-white">
                       {formatearPrecio(Math.round(fila.v))}
                     </dd>
                   </div>
@@ -285,7 +307,7 @@ export default function CalculadoraFinanciacion({
                 href={linkConsultaFinanciacion(resultado, unidad)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-semibold text-white transition-colors hover:bg-rojo-700"
+                className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar con un asesor
@@ -295,7 +317,7 @@ export default function CalculadoraFinanciacion({
 
           {/* Es el texto legal de la simulación: tiene que poder leerse, no ser
               una marca de agua. */}
-          <p className="mt-auto pt-8 text-[12px] leading-relaxed text-gris-400">
+          <p className="mt-auto pt-8 text-xs leading-relaxed text-gris-400">
             {parametros.leyenda}
           </p>
         </div>

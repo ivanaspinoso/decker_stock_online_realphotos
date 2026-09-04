@@ -21,14 +21,14 @@ const VARIANTES: Record<Variante, string> = {
 };
 
 const TAMANOS: Record<Tamano, string> = {
-  sm: 'h-9 px-3.5 text-[13px] gap-1.5 rounded-sm',
+  sm: 'h-9 px-3.5 text-sm gap-1.5 rounded-sm',
   md: 'h-11 px-5 text-sm gap-2 rounded',
-  lg: 'h-[52px] px-7 text-[15px] gap-2.5 rounded',
+  lg: 'h-[52px] px-7 text-base gap-2.5 rounded',
 };
 
 const BASE =
-  'inline-flex select-none items-center justify-center font-semibold ' +
-  'transition-[background-color,box-shadow,transform] duration-150 ease-suave ' +
+  'inline-flex select-none items-center justify-center font-medium ' +
+  'transition-[background-color,box-shadow,transform] duration-rapido ease-suave ' +
   'active:translate-y-px disabled:pointer-events-none disabled:opacity-40';
 
 interface PropsComunes {

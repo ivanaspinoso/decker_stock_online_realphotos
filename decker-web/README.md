@@ -152,17 +152,54 @@ public/         marca/ (logo) · unidades/ (fotos)
 
 Público objetivo: dueño de flota, transportista, gerente de compras. Viene a resolver.
 
-**Superficie.** Las tarjetas se separan del fondo con elevación suave (`shadow-tarjeta`)
-y no con bordes de 1px. Los bordes quedan sólo donde hace falta leer una grilla: la
-tabla del catálogo y las filas de la ficha técnica. Radios de 6/10/12/16 px.
+**Superficie.** Las tarjetas se separan del fondo con elevación suave y no con bordes
+de 1px. Los bordes quedan sólo donde hace falta leer una grilla: la tabla del catálogo
+y las filas de la ficha técnica. Radios de 6/10/12/16 px.
 
-**Tipografía, tres familias con función:**
+La elevación tiene **tres niveles y ninguna sombra escrita a mano fuera de ellos**:
+`shadow-nivel-1` (reposo), `shadow-nivel-2` (foco: tarjeta bajo el cursor, panel de
+decisión) y `shadow-nivel-3` (flotante: simulador, buscador abierto).
 
-- **Oswald** — sólo títulos de sección y `h1`. Usarla también en cada tarjeta es lo que
-  apelmaza la página.
-- **Inter** — texto, títulos de tarjeta y botones, en caja normal.
-- **IBM Plex Mono** — todo dato técnico: precios, km, años, tasas, teléfonos. La clase
-  `.dato` agrega `tabular-nums` para que las columnas de la tabla queden alineadas.
+**Tipografía: UNA cara, sin excepciones.** Todo el sitio es **Overpass**, una
+reinterpretación libre de la Highway Gothic —la letra de la señalética vial
+norteamericana desde 1948—. Para una empresa de camiones el origen no es decorativo. En
+regular se comporta como una grotesca neutra y se lee como cualquier texto largo; en los
+pesos altos gana carácter propio y aguanta un titular sin pedir prestada una segunda
+familia. La diferencia entre un título, un párrafo y un precio la hace el **peso**, nunca
+otro dibujo.
+
+- **Overpass 800/900** (`font-display`) — todo título: `h1`, `h2`, `h3`, nombre de unidad
+  y los estados vacíos que funcionan como título. El **900** queda para el `h1` de cada
+  página y los títulos de sección (`.titulo-expresivo`, `.titulo-seccion`); el resto de
+  los encabezados va en 800. Si es título, no baja de 800; no hay excepción por tamaño.
+- **Overpass 400/500** (`font-sans`) — todo lo demás: texto corrido, rótulos, botones,
+  navegación y datos técnicos. El cuerpo no pasa de 500: si llegara al peso de un título,
+  no habría jerarquía, habría dos negritas.
+
+**No hay monoespaciada, y no se agrega ninguna otra familia.** La hubo —Overpass Mono
+para precios, km, años y tasas— y se sacó: aunque era de la misma familia, en pantalla se
+lee como OTRA tipografía, y ver "420 CV" en ancho fijo al lado de "Bahía Blanca" en ancho
+normal, dentro de la misma tarjeta, rompía la unidad de la página. Lo único que aportaba
+era alinear columnas de importes, y eso lo hace `.dato` con `tabular-nums` sin cambiar de
+cara: fuerza a que todos los dígitos midan lo mismo y deja las letras con su ancho
+natural. `font-display`, `font-sans` y `font-mono` resuelven las tres al MISMO archivo;
+las tres claves se conservan porque `font-display` sigue nombrando un rol y el preflight
+de Tailwind usa `font-mono` para `code` y `pre`.
+
+**Nada en mayúscula sostenida.** Ni titulares, ni rótulos, ni volantas de sección, ni los
+badges de estado. La caja alta borra el perfil de la palabra —las ascendentes y
+descendentes que el ojo usa para reconocerla— y, repetida en cada sección, deja de ser un
+acento para convertirse en el tono normal de la página. Los rótulos llevan un tracking
+apenas abierto (`0.06em`); es lo que queda de las versalitas que había antes.
+
+**Descarga (subconjunto latin): 1 archivo, ~38 KB.** Overpass se pide como fuente VARIABLE
+y no como pesos sueltos: los cuatro estáticos que usa el sitio suman ~154 KB en cuatro
+pedidos, y el variable cubre todo el eje 100–900 en un archivo. Antes, con IBM Plex en
+tres cortes, eran 6 archivos y ~156 KB.
+
+Los tamaños salen de una escala de doce escalones definida en `tailwind.config.ts`
+(`text-2xs` a `text-6xl`), con interlineados múltiplos de 4 para que el texto caiga en la
+misma grilla de 8px que el espaciado. **Ningún `text-[Npx]` escrito a mano.**
 
 Las mayúsculas con tracking se reservan para etiquetas chicas y badges.
 

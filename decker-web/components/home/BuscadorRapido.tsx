@@ -135,7 +135,7 @@ export default function BuscadorRapido({
     alElegir: (valor: T | '') => void,
   ) => (
     <fieldset className="mt-5 first:mt-0">
-      <legend className="etiqueta px-1 text-gris-400">{etiqueta}</legend>
+      <legend className="etiqueta px-1 text-gris-500">{etiqueta}</legend>
       {/* h-11 = 44px: área táctil cómoda en mobile. */}
       <div className="mt-3 flex flex-wrap gap-2">
         {valores.map(({ valor, texto: rotulo }) => {
@@ -146,7 +146,7 @@ export default function BuscadorRapido({
               type="button"
               aria-pressed={activo}
               onClick={() => alElegir(activo ? '' : valor)}
-              className={`inline-flex h-11 items-center rounded-sm px-4 text-[14px] font-semibold transition-colors ${
+              className={`inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors ${
                 activo
                   ? 'bg-negro text-white'
                   : 'bg-gris-100 text-negro hover:bg-gris-200'
@@ -171,13 +171,13 @@ export default function BuscadorRapido({
         onClick={() => setAbierto(true)}
         aria-haspopup="dialog"
         aria-expanded={abierto}
-        className="group flex h-14 w-full items-center gap-3 rounded-lg bg-white pl-4 pr-2 text-left shadow-flotante transition-shadow hover:shadow-tarjeta-hover"
+        className="group flex h-14 w-full items-center gap-3 rounded-lg bg-white pl-4 pr-2 text-left shadow-nivel-2 transition-shadow duration-rapido ease-suave hover:shadow-nivel-3"
       >
-        <IconoBuscar className="h-5 w-5 shrink-0 text-gris-400" aria-hidden="true" />
-        <span className={`flex-1 truncate text-[16px] ${texto ? 'text-negro' : 'text-gris-400'}`}>
+        <IconoBuscar className="h-5 w-5 shrink-0 text-gris-500" aria-hidden="true" />
+        <span className={`flex-1 truncate text-base ${texto ? 'text-negro' : 'text-gris-500'}`}>
           {texto || 'Buscá por marca o modelo'}
         </span>
-        <span className="inline-flex h-10 shrink-0 items-center rounded bg-rojo px-4 text-sm font-semibold text-white transition-colors group-hover:bg-rojo-700">
+        <span className="inline-flex h-10 shrink-0 items-center rounded bg-rojo px-4 text-sm font-medium text-white transition-colors group-hover:bg-rojo-700">
           Buscar
         </span>
       </button>
@@ -190,7 +190,7 @@ export default function BuscadorRapido({
         createPortal(
           <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 pt-[8vh] sm:pt-[12vh]">
             <div
-              className="absolute inset-0 bg-negro-950/70 backdrop-blur-sm"
+              className="animate-velo absolute inset-0 bg-negro-950/70 backdrop-blur-sm"
               onClick={cerrar}
               aria-hidden="true"
             />
@@ -199,7 +199,7 @@ export default function BuscadorRapido({
               role="dialog"
               aria-modal="true"
               aria-labelledby={`${id}-titulo`}
-              className="animate-aparecer relative flex max-h-[84vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-flotante"
+              className="animate-entrar-panel relative flex max-h-[84vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-nivel-3"
             >
               <div className="flex items-center justify-between gap-4 border-b border-gris-200 px-5 pt-4">
                 <p id={`${id}-titulo`} className="etiqueta pb-4 text-rojo">
@@ -209,7 +209,7 @@ export default function BuscadorRapido({
                   type="button"
                   onClick={cerrar}
                   aria-label="Cerrar buscador"
-                  className="mb-3 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-gris-400 transition-colors hover:bg-gris-100 hover:text-negro"
+                  className="mb-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-gris-500 transition-colors duration-rapido hover:bg-gris-100 hover:text-negro"
                 >
                   <IconoCerrar className="h-4 w-4" />
                 </button>
@@ -226,13 +226,13 @@ export default function BuscadorRapido({
                 <label htmlFor={`${id}-q`} className="sr-only">
                   Buscá por marca o modelo
                 </label>
-                <IconoBuscar className="h-5 w-5 shrink-0 text-gris-400" aria-hidden="true" />
+                <IconoBuscar className="h-5 w-5 shrink-0 text-gris-500" aria-hidden="true" />
                 <input
                   ref={campo}
                   id={`${id}-q`}
                   type="text"
                   autoComplete="off"
-                  className="h-10 flex-1 border-0 bg-transparent text-[17px] text-negro outline-none placeholder:text-gris-400"
+                  className="h-11 flex-1 border-0 bg-transparent text-md text-negro outline-none placeholder:text-gris-500"
                   placeholder="Buscá por marca o modelo"
                   value={texto}
                   onChange={(evento) => setTexto(evento.target.value)}
@@ -242,7 +242,7 @@ export default function BuscadorRapido({
                     type="button"
                     onClick={() => setTexto('')}
                     aria-label="Borrar búsqueda"
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-gris-400 transition-colors hover:bg-gris-100 hover:text-negro"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-gris-500 transition-colors duration-rapido hover:bg-gris-100 hover:text-negro"
                   >
                     <IconoCerrar className="h-4 w-4" />
                   </button>
@@ -255,7 +255,7 @@ export default function BuscadorRapido({
                     responden a ninguna intención. */}
                 {consulta && coincidentes.length > 0 && (
                   <div className="mb-6">
-                    <p className="etiqueta px-1 text-gris-400">Unidades</p>
+                    <p className="etiqueta px-1 text-gris-500">Unidades</p>
                     <ul className="mt-2">
                       {coincidentes.slice(0, MAX_SUGERENCIAS).map((unidad) => (
                         <li key={unidad.slug}>
@@ -265,10 +265,10 @@ export default function BuscadorRapido({
                             className="flex w-full items-center justify-between gap-3 rounded-sm px-2 py-3 text-left transition-colors hover:bg-gris-100"
                           >
                             <span className="min-w-0">
-                              <span className="block truncate text-[15px] font-semibold text-negro">
+                              <span className="block truncate text-base font-medium text-negro">
                                 {unidad.nombre}
                               </span>
-                              <span className="block truncate text-[13px] text-gris-500">
+                              <span className="block truncate text-sm text-gris-500">
                                 {unidad.tipo} · {unidad.estado}
                               </span>
                             </span>
@@ -305,8 +305,8 @@ export default function BuscadorRapido({
               {/* Pie fijo: el conteo se actualiza con cada elección, así el
                   efecto de combinar filtros se ve antes de navegar. */}
               <div className="flex items-center justify-between gap-4 border-t border-gris-200 px-5 py-4">
-                <div className="min-w-0 text-[13px] text-gris-500">
-                  <span className="dato font-semibold text-negro">{coincidentes.length}</span>{' '}
+                <div className="min-w-0 text-sm text-gris-500">
+                  <span className="dato font-medium text-negro">{coincidentes.length}</span>{' '}
                   {coincidentes.length === 1 ? 'unidad coincide' : 'unidades coinciden'}
                   {hayFiltros && (
                     <button
@@ -316,7 +316,7 @@ export default function BuscadorRapido({
                         setTexto('');
                         campo.current?.focus();
                       }}
-                      className="ml-3 font-semibold text-rojo transition-opacity hover:opacity-70"
+                      className="ml-3 font-medium text-rojo transition-opacity hover:opacity-70"
                     >
                       Limpiar
                     </button>
@@ -326,7 +326,7 @@ export default function BuscadorRapido({
                 <button
                   type="button"
                   onClick={() => irA(href)}
-                  className="inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-semibold text-white transition-colors hover:bg-rojo-700"
+                  className="inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors hover:bg-rojo-700"
                 >
                   {coincidentes.length > 0 ? `Ver ${coincidentes.length}` : 'Ver stock'}
                 </button>

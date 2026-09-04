@@ -80,14 +80,14 @@ export default function DestacadasCliente({
         }
       />
 
-      <div className="mb-8 rounded-lg bg-white p-5 shadow-tarjeta">
+      <div className="mb-8 rounded-lg bg-white p-5 shadow-nivel-1">
         <div className="flex items-baseline justify-between gap-4">
-          <h3 className="text-[15px] font-semibold leading-none">Filtrar unidades seleccionadas</h3>
+          <h3 className="titulo-tarjeta">Filtrar unidades seleccionadas</h3>
           <button
             type="button"
             onClick={limpiar}
             disabled={!hayFiltros}
-            className="text-[13px] font-semibold text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
+            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
           >
             Limpiar
           </button>
@@ -197,8 +197,8 @@ export default function DestacadasCliente({
       {resultados.length > 0 ? (
         <UnidadGrilla unidades={resultados} />
       ) : (
-        <div className="rounded-lg bg-white p-12 text-center shadow-tarjeta">
-          <p className="text-[19px] font-semibold text-negro">
+        <div className="rounded-lg bg-white p-12 text-center shadow-nivel-1">
+          <p className="font-display text-lg font-extrabold text-negro">
             No encontramos unidades con esos filtros
           </p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gris-500">

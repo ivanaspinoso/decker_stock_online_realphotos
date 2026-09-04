@@ -47,14 +47,14 @@ export default function PanelFiltros({
 
   return (
     <aside aria-label="Filtros del catálogo" className="lg:sticky lg:top-24">
-      <div className="rounded-lg bg-white p-5 shadow-tarjeta">
+      <div className="rounded-lg bg-white p-5 shadow-nivel-1">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-[17px] font-semibold leading-none">Filtros</h2>
+          <h2 className="titulo-tarjeta">Filtros</h2>
           <button
             type="button"
             onClick={onLimpiar}
             disabled={!hayFiltros}
-            className="text-[13px] font-semibold text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
+            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
           >
             Limpiar
           </button>
@@ -158,13 +158,16 @@ export default function PanelFiltros({
           <label className="col-span-2 flex items-center gap-2.5 lg:col-span-1">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded-sm accent-rojo"
+              // h-5 y no h-4: 16px es un blanco chico para el pulgar. El
+              // `<label>` que lo envuelve ya hace clickeable todo el texto, así
+              // que el área real es grande; esto es para quien apunta a la caja.
+              className="h-5 w-5 rounded-sm accent-rojo"
               checked={filtros.financiacion === 'Disponible'}
               onChange={(evento) =>
                 onCambio({ financiacion: evento.target.checked ? 'Disponible' : '' })
               }
             />
-            <span className="text-[13px] text-gris-600">Sólo con financiación disponible</span>
+            <span className="text-sm text-gris-600">Sólo con financiación disponible</span>
           </label>
 
           <fieldset className="col-span-2 lg:col-span-1">
@@ -181,7 +184,10 @@ export default function PanelFiltros({
                 value={filtros.anioDesde ?? ''}
                 onChange={(evento) => onCambio({ anioDesde: aNumero(evento.target.value) })}
               />
-              <span aria-hidden="true" className="text-gris-300">
+              {/* Es lo único que dice que los dos campos son un rango. En
+                  gris-300 daba 1.5:1 sobre blanco —invisible— y los campos se
+                  leían como dos filtros sueltos. */}
+              <span aria-hidden="true" className="text-gris-500">
                 –
               </span>
               <input
@@ -201,8 +207,8 @@ export default function PanelFiltros({
           
         </div>
 
-        <p className="mt-5 border-t border-gris-200 pt-4 text-[13px] text-gris-500">
-          <span className="dato font-semibold text-negro">{resultados}</span>{' '}
+        <p className="mt-5 border-t border-gris-200 pt-4 text-sm text-gris-500">
+          <span className="dato font-medium text-negro">{resultados}</span>{' '}
           {resultados === 1 ? 'unidad coincide' : 'unidades coinciden'}
         </p>
       </div>

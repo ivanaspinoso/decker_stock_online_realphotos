@@ -33,7 +33,7 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
       // La tarjeta va sobre una sección blanca: sin un borde propio, blanco
       // sobre blanco no se distingue. El anillo la define; la sombra sola no
       // alcanza.
-      className="space-y-5 rounded-lg bg-white p-6 shadow-tarjeta ring-1 ring-gris-200 sm:p-8"
+      className="space-y-5 rounded-lg bg-white p-6 shadow-nivel-1 ring-1 ring-gris-200 sm:p-8"
       onSubmit={(evento) => {
         evento.preventDefault();
         window.open(linkCotizarUsado(datos), '_blank', 'noopener,noreferrer');
@@ -169,13 +169,13 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
 
       <button
         type="submit"
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-semibold text-white transition-colors hover:bg-rojo-700 active:translate-y-px"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-white transition-colors hover:bg-rojo-700 active:translate-y-px"
       >
         <IconoWhatsapp className="h-4 w-4" />
         Enviar consulta por WhatsApp
       </button>
 
-      <p className="text-[12px] leading-relaxed text-gris-500">
+      <p className="text-xs leading-relaxed text-gris-500">
         Se abre WhatsApp con el mensaje ya escrito, dirigido al asesor de la sucursal elegida.
         Los datos no se guardan en este sitio.
       </p>

@@ -83,6 +83,37 @@ export default function CatalogoCliente({
 
   const limpiar = useCallback(() => setFiltros({ orden: filtros.orden }), [filtros.orden]);
 
+  /**
+   * Firma de la combinación de filtros aplicada.
+   *
+   * Se usa como `key` de la grilla: al cambiar, React desmonta el listado y
+   * monta uno nuevo, y las tarjetas vuelven a correr su animación de entrada.
+   * Es el acuse de recibo del filtro —sin él, en un listado de treinta unidades
+   * que baja a veintiocho no se ve que el sitio haya hecho nada—.
+   *
+   * Incluye el orden: cambiar de "más nuevas" a "menos kilómetros" reacomoda
+   * las mismas unidades en otra secuencia, y sin la re-entrada el listado se ve
+   * idéntico salvo por el primer renglón. La entrada escalonada es lo que dice
+   * "se reordenó".
+   */
+  const firmaFiltros = useMemo(
+    () =>
+      [
+        filtros.busqueda?.trim() ?? '',
+        filtros.tipo ?? '',
+        filtros.marca ?? '',
+        filtros.sucursalId ?? '',
+        filtros.estado ?? '',
+        filtros.financiacion ?? '',
+        filtros.anioDesde ?? '',
+        filtros.anioHasta ?? '',
+        filtros.precioDesde ?? '',
+        filtros.precioHasta ?? '',
+        filtros.orden ?? '',
+      ].join('|'),
+    [filtros],
+  );
+
   return (
     <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-8">
       <PanelFiltros
@@ -99,20 +130,20 @@ export default function CatalogoCliente({
       <div className="min-w-0">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gris-500">
-            <span className="dato font-semibold text-negro">{resultados.length}</span>{' '}
+            <span className="dato text-md font-medium text-negro">{resultados.length}</span>{' '}
             {resultados.length === 1 ? 'unidad' : 'unidades'}
             {resultados.length !== unidades.length && (
               <span> de {unidades.length} publicadas</span>
             )}
           </p>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <label htmlFor="catalogo-orden" className="sr-only">
               Ordenar por
             </label>
             <select
               id="catalogo-orden"
-              className="campo h-10 w-auto py-0 text-[13px]"
+              className="campo h-11 w-auto py-0 text-sm"
               value={filtros.orden ?? 'relevancia'}
               onChange={(evento) => cambiar({ orden: evento.target.value as OrdenCatalogo })}
             >
@@ -123,8 +154,10 @@ export default function CatalogoCliente({
               ))}
             </select>
 
+            {/* p-0.5 y botones de 40px: el conmutador entero mide 44 de alto,
+                así que cada mitad es tocable sin apuntar. */}
             <div
-              className="flex gap-1 rounded-sm bg-gris-100 p-1"
+              className="flex gap-1 rounded-sm bg-gris-100 p-0.5"
               role="group"
               aria-label="Vista del catálogo"
             >
@@ -139,9 +172,9 @@ export default function CatalogoCliente({
                   type="button"
                   onClick={() => setVista(modo)}
                   aria-pressed={vista === modo}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-sm px-3 text-[13px] font-semibold transition-colors ${
+                  className={`inline-flex h-10 items-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors duration-rapido ${
                     vista === modo
-                      ? 'bg-white text-negro shadow-tarjeta'
+                      ? 'bg-white text-negro shadow-nivel-1'
                       : 'text-gris-500 hover:text-negro'
                   }`}
                 >
@@ -159,21 +192,21 @@ export default function CatalogoCliente({
         </p>
 
         {resultados.length === 0 ? (
-          <div className="rounded-lg bg-white p-12 text-center shadow-tarjeta">
-            <p className="text-[19px] font-semibold text-negro">Sin resultados</p>
+          <div className="animate-entrar rounded-lg bg-white p-12 text-center shadow-nivel-1">
+            <p className="font-display text-lg font-extrabold text-negro">Sin resultados</p>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-gris-500">
               Ninguna unidad coincide con esa combinación de filtros. Probá quitar la sucursal.
             </p>
             <button
               type="button"
               onClick={limpiar}
-              className="mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-semibold text-white transition-colors hover:bg-rojo-700"
+              className="mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
             >
               Limpiar filtros
             </button>
           </div>
         ) : vista === 'grilla' ? (
-          <UnidadGrilla unidades={resultados} columnas={3} />
+          <UnidadGrilla key={firmaFiltros} unidades={resultados} columnas={3} animar />
         ) : (
           <UnidadTabla unidades={resultados} />
         )}

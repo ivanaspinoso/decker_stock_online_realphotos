@@ -1,50 +1,93 @@
 import type { Metadata, Viewport } from 'next';
-import { Oswald, Inter, IBM_Plex_Mono } from 'next/font/google';
+import { Overpass } from 'next/font/google';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import './globals.css';
 
 /**
- * Tres familias, tres funciones:
- * - Oswald: títulos. Condensada, industrial.
- * - Inter: texto de lectura.
- * - IBM Plex Mono: TODO dato técnico (precios, km, años, tasas). Le da lenguaje
- *   de ficha técnica a los números; no es decoración.
+ * UNA familia: Overpass. Nada más.
+ *
+ * Overpass es una reinterpretación libre de la Highway Gothic, la tipografía de
+ * la señalética vial norteamericana desde 1948. Para una empresa de camiones el
+ * origen no es decorativo: es la letra de los carteles de ruta, que es donde
+ * esta gente trabaja. En regular se comporta como una grotesca neutra y se lee
+ * como cualquier texto largo; en los pesos altos gana carácter propio y aguanta
+ * un titular sin pedir prestada una segunda familia.
+ *
+ * UNA sola cara, sin excepciones: la diferencia entre un titular, un párrafo
+ * y un precio la hace el PESO, nunca otro dibujo.
+ * - 800/900 para titulares: h1 de cada página y títulos de sección.
+ * - 400/500 para todo lo demás: texto corrido, rótulos, botones, navegación y
+ *   datos técnicos.
+ *
+ * No hay monoespaciada. La hubo —Overpass Mono para precios, km, años y tasas—
+ * y se sacó: aunque es de la misma familia, en pantalla se lee como OTRA
+ * tipografía, y ver "420 CV" en ancho fijo al lado de "Bahía Blanca" en ancho
+ * normal, dentro de la misma tarjeta, rompía la unidad de la página. Lo único
+ * que aportaba era alinear columnas de importes, y eso lo hace `tabular-nums`
+ * sin cambiar de cara (ver `.dato` en globals.css).
+ *
+ * Antes el sitio era IBM Plex en tres cortes —Condensed, Sans y Mono, seis
+ * archivos estáticos—. Antes de eso, Oswald para títulos e Inter para lectura.
+ *
+ * Peso de la descarga (subconjunto latin):
+ * - IBM Plex: 6 archivos estáticos, ~156 KB.
+ * - Overpass + Mono: 2 archivos variables, ~60 KB.
+ * - Ahora: UN archivo variable, ~38 KB.
  */
-const display = Oswald({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-display',
-  display: 'swap',
-});
 
-const sans = Inter({
+/**
+ * El archivo VARIABLE, no cuatro estáticos.
+ *
+ * Se necesitan 400, 500, 800 y 900. Pedidos como pesos sueltos, Google entrega
+ * cuatro archivos que suman ~154 KB; el variable cubre TODO el eje de 100 a 900
+ * en un solo archivo de ~38 KB. Cuatro veces menos peso y un pedido de red en
+ * lugar de cuatro, que en una conexión de ruta es la diferencia que se nota.
+ *
+ * Por eso acá no va `weight`: pedirlo es justamente lo que fuerza los estáticos.
+ * Los pesos que el sitio no usa no cuestan nada: no son archivos aparte, son
+ * posiciones del mismo eje.
+ */
+const texto = Overpass({
   subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-mono',
+  variable: '--font-overpass',
   display: 'swap',
 });
 
 /** Título y descripción tomados del sitio original de Decker. */
 export const metadata: Metadata = {
   title: {
-    default: 'Decker ',
+    // Era 'Decker ' —con el espacio colgando—: es el título que ve el buscador
+    // y el que queda en la pestaña. Ahora dice qué es el sitio.
+    default: 'Decker Camiones — Stock online de camiones 0 km y usados',
     template: '%s | Decker Camiones',
   },
   description:
     'Encontrá camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas. ' +
     'Consultá financiación, entregá tu usado y hablá con un asesor Decker.',
   metadataBase: new URL('https://deckercamiones.com.ar'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'es_AR',
     siteName: 'Decker Camiones',
+    url: '/',
+    // Sin esto, compartir el sitio por WhatsApp —que es el canal por el que
+    // entra la consulta— mostraba una tarjeta sin imagen.
+    images: [
+      {
+        url: '/marca/banner.jpg',
+        width: 1920,
+        height: 1440,
+        alt: 'Patio de unidades Decker Camiones',
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -54,13 +97,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-AR" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    // `data-scroll-behavior="smooth"` lo pide Next 16: globals.css pone
+    // `scroll-behavior: smooth` en el html, y sin este atributo el router
+    // anima también el salto al tope en cada cambio de ruta —se ve como si la
+    // página nueva entrara scrolleando—. Con el atributo, el suave queda para
+    // los anclas internos y la navegación salta directo.
+    <html
+      lang="es-AR"
+      data-scroll-behavior="smooth"
+      className={texto.variable}
+    >
       <body className="flex min-h-screen flex-col font-sans">
         <a
           href="#contenido"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50
                      focus:rounded focus:bg-rojo focus:px-4 focus:py-2 focus:text-sm
-                     focus:font-semibold focus:text-white"
+                     focus:font-medium focus:text-white"
         >
           Saltar al contenido
         </a>

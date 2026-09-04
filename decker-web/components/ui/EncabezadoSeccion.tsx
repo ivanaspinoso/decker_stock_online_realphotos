@@ -27,7 +27,7 @@ export default function EncabezadoSeccion({
         </h2>
         {descripcion && (
           <p
-            className={`mt-4 text-[15px] leading-relaxed ${
+            className={`mt-4 text-base leading-relaxed ${
               // gris-300 y no gris-400: la variante oscura se usa sobre foto, y
               // ahí gris-400 no llega a 4.5:1 contra las zonas claras.
               oscuro ? 'text-gris-300' : 'text-gris-500'

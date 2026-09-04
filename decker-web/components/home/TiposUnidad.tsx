@@ -16,7 +16,8 @@ import type { TipoUnidad } from '@/lib/types';
  * `/catalogo?tipo=…`: el usuario que ya sabe qué necesita no tiene que pasar
  * por el catálogo completo y filtrar a mano.
  */
-const ICONOS: Record<TipoUnidad, (props: React.SVGProps<SVGSVGElement>) => JSX.Element> = {
+// `React.JSX` y no `JSX` a secas: React 19 sacó el namespace JSX global.
+const ICONOS: Record<TipoUnidad, (props: React.SVGProps<SVGSVGElement>) => React.JSX.Element> = {
   Camión: IconoCamion,
   Semi: IconoSemi,
   Batea: IconoBatea,
@@ -35,7 +36,7 @@ export default function TiposUnidad({
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="etiqueta text-rojo">Buscar por tipo</p>
-            <h2 className="mt-3 font-display text-[28px] font-semibold leading-none tracking-[-0.01em] sm:text-[34px]">
+            <h2 className="mt-3 font-display text-2xl font-extrabold leading-none tracking-[-0.01em] sm:text-3xl">
               ¿Qué unidad necesitás?
             </h2>
           </div>
@@ -49,18 +50,18 @@ export default function TiposUnidad({
               <Link
                 key={tipo}
                 href={`/catalogo?tipo=${encodeURIComponent(tipo)}`}
-                className="group flex items-center gap-4 rounded-md bg-white p-5 shadow-tarjeta transition-shadow duration-200 ease-suave hover:shadow-tarjeta-hover"
+                className="group flex items-center gap-4 rounded-md bg-white p-5 shadow-nivel-1 transition-shadow duration-medio ease-suave hover:shadow-nivel-2"
               >
                 <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-gris-100 transition-colors group-hover:bg-rojo-50">
                   <Icono className="h-6 w-6 text-negro transition-colors group-hover:text-rojo" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-[17px] font-semibold leading-none text-negro">{tipo}</h3>
-                  <p className="dato mt-1.5 text-[13px] text-gris-500">
+                  <h3 className="titulo-tarjeta text-negro">{tipo}</h3>
+                  <p className="dato mt-1 text-sm text-gris-500">
                     {total} {total === 1 ? 'unidad' : 'unidades'}
                   </p>
                 </div>
-                <IconoFlecha className="h-5 w-5 shrink-0 text-gris-300 transition-all duration-200 ease-suave group-hover:translate-x-0.5 group-hover:text-rojo" />
+                <IconoFlecha className="h-5 w-5 shrink-0 text-gris-300 transition-all duration-medio ease-suave group-hover:translate-x-0.5 group-hover:text-rojo" />
               </Link>
             );
           })}

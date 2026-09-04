@@ -16,19 +16,22 @@ import {
 import type { EstadoUnidad, FiltrosCatalogo, IdSucursal, TipoUnidad } from '@/lib/types';
 
 interface Props {
-  searchParams: {
+  // Desde Next 15 `searchParams` es una Promise: la página empieza a renderizar
+  // antes de que se conozcan los parámetros, y recién se esperan cuando se usan.
+  searchParams: Promise<{
     q?: string;
     tipo?: string;
     marca?: string;
     sucursal?: string;
     estado?: string;
-  };
+  }>;
 }
 
 /** Los textos de las secciones son los del sitio original de Decker. */
 export default async function Home({ searchParams }: Props) {
-  const [destacadas, sucursales, sugerencias, parametros, conteoPorSucursal] =
+  const [parametrosUrl, destacadas, sucursales, sugerencias, parametros, conteoPorSucursal] =
     await Promise.all([
+      searchParams,
       getUnidadesDestacadas(),
       getSucursales(),
       getIndiceBuscador(),
@@ -40,11 +43,11 @@ export default async function Home({ searchParams }: Props) {
   // catálogo). Son el punto de partida de la sección de destacadas, que de ahí
   // en más filtra en el cliente.
   const filtros: FiltrosCatalogo = {
-    busqueda: searchParams.q ?? '',
-    tipo: (searchParams.tipo ?? '') as TipoUnidad | '',
-    marca: searchParams.marca ?? '',
-    sucursalId: (searchParams.sucursal ?? '') as IdSucursal | '',
-    estado: (searchParams.estado ?? '') as EstadoUnidad | '',
+    busqueda: parametrosUrl.q ?? '',
+    tipo: (parametrosUrl.tipo ?? '') as TipoUnidad | '',
+    marca: parametrosUrl.marca ?? '',
+    sucursalId: (parametrosUrl.sucursal ?? '') as IdSucursal | '',
+    estado: (parametrosUrl.estado ?? '') as EstadoUnidad | '',
   };
 
   return (
@@ -93,7 +96,7 @@ export default async function Home({ searchParams }: Props) {
           <div>
             <p className="etiqueta text-rojo">Parte de pago</p>
             <h2 className="titulo-seccion mt-3">Entregá tu usado y subite a otra unidad</h2>
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-gris-500">
+            <p className="mt-4 max-w-md text-base leading-relaxed text-gris-500">
               Cargá los datos de tu unidad y generá una consulta directa para que el equipo
               comercial evalúe la operación.
             </p>
@@ -114,10 +117,10 @@ export default async function Home({ searchParams }: Props) {
                       className="absolute bottom-0 left-[15px] top-9 w-px bg-gris-200"
                     />
                   )}
-                  <span className="dato relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-negro text-[13px] font-semibold text-white">
+                  <span className="dato relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-negro text-sm font-medium text-white">
                     {indice + 1}
                   </span>
-                  <span className="pt-1.5 text-[15px] leading-relaxed text-gris-600">
+                  <span className="pt-1.5 text-base leading-relaxed text-gris-600">
                     {paso}
                   </span>
                 </li>

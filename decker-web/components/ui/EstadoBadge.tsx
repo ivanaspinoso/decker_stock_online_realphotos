@@ -20,7 +20,7 @@ export default function EstadoBadge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-sm px-2.5 py-1 text-[10px] font-bold uppercase leading-none tracking-[0.1em] ${ESTILOS[estado]} ${className}`}
+      className={`inline-flex items-center rounded-sm px-2.5 py-1 text-2xs font-medium leading-none tracking-[0.04em] ${ESTILOS[estado]} ${className}`}
     >
       {estado}
     </span>

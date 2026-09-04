@@ -248,3 +248,38 @@ export function IconoMenu(props: Props) {
     </Base>
   );
 }
+
+/**
+ * Favorito. Es el único ícono del set que se rellena: el estado "guardada" se
+ * lee de un vistazo por el relleno, no por el color, así que también funciona
+ * para quien no distingue el rojo del gris.
+ */
+export function IconoCorazon({ relleno = false, ...props }: Props & { relleno?: boolean }) {
+  return (
+    <Base fill={relleno ? 'currentColor' : 'none'} {...props}>
+      <path d="M12 20.5 4.2 12.9a4.6 4.6 0 0 1 0-6.6 4.8 4.8 0 0 1 6.7 0l1.1 1.1 1.1-1.1a4.8 4.8 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6Z" />
+    </Base>
+  );
+}
+
+/** Compartir. Tres nodos unidos: se lee como "mandar a otro lado". */
+export function IconoCompartir(props: Props) {
+  return (
+    <Base {...props}>
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4" />
+    </Base>
+  );
+}
+
+/** Enlace copiado: confirmación del respaldo de compartir en escritorio. */
+export function IconoEnlace(props: Props) {
+  return (
+    <Base {...props}>
+      <path d="M10 13a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" />
+      <path d="M14 11a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5L12.5 17.5" />
+    </Base>
+  );
+}

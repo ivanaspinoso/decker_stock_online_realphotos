@@ -17,7 +17,7 @@ export default function Footer() {
             height={135}
             className="h-14 w-auto"
           />
-          <p className="mt-5 font-display text-2xl font-semibold leading-tight tracking-[-0.01em] text-white">
+          <p className="mt-5 font-display text-2xl font-extrabold leading-tight tracking-[-0.01em] text-white">
             Nuestro motor es el trabajo
           </p>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-gris-400">
@@ -49,7 +49,7 @@ export default function Footer() {
           <ul className="mt-5 grid gap-5 sm:grid-cols-2">
             {SUCURSALES.map((sucursal) => (
               <li key={sucursal.id} className="text-sm">
-                <p className="font-semibold text-white">{sucursal.nombre}</p>
+                <p className="font-medium text-white">{sucursal.nombre}</p>
                 <p className="mt-0.5 text-gris-400">{sucursal.direccion}</p>
                 <a
                   href={linkWhatsapp(

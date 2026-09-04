@@ -1,8 +1,8 @@
-import Image from 'next/image';
+import FotoUnidad from '@/components/unidades/FotoUnidad';
 import Link from 'next/link';
 import EstadoBadge from '@/components/ui/EstadoBadge';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
-import { formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
+import { esCifra, formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
 
@@ -16,7 +16,7 @@ import type { Unidad } from '@/lib/types';
 export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
   return (
     <>
-      <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-gris-400 lg:hidden">
+      <p className="rotulo-dato mb-3 block lg:hidden">
         Deslizá la tabla para ver año, km y financiación →
       </p>
       {/* El encabezado va `top-0` y no `top-20`: `overflow-x-auto` convierte a
@@ -28,7 +28,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
           Un encabezado que acompañe el scroll de la página exigiría sacar el
           contenedor de scroll, y sin él la tabla se desborda de la tarjeta en
           vez de scrollear. */}
-      <div className="overflow-x-auto rounded-md bg-white shadow-tarjeta">
+      <div className="overflow-x-auto rounded-md bg-white shadow-nivel-1">
         <table className="w-full min-w-[880px] border-collapse text-left">
           <caption className="sr-only">
             Listado de unidades con sucursal, año, kilómetros, financiación y estado
@@ -50,7 +50,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                 <th
                   key={col.texto}
                   scope="col"
-                  className={`px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] ${col.clase}`}
+                  className={`px-4 py-4 text-2xs font-medium tracking-[0.05em] ${col.clase}`}
                 >
                   {col.texto}
                 </th>
@@ -61,46 +61,72 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
             {unidades.map((unidad) => (
               <tr
                 key={unidad.slug}
-                className="border-t border-gris-200 transition-colors hover:bg-gris-50"
+                className="border-t border-gris-200 transition-colors duration-rapido hover:bg-gris-50"
               >
-                <th scope="row" className="px-3 py-3 font-normal">
+                <th scope="row" className="px-4 py-4 font-normal">
                   <div className="flex items-center gap-3">
-                    <div className="relative hidden h-11 w-16 shrink-0 overflow-hidden rounded-sm bg-gris-100 sm:block">
-                      <Image src={unidad.imagen} alt="" fill sizes="64px" className="object-cover" />
-                    </div>
+                    {/* Mismo 4:3 y mismo esqueleto de carga que la tarjeta y la
+                        galería: la miniatura de la tabla es la misma foto en
+                        chico, no otro recorte. */}
+                    <FotoUnidad
+                      src={unidad.imagen}
+                      alt=""
+                      sizes="64px"
+                      className="hidden w-16 shrink-0 rounded-sm sm:block"
+                    />
                     <div className="min-w-0">
                       <Link
                         href={`/unidad/${unidad.slug}`}
-                        className="block truncate text-[14px] font-semibold text-negro hover:text-rojo"
+                        className="block truncate text-sm font-medium text-negro hover:text-rojo"
                       >
                         {unidad.nombre}
                       </Link>
-                      <span className="text-[11px] text-gris-400">{unidad.tipo}</span>
+                      <span className="text-2xs text-gris-500">{unidad.tipo}</span>
                     </div>
                   </div>
                 </th>
-                <td className="px-3 py-3 text-sm text-gris-600">
+                <td className="px-4 py-4 text-sm text-gris-600">
                   {nombreDeSucursal(unidad.sucursalId)}
                 </td>
-                <td className="dato px-3 py-3 text-right text-sm text-negro">
+                {/* "Consultar" cuando el año no está cargado: ahí no hay
+                    cifra que alinear. */}
+                <td
+                  className={`px-4 py-4 text-right text-sm text-negro ${
+                    esCifra(formatearAnio(unidad.anio)) ? 'dato' : ''
+                  }`}
+                >
                   {formatearAnio(unidad.anio)}
                 </td>
-                <td className="dato px-3 py-3 text-right text-sm text-gris-600">
-                  {tieneKilometraje(unidad.tipo) ? formatearKm(unidad.km) : (unidad.potencia ?? '—')}
-                </td>
+                {/* La columna alterna cifra y palabra según el tipo: un camión
+                    trae kilómetros, un semi trae su configuración. El ancho fijo
+                    se decide por el valor, no por la columna. */}
+                {(() => {
+                  const valor = tieneKilometraje(unidad.tipo)
+                    ? formatearKm(unidad.km)
+                    : (unidad.potencia ?? '—');
+                  return (
+                    <td
+                      className={`px-4 py-4 text-right text-sm text-gris-600 ${
+                        esCifra(valor) ? 'dato' : ''
+                      }`}
+                    >
+                      {valor}
+                    </td>
+                  );
+                })()}
                 {/* Sin `dato`: la monoespaciada está reservada para datos
                     numéricos. Esto es un estado, no una cifra. */}
-                <td className="px-3 py-3 text-right text-sm font-semibold text-negro">
+                <td className="px-4 py-4 text-right text-sm font-medium text-negro">
                   {unidad.financiacion}
                 </td>
-                <td className="px-3 py-3">
+                <td className="px-4 py-4">
                   <EstadoBadge estado={unidad.estado} />
                 </td>
-                <td className="px-3 py-3">
-                  <div className="flex justify-end gap-1.5">
+                <td className="px-4 py-4">
+                  <div className="flex justify-end gap-2">
                     <Link
                       href={`/unidad/${unidad.slug}`}
-                      className="inline-flex h-8 items-center rounded-sm bg-gris-100 px-3 text-[12px] font-semibold text-negro transition-colors hover:bg-gris-200"
+                      className="inline-flex h-11 items-center rounded-sm bg-gris-100 px-3 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
                     >
                       Ficha
                     </Link>
@@ -112,7 +138,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                       href={linkConsultaUnidad(unidad)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-sm bg-rojo text-white transition-colors hover:bg-rojo-700"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-sm bg-rojo text-white transition-colors duration-rapido hover:bg-rojo-700"
                       aria-label={`Consultar por ${unidad.nombre} por WhatsApp`}
                       title="Consultar por WhatsApp"
                     >
