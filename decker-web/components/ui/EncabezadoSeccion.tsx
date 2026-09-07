@@ -21,7 +21,10 @@ export default function EncabezadoSeccion({
   return (
     <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
-        <p className={`etiqueta ${oscuro ? 'text-amarillo' : 'text-rojo'}`}>{etiqueta}</p>
+        {/* El MISMO amarillo en los dos casos, en dos escalones distintos: plano
+            sobre la superficie oscura (10.4:1) y oro oscuro sobre la clara,
+            donde el plano daría 1.6:1 y desaparecería. */}
+        <p className={`etiqueta ${oscuro ? 'text-amarillo' : 'text-rojo-800'}`}>{etiqueta}</p>
         <h2 className={`titulo-seccion mt-3 ${oscuro ? 'text-white' : 'text-negro'}`}>
           {titulo}
         </h2>

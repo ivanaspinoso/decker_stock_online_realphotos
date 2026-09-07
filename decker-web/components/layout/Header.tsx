@@ -182,7 +182,7 @@ export default function Header() {
               href={linkConsultaGeneral()}
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-4 inline-flex h-11 items-center gap-2 rounded bg-rojo px-6 text-sm font-medium text-white shadow-[0_2px_12px_rgba(214,0,28,.45)] transition-colors hover:bg-rojo-700"
+              className="ml-4 inline-flex h-11 items-center gap-2 rounded bg-rojo px-6 text-sm font-medium text-negro shadow-[0_2px_12px_rgba(254,199,0,.45)] transition-colors hover:bg-rojo-700"
             >
               <IconoWhatsapp className="h-4 w-4" />
               Consultar
@@ -291,7 +291,7 @@ export default function Header() {
               href={linkConsultaGeneral()}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-white"
+              className="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-negro"
             >
               <IconoWhatsapp className="h-4 w-4" />
               Consultar por WhatsApp

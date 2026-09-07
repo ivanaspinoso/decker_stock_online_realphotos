@@ -53,7 +53,7 @@ export default function CtaDecker() {
               href={linkConsultaGeneral()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-[52px] items-center justify-center gap-2.5 rounded bg-rojo px-7 text-base font-medium text-white transition-colors hover:bg-rojo-700"
+              className="inline-flex h-[52px] items-center justify-center gap-2.5 rounded bg-rojo px-7 text-base font-medium text-negro transition-colors hover:bg-rojo-700"
             >
               <IconoWhatsapp className="h-5 w-5" />
               Hablar con un asesor

@@ -200,7 +200,7 @@ export default function CatalogoCliente({
             <button
               type="button"
               onClick={limpiar}
-              className="mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
+              className="mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
             >
               Limpiar filtros
             </button>

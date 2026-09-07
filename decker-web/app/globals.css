@@ -21,9 +21,16 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Foco visible en todo elemento interactivo. No se remueve en ningún lado. */
+  /**
+   * Foco visible en todo elemento interactivo. No se remueve en ningún lado.
+   *
+   * El anillo es AZUL sobre fondo claro y amarillo sobre fondo oscuro, en vez
+   * del acento en los dos casos. El amarillo de marca sobre blanco da 1.6:1 y
+   * WCAG 2.4.11 pide 3:1 para el indicador de foco: un anillo que no se ve no
+   * es un indicador. El azul da 16.4:1.
+   */
   :focus-visible {
-    @apply outline-none ring-2 ring-rojo ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-negro ring-offset-2 ring-offset-white;
   }
 
   .oscuro :focus-visible {

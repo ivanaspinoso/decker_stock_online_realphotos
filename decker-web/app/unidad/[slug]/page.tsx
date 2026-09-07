@@ -226,7 +226,7 @@ export default async function FichaUnidad({ params }: Props) {
               href={linkConsultaUnidad(unidad)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-base font-medium text-white transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
+              className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-base font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
             >
               <IconoWhatsapp className="h-5 w-5" />
               Consultar por WhatsApp
@@ -250,7 +250,7 @@ export default async function FichaUnidad({ params }: Props) {
             <div className="mt-6 rounded-lg bg-white p-8 shadow-nivel-1">
               <p className="rotulo-dato">Disponible en</p>
               <div className="mt-3 flex items-start gap-3">
-                <IconoPin className="mt-0.5 h-5 w-5 shrink-0 text-rojo" />
+                <IconoPin className="mt-0.5 h-5 w-5 shrink-0 text-rojo-800" />
                 <div>
                   <p className="text-md font-medium leading-tight">{sucursal.nombre}</p>
                   <p className="mt-1 text-sm text-gris-600">{sucursal.direccion}</p>

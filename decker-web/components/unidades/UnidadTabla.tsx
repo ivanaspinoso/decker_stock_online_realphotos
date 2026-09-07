@@ -77,7 +77,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                     <div className="min-w-0">
                       <Link
                         href={`/unidad/${unidad.slug}`}
-                        className="block truncate text-sm font-medium text-negro hover:text-rojo"
+                        className="block truncate text-sm font-medium text-negro hover:text-rojo-800"
                       >
                         {unidad.nombre}
                       </Link>
@@ -138,7 +138,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                       href={linkConsultaUnidad(unidad)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-sm bg-rojo text-white transition-colors duration-rapido hover:bg-rojo-700"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-sm bg-rojo text-negro transition-colors duration-rapido hover:bg-rojo-700"
                       aria-label={`Consultar por ${unidad.nombre} por WhatsApp`}
                       title="Consultar por WhatsApp"
                     >

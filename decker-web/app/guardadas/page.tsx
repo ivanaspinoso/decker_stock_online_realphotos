@@ -25,7 +25,7 @@ export default async function Guardadas() {
   return (
     <section className="seccion pt-28 sm:pt-32">
       <div className="contenedor">
-        <p className="etiqueta text-rojo">Tu selección</p>
+        <p className="etiqueta text-rojo-800">Tu selección</p>
         <h1 className="titulo-seccion mt-3">Unidades guardadas</h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-gris-600">
           Se guardan en este navegador, sin cuenta y sin dejar ningún dato. Si

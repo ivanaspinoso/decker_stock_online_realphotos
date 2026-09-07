@@ -307,7 +307,7 @@ export default function CalculadoraFinanciacion({
                 href={linkConsultaFinanciacion(resultado, unidad)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
+                className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar con un asesor

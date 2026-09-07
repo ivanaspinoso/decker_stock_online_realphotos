@@ -80,7 +80,7 @@ export default function CompraSegura() {
              * misma altura, y una línea de 1px agrupa sin encuadrar ni teñir.
              */
             <article key={pilar.titulo} className="border-t border-gris-200 pt-6">
-              <pilar.Icono className="h-8 w-8 text-rojo" />
+              <pilar.Icono className="h-8 w-8 text-rojo-800" />
               <h3 className="titulo-tarjeta mt-5 text-negro">
                 {pilar.titulo}
               </h3>

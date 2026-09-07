@@ -112,7 +112,7 @@ export default function UnidadCard({
         <h3 className="titulo-tarjeta mt-2 text-negro">
           <Link
             href={`/unidad/${unidad.slug}`}
-            className="after:absolute after:inset-0 group-hover:text-rojo"
+            className="after:absolute after:inset-0 group-hover:text-rojo-800"
           >
             {unidad.nombre}
           </Link>
@@ -194,7 +194,7 @@ export default function UnidadCard({
               href={linkConsultaUnidad(unidad)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-rojo text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-rojo text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
               aria-label={`Consultar por ${unidad.nombre} por WhatsApp`}
             >
               <IconoWhatsapp className="h-4 w-4" />
