@@ -83,12 +83,18 @@ export default async function CatalogoPage({ searchParams }: Props) {
           <h1 className="titulo-expresivo mt-3 text-4xl text-white sm:text-5xl">
             Stock online
           </h1>
-          {/* gris-200 y no gris-400: sobre la foto, el gris medio no llega a
+          {/* Sin la cifra del stock total. Al catálogo se entra filtrado desde
+              el subcatálogo de la home, y un titular que anunciaba "36 unidades
+              publicadas" arriba de una lista de 7 se leía como que el filtro no
+              se había aplicado. La cuenta viva —"7 unidades de 36 publicadas"—
+              la lleva el catálogo, que es lo único que puede mantenerla al día
+              cuando el filtro cambia sin recargar.
+
+              gris-200 y no gris-400: sobre la foto, el gris medio no llega a
               4.5:1 contra los techos blancos de los camiones. */}
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-gris-200">
-            {unidades.length} unidades publicadas entre las cinco agencias. Filtrá por tipo,
-            marca, año, precio, sucursal o estado, y cambiá a vista lista para comparar varias
-            de un vistazo.
+            El stock de las cinco agencias. Filtrá por tipo, marca, año, precio, sucursal o
+            estado, y cambiá a vista lista para comparar varias de un vistazo.
           </p>
         </div>
       </div>
