@@ -57,7 +57,7 @@ export const SUCURSALES: Sucursal[] = [
     localidad: 'Comodoro Rivadavia',
     provincia: 'Chubut',
     coordenadas: { lat: -45.85, lng: -67.48 },
-    asesor: { nombre: 'Asesor Comodoro', whatsapp: '5492974433415' },
+    asesor: { nombre: 'Asesor Comodoro', whatsapp: '5492974439691' },
   },
 ];
 

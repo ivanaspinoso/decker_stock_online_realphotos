@@ -161,3 +161,24 @@ export interface OpcionesCatalogo {
   precioMin: number;
   precioMax: number;
 }
+
+/**
+ * Accesos del subcatálogo de la home.
+ *
+ * NO es una taxonomía: es la lista de puertas de entrada al stock, y por eso
+ * mezcla ejes a propósito. Se entra por estado (0 km, usados), por tipo (semis,
+ * bateas) o por marca, porque así es como se pregunta por un camión: nadie
+ * empieza eligiendo una dimensión y después la otra.
+ *
+ * `livianos` va aparte y sin abrir —ni por marca ni por estado—: el que busca
+ * una camioneta o un utilitario mira lo que hay, no filtra.
+ */
+export interface Subcatalogo {
+  ceroKm: number;
+  usados: number;
+  semis: number;
+  bateas: number;
+  /** Sólo marcas con camiones en stock. Las de semis y bateas no entran acá. */
+  marcasDeCamiones: { marca: string; total: number }[];
+  livianos: { tipo: TipoUnidad; total: number }[];
+}

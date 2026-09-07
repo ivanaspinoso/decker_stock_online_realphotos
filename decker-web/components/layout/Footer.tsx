@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SUCURSALES } from '@/lib/data/sucursales';
 import { linkWhatsapp } from '@/lib/whatsapp';
+import { formatearWhatsapp } from '@/lib/format';
 
 export default function Footer() {
   const anio = new Date().getFullYear();
@@ -60,7 +61,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="dato mt-1.5 inline-block text-xs text-amarillo transition-opacity hover:opacity-70"
                 >
-                  +{sucursal.asesor.whatsapp}
+                  {formatearWhatsapp(sucursal.asesor.whatsapp)}
                 </a>
               </li>
             ))}

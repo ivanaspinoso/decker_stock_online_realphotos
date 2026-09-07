@@ -5,6 +5,7 @@ import Link from 'next/link';
 import EncabezadoSeccion from '@/components/ui/EncabezadoSeccion';
 import { IconoFlecha, IconoPin, IconoWhatsapp } from '@/components/ui/Iconos';
 import { linkWhatsapp } from '@/lib/whatsapp';
+import { formatearWhatsapp } from '@/lib/format';
 import type { IdSucursal, Sucursal } from '@/lib/types';
 
 /**
@@ -137,7 +138,7 @@ export default function Agencias({
                   WhatsApp
                 </dt>
                 <dd className="dato mt-1 text-base font-medium leading-none">
-                  +{sucursal.asesor.whatsapp}
+                  {formatearWhatsapp(sucursal.asesor.whatsapp)}
                 </dd>
               </div>
             </dl>

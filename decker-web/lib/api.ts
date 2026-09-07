@@ -7,6 +7,7 @@ import type {
   IdSucursal,
   OpcionesCatalogo,
   ParametrosFinanciacion,
+  Subcatalogo,
   Sucursal,
   SugerenciaUnidad,
   TipoUnidad,
@@ -119,17 +120,39 @@ export async function getOpcionesCatalogo(): Promise<OpcionesCatalogo> {
 }
 
 /**
- * Cuántas unidades hay de cada tipo. Alimenta la grilla de acceso rápido de la
- * home: el usuario entra directo al catálogo ya filtrado por tipo.
+ * Los accesos del subcatálogo de la home, contados sobre el stock real.
+ *
+ * Ninguno de estos números está escrito a mano: si mañana entra un semi o se
+ * vende el último Iveco, el acceso aparece o desaparece solo. Una puerta que
+ * promete stock y lleva a una lista vacía es peor que no tenerla.
+ *
+ * Las marcas salen SÓLO de los camiones. En el stock, Randon aparece en bateas
+ * y semis: si la lista se armara con todo el catálogo, "Marcas de camiones"
+ * ofrecería una marca de acoplados.
  */
-export async function getConteoPorTipo(): Promise<{ tipo: TipoUnidad; total: number }[]> {
-  const conteo = new Map<TipoUnidad, number>();
-  for (const unidad of UNIDADES) {
-    conteo.set(unidad.tipo, (conteo.get(unidad.tipo) ?? 0) + 1);
+export async function getSubcatalogo(): Promise<Subcatalogo> {
+  const porTipo = (tipo: TipoUnidad) => UNIDADES.filter((u) => u.tipo === tipo).length;
+
+  const porMarca = new Map<string, number>();
+  for (const camion of UNIDADES.filter((u) => u.tipo === 'Camión')) {
+    porMarca.set(camion.marca, (porMarca.get(camion.marca) ?? 0) + 1);
   }
-  return [...conteo.entries()]
-    .map(([tipo, total]) => ({ tipo, total }))
-    .sort((a, b) => b.total - a.total);
+
+  return {
+    ceroKm: UNIDADES.filter((u) => u.estado === '0 km').length,
+    usados: UNIDADES.filter((u) => u.estado === 'Usado seleccionado').length,
+    semis: porTipo('Semi'),
+    bateas: porTipo('Batea'),
+    marcasDeCamiones: [...porMarca.entries()]
+      .map(([marca, total]) => ({ marca, total }))
+      // Por cantidad y no alfabético: la marca con más stock es la que más
+      // chances tiene de resolver la búsqueda, y va primera.
+      .sort((a, b) => b.total - a.total || a.marca.localeCompare(b.marca, 'es')),
+    livianos: (['Auto/Camioneta', 'Utilitario'] as const).map((tipo) => ({
+      tipo,
+      total: porTipo(tipo),
+    })),
+  };
 }
 
 /** Cuántas unidades hay en cada agencia. Se muestra en el selector de agencias. */

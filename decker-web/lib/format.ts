@@ -58,3 +58,25 @@ export function tieneKilometraje(tipo: string): boolean {
 export function esCifra(valor: string): boolean {
   return /^\d/.test(valor.trim());
 }
+
+/**
+ * Número de WhatsApp para MOSTRAR.
+ *
+ * Los datos guardan el número como lo pide la API de WhatsApp —internacional,
+ * sin `+` ni separadores—, y hasta ahora la pantalla mostraba esa misma tira:
+ * `+5492974439691`. Trece dígitos corridos no se leen ni se dictan por
+ * teléfono. Acá se le devuelve la forma en que la agencia lo escribe.
+ *
+ * Sólo se parte el caso que existe en el stock: móvil argentino, `549` más
+ * característica de cuatro dígitos más seis del abonado. Cualquier otra cosa
+ * —un fijo, una característica de dos o tres dígitos, un número de otro país—
+ * se devuelve con el `+` y nada más: es preferible un número sin cortar que uno
+ * cortado en el lugar equivocado.
+ */
+export function formatearWhatsapp(numero: string): string {
+  const digitos = numero.replace(/\D/g, '');
+  const movilArgentino = /^549(\d{4})(\d{2})(\d{4})$/.exec(digitos);
+  if (!movilArgentino) return `+${digitos}`;
+  const [, caracteristica, bloque, resto] = movilArgentino;
+  return `+54 9 ${caracteristica} ${bloque}-${resto}`;
+}

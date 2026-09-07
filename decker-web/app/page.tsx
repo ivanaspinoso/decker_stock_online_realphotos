@@ -3,6 +3,7 @@ import CompraSegura from '@/components/home/CompraSegura';
 import Agencias from '@/components/home/Agencias';
 import CtaDecker from '@/components/home/CtaDecker';
 import DestacadasCliente from '@/components/home/DestacadasCliente';
+import Subcatalogo from '@/components/home/Subcatalogo';
 import CalculadoraFinanciacion from '@/components/financiacion/CalculadoraFinanciacion';
 import FormCotizarUsado from '@/components/formularios/FormCotizarUsado';
 import EncabezadoSeccion from '@/components/ui/EncabezadoSeccion';
@@ -10,6 +11,7 @@ import {
   getConteoPorSucursal,
   getIndiceBuscador,
   getParametrosFinanciacion,
+  getSubcatalogo,
   getSucursales,
   getUnidadesDestacadas,
 } from '@/lib/api';
@@ -29,15 +31,23 @@ interface Props {
 
 /** Los textos de las secciones son los del sitio original de Decker. */
 export default async function Home({ searchParams }: Props) {
-  const [parametrosUrl, destacadas, sucursales, sugerencias, parametros, conteoPorSucursal] =
-    await Promise.all([
-      searchParams,
-      getUnidadesDestacadas(),
-      getSucursales(),
-      getIndiceBuscador(),
-      getParametrosFinanciacion(),
-      getConteoPorSucursal(),
-    ]);
+  const [
+    parametrosUrl,
+    destacadas,
+    sucursales,
+    sugerencias,
+    parametros,
+    conteoPorSucursal,
+    subcatalogo,
+  ] = await Promise.all([
+    searchParams,
+    getUnidadesDestacadas(),
+    getSucursales(),
+    getIndiceBuscador(),
+    getParametrosFinanciacion(),
+    getConteoPorSucursal(),
+    getSubcatalogo(),
+  ]);
 
   // Filtros que pueden venir por URL (un link compartido, o la vuelta desde el
   // catálogo). Son el punto de partida de la sección de destacadas, que de ahí
@@ -58,6 +68,12 @@ export default async function Home({ searchParams }: Props) {
         totalUnidades={sugerencias.length}
         busquedaInicial={filtros.busqueda}
       />
+
+      {/* El subcatálogo va pegado al hero y ANTES de las destacadas: el hero
+          ofrece buscar por texto, y esto es la otra mitad de lo mismo —entrar
+          por lo que uno ya sabe que busca— para el que no tiene una palabra
+          para escribir. Las destacadas son vidriera y van después. */}
+      <Subcatalogo datos={subcatalogo} />
 
       <section id="destacadas" className="seccion scroll-mt-24">
         <div className="contenedor">
