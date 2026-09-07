@@ -17,27 +17,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /**
-         * Superficies oscuras: nav, hero, footer, simulador.
-         *
-         * Ya no es un gris casi negro sino AZUL DE MARCA. La rampa se construyó
-         * desde #002040 —hsl(210, 100%, 12.5%)— replicando los saltos de
-         * luminosidad que tenía la vieja, y aflojando la saturación a medida
-         * que sube para que los escalones claros no queden eléctricos.
-         *
-         * El nombre sigue siendo `negro` porque es el ROL —la superficie oscura
-         * del sitio— y renombrarlo tocaría un centenar de clases sin mover un
-         * píxel. Lo que hay adentro es azul.
-         *
-         * Blanco encima: 16.4:1 en el 950, 12.7:1 en el 800 (campos oscuros).
-         */
+        // Superficies oscuras: nav, hero, footer.
         negro: {
-          DEFAULT: '#002040',
-          950: '#002040',
-          900: '#02294F',
-          800: '#07335F',
-          700: '#103E6B',
-          600: '#1F4D7B',
+          DEFAULT: '#0B0B0C',
+          950: '#0B0B0C',
+          900: '#121316',
+          800: '#1A1C20',
+          700: '#24262B',
+          600: '#32353B',
         },
         // Neutros de contenido. Menos escalones, más contraste entre ellos.
         gris: {
@@ -50,44 +37,17 @@ const config: Config = {
           600: '#4E5259',
           700: '#33363B',
         },
-        /**
-         * Acento de marca. UN amarillo, #FEC700, donde antes había dos colores
-         * —el rojo del CTA y el amarillo de señalética—.
-         *
-         * `rojo` y `amarillo` son el MISMO color: los dos nombres se conservan
-         * porque están escritos en ~60 clases y renombrarlos no cambiaría nada
-         * en pantalla. El que importa es el escalón, no el nombre.
-         *
-         * Un amarillo no se comporta como un rojo, y por eso la escala tiene un
-         * escalón más:
-         *
-         * - DEFAULT / 600 (#FEC700) — SUPERFICIE. Va de fondo, con texto
-         *   `negro` encima: 10.4:1. Blanco encima da 1.6:1, así que el texto
-         *   sobre amarillo NUNCA es blanco. También sirve como texto sobre las
-         *   superficies oscuras, donde da esos mismos 10.4:1.
-         * - 700 (#DFAF00) — el hover de esa superficie. Un escalón, no un salto.
-         * - 800 (#806400) — TEXTO Y TRAZO sobre fondo claro, que es lo que el
-         *   amarillo plano no puede hacer: sobre blanco da 1.6:1 y desaparece.
-         *   Este oro oscuro mantiene el tono y pasa sobre TODAS las superficies
-         *   claras del sitio: 5.6:1 en blanco, 5.1:1 en el lienzo gris y 4.6:1
-         *   en gris-200. Se eligio contra el lienzo y no contra el blanco: un
-         *   oro calculado solo sobre blanco daba 4.3:1 sobre el gris y fallaba
-         *   justo en las volantas, que viven sobre el lienzo.
-         * - 50 (#FEF9E6) — fondo tenue de badge.
-         */
         rojo: {
-          DEFAULT: '#FEC700',
-          600: '#FEC700',
-          700: '#DFAF00',
-          800: '#806400',
-          50: '#FEF9E6',
+          DEFAULT: '#D6001C',
+          600: '#D6001C',
+          700: '#B00017',
+          50: '#FFF1F2',
         },
+        // Señalética industrial. Reservado para 0 km.
         amarillo: {
-          DEFAULT: '#FEC700',
-          600: '#DFAF00',
-          700: '#DFAF00',
-          800: '#806400',
-          50: '#FEF9E6',
+          DEFAULT: '#FFC400',
+          600: '#E0AC00',
+          50: '#FFF8E1',
         },
       },
       /**

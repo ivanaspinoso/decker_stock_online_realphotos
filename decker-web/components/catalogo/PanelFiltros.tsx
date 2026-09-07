@@ -54,7 +54,7 @@ export default function PanelFiltros({
             type="button"
             onClick={onLimpiar}
             disabled={!hayFiltros}
-            className="-my-1 py-1 text-sm font-medium text-rojo-800 transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
+            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
           >
             Limpiar
           </button>
@@ -161,7 +161,7 @@ export default function PanelFiltros({
               // h-5 y no h-4: 16px es un blanco chico para el pulgar. El
               // `<label>` que lo envuelve ya hace clickeable todo el texto, así
               // que el área real es grande; esto es para quien apunta a la caja.
-              className="h-5 w-5 rounded-sm accent-negro"
+              className="h-5 w-5 rounded-sm accent-rojo"
               checked={filtros.financiacion === 'Disponible'}
               onChange={(evento) =>
                 onCambio({ financiacion: evento.target.checked ? 'Disponible' : '' })

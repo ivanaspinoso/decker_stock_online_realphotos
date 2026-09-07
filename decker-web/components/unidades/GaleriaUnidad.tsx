@@ -67,7 +67,7 @@ export default function GaleriaUnidad({
                  elegida tiene que verse elegida sola. */
               className={`relative rounded-md transition-opacity duration-rapido ease-suave ${
                 indice === activa
-                  ? 'ring-2 ring-negro ring-offset-2'
+                  ? 'ring-2 ring-rojo ring-offset-2'
                   : 'opacity-70 hover:opacity-100'
               }`}
             >

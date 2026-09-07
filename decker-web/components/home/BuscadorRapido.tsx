@@ -177,7 +177,7 @@ export default function BuscadorRapido({
         <span className={`centrado-optico flex-1 truncate text-base ${texto ? 'text-negro' : 'text-gris-500'}`}>
           {texto || 'Buscá por marca o modelo'}
         </span>
-        <span className="centrado-optico inline-flex h-10 shrink-0 items-center rounded bg-rojo px-4 text-sm font-medium text-negro transition-colors group-hover:bg-rojo-700">
+        <span className="centrado-optico inline-flex h-10 shrink-0 items-center rounded bg-rojo px-4 text-sm font-medium text-white transition-colors group-hover:bg-rojo-700">
           Buscar
         </span>
       </button>
@@ -202,7 +202,7 @@ export default function BuscadorRapido({
               className="animate-entrar-panel relative flex max-h-[84vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-nivel-3"
             >
               <div className="flex items-center justify-between gap-4 border-b border-gris-200 px-5 pt-4">
-                <p id={`${id}-titulo`} className="etiqueta pb-4 text-rojo-800">
+                <p id={`${id}-titulo`} className="etiqueta pb-4 text-rojo">
                   Encontrá la unidad ideal
                 </p>
                 <button
@@ -316,7 +316,7 @@ export default function BuscadorRapido({
                         setTexto('');
                         campo.current?.focus();
                       }}
-                      className="ml-3 font-medium text-rojo-800 transition-opacity hover:opacity-70"
+                      className="ml-3 font-medium text-rojo transition-opacity hover:opacity-70"
                     >
                       Limpiar
                     </button>
@@ -326,7 +326,7 @@ export default function BuscadorRapido({
                 <button
                   type="button"
                   onClick={() => irA(href)}
-                  className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors hover:bg-rojo-700"
+                  className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors hover:bg-rojo-700"
                 >
                   {coincidentes.length > 0 ? `Ver ${coincidentes.length}` : 'Ver stock'}
                 </button>

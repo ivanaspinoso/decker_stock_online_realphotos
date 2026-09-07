@@ -35,7 +35,7 @@ export default function TiposUnidad({
       <div className="contenedor">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="etiqueta text-rojo-800">Buscar por tipo</p>
+            <p className="etiqueta text-rojo">Buscar por tipo</p>
             <h2 className="mt-3 font-display text-2xl font-extrabold leading-none tracking-[-0.01em] sm:text-3xl">
               ¿Qué unidad necesitás?
             </h2>
@@ -53,7 +53,7 @@ export default function TiposUnidad({
                 className="group flex items-center gap-4 rounded-md bg-white p-5 shadow-nivel-1 transition-shadow duration-medio ease-suave hover:shadow-nivel-2"
               >
                 <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-gris-100 transition-colors group-hover:bg-rojo-50">
-                  <Icono className="h-6 w-6 text-negro transition-colors group-hover:text-rojo-800" />
+                  <Icono className="h-6 w-6 text-negro transition-colors group-hover:text-rojo" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <h3 className="titulo-tarjeta text-negro">{tipo}</h3>
@@ -61,7 +61,7 @@ export default function TiposUnidad({
                     {total} {total === 1 ? 'unidad' : 'unidades'}
                   </p>
                 </div>
-                <IconoFlecha className="h-5 w-5 shrink-0 text-gris-300 transition-all duration-medio ease-suave group-hover:translate-x-0.5 group-hover:text-rojo-800" />
+                <IconoFlecha className="h-5 w-5 shrink-0 text-gris-300 transition-all duration-medio ease-suave group-hover:translate-x-0.5 group-hover:text-rojo" />
               </Link>
             );
           })}

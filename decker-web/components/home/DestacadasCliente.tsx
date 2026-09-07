@@ -87,7 +87,7 @@ export default function DestacadasCliente({
             type="button"
             onClick={limpiar}
             disabled={!hayFiltros}
-            className="-my-1 py-1 text-sm font-medium text-rojo-800 transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
+            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
           >
             Limpiar
           </button>

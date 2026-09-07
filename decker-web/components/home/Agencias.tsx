@@ -111,7 +111,7 @@ export default function Agencias({
         >
           <div className="flex flex-col">
             <div className="flex items-start gap-3">
-              <IconoPin className="mt-1 h-6 w-6 shrink-0 text-rojo-800" />
+              <IconoPin className="mt-1 h-6 w-6 shrink-0 text-rojo" />
               <div>
                 <h3 className="font-display text-2xl font-extrabold leading-none tracking-[-0.01em]">
                   {sucursal.nombre}
@@ -153,7 +153,7 @@ export default function Agencias({
                 // `sm:flex-1` y no `flex-1`: en mobile el contenedor es
                 // `flex-col`, y ahí `flex-1` fija la base sobre el eje
                 // vertical, pisando el `h-11` y aplastando el botón a ~22px.
-                className="centrado-optico inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-medium text-negro transition-colors hover:bg-rojo-700 sm:flex-1"
+                className="centrado-optico inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-medium text-white transition-colors hover:bg-rojo-700 sm:flex-1"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar por WhatsApp
@@ -187,7 +187,7 @@ export default function Agencias({
                 href={comoLlegar}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-1.5 text-sm font-medium text-negro hover:text-rojo-800"
+                className="group inline-flex items-center gap-1.5 text-sm font-medium text-negro hover:text-rojo"
               >
                 Cómo llegar
                 <IconoFlecha className="h-4 w-4 transition-transform duration-medio ease-suave group-hover:translate-x-0.5" />

@@ -56,11 +56,11 @@ export default function BotonFavorito({
   const estilos =
     variante === 'sobre-foto'
       ? guardada
-        ? 'corazon-foto text-amarillo hover:text-amarillo-600'
-        : 'corazon-foto text-white hover:text-amarillo'
+        ? 'corazon-foto text-rojo hover:text-rojo-600'
+        : 'corazon-foto text-white hover:text-rojo'
       : guardada
-        ? 'text-rojo-800 hover:text-rojo-800'
-        : 'text-gris-500 hover:text-rojo-800';
+        ? 'text-rojo hover:text-rojo-700'
+        : 'text-gris-500 hover:text-rojo';
 
   /**
    * Guardar no es sólo pintar este corazón: la unidad se va a otro lado de la

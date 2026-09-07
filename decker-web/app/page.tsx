@@ -94,7 +94,7 @@ export default async function Home({ searchParams }: Props) {
       <section id="cotizar" className="seccion scroll-mt-24 bg-white">
         <div className="contenedor grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
           <div>
-            <p className="etiqueta text-rojo-800">Parte de pago</p>
+            <p className="etiqueta text-rojo">Parte de pago</p>
             <h2 className="titulo-seccion mt-3">Entregá tu usado y subite a otra unidad</h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-gris-500">
               Cargá los datos de tu unidad y generá una consulta directa para que el equipo
