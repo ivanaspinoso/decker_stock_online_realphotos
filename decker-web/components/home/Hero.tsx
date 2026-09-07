@@ -106,13 +106,13 @@ export default function Hero({
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/catalogo"
-                className="inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors duration-rapido hover:bg-white/20 hover:ring-white/50"
+                className="centrado-optico inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors duration-rapido hover:bg-white/20 hover:ring-white/50"
               >
                 Explorar unidades
               </Link>
               <Link
                 href="/#cotizar"
-                className="inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors duration-rapido hover:bg-white/20 hover:ring-white/50"
+                className="centrado-optico inline-flex h-12 items-center justify-center rounded bg-white/10 px-6 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-colors duration-rapido hover:bg-white/20 hover:ring-white/50"
               >
                 Parte de pago
               </Link>

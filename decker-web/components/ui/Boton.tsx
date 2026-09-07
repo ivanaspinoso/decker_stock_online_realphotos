@@ -27,7 +27,7 @@ const TAMANOS: Record<Tamano, string> = {
 };
 
 const BASE =
-  'inline-flex select-none items-center justify-center font-medium ' +
+  'centrado-optico inline-flex select-none items-center justify-center font-medium ' +
   'transition-[background-color,box-shadow,transform] duration-rapido ease-suave ' +
   'active:translate-y-px disabled:pointer-events-none disabled:opacity-40';
 

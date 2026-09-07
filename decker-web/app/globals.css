@@ -87,6 +87,33 @@
 }
 
 @layer components {
+  /**
+   * Centrado óptico de la línea de texto dentro de un control.
+   *
+   * Overpass declara un descendente enorme —383 contra los 883 del ascendente,
+   * sobre 1000 de em—, así que el centro de su caja de línea cae 0,1016em por
+   * DEBAJO del medio de la mayúscula. `items-center` centra esa caja, no la
+   * letra: en un botón de 44px el rótulo queda 1,5px alto y el ícono de al
+   * lado —que sí está centrado dentro de su cuadro— parece caído.
+   *
+   * Se baja el contenido medio desfase y se devuelve el ícono a su lugar. En
+   * em y no en píxeles, para que valga igual en un botón de 14px que en uno de
+   * 16. El ícono se corrige con `margin-bottom` y no con `margin-top`: bajo
+   * `align-items: center` lo que se centra es la caja de márgenes, así que
+   * agregar aire ABAJO es lo que lo sube.
+   *
+   * Va en todo control con alto fijo, tenga ícono o no: dos botones lado a
+   * lado, uno con ícono y otro sin, tienen que apoyar el texto en la misma
+   * línea.
+   */
+  .centrado-optico {
+    padding-top: 0.203em;
+  }
+
+  .centrado-optico > svg {
+    margin-bottom: 0.203em;
+  }
+
   /* El padding lateral baja de 8/10 a 6/8 desde `sm`: sumado al ancho útil
      mayor, el contenido gana ~136px a 1440. En mobile se mantiene en 20px, que
      es lo mínimo cómodo para que el texto no toque el borde de la pantalla. */

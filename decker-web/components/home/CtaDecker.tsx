@@ -53,14 +53,14 @@ export default function CtaDecker() {
               href={linkConsultaGeneral()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-[52px] items-center justify-center gap-2.5 rounded bg-rojo px-7 text-base font-medium text-negro transition-colors hover:bg-rojo-700"
+              className="centrado-optico inline-flex h-[52px] items-center justify-center gap-2.5 rounded bg-rojo px-7 text-base font-medium text-negro transition-colors hover:bg-rojo-700"
             >
               <IconoWhatsapp className="h-5 w-5" />
               Hablar con un asesor
             </a>
             <Link
               href="/catalogo"
-              className="inline-flex h-[52px] items-center justify-center rounded px-7 text-base font-medium text-white ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/10 hover:ring-white/50"
+              className="centrado-optico inline-flex h-[52px] items-center justify-center rounded px-7 text-base font-medium text-white ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/10 hover:ring-white/50"
             >
               Ver stock
             </Link>

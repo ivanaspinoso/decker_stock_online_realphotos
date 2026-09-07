@@ -226,14 +226,14 @@ export default async function FichaUnidad({ params }: Props) {
               href={linkConsultaUnidad(unidad)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-base font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
+              className="centrado-optico mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-base font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
             >
               <IconoWhatsapp className="h-5 w-5" />
               Consultar por WhatsApp
             </a>
             <a
               href="#financiar-unidad"
-              className="mt-2 inline-flex h-12 w-full items-center justify-center rounded bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+              className="centrado-optico mt-2 inline-flex h-12 w-full items-center justify-center rounded bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
             >
               Simular financiación
             </a>
@@ -266,7 +266,7 @@ export default async function FichaUnidad({ params }: Props) {
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+                className="centrado-optico mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
               >
                 <IconoWhatsapp className="h-4 w-4 text-[#1FA855]" />
                 Coordinar visita
@@ -302,7 +302,7 @@ export default async function FichaUnidad({ params }: Props) {
               accion={
                 <Link
                   href="/catalogo"
-                  className="inline-flex h-11 items-center rounded bg-gris-100 px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+                  className="centrado-optico inline-flex h-11 items-center rounded bg-gris-100 px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
                 >
                   Ver stock
                 </Link>

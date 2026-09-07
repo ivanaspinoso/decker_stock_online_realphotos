@@ -56,7 +56,7 @@ export default function GuardadasCliente({ unidades }: { unidades: Unidad[] }) {
         </p>
         <Link
           href="/catalogo"
-          className="mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
+          className="centrado-optico mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
         >
           Ver el stock
         </Link>

@@ -146,7 +146,7 @@ export default function BuscadorRapido({
               type="button"
               aria-pressed={activo}
               onClick={() => alElegir(activo ? '' : valor)}
-              className={`inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors ${
+              className={`centrado-optico inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors ${
                 activo
                   ? 'bg-negro text-white'
                   : 'bg-gris-100 text-negro hover:bg-gris-200'
@@ -174,10 +174,10 @@ export default function BuscadorRapido({
         className="group flex h-14 w-full items-center gap-3 rounded-lg bg-white pl-4 pr-2 text-left shadow-nivel-2 transition-shadow duration-rapido ease-suave hover:shadow-nivel-3"
       >
         <IconoBuscar className="h-5 w-5 shrink-0 text-gris-500" aria-hidden="true" />
-        <span className={`flex-1 truncate text-base ${texto ? 'text-negro' : 'text-gris-500'}`}>
+        <span className={`centrado-optico flex-1 truncate text-base ${texto ? 'text-negro' : 'text-gris-500'}`}>
           {texto || 'Buscá por marca o modelo'}
         </span>
-        <span className="inline-flex h-10 shrink-0 items-center rounded bg-rojo px-4 text-sm font-medium text-negro transition-colors group-hover:bg-rojo-700">
+        <span className="centrado-optico inline-flex h-10 shrink-0 items-center rounded bg-rojo px-4 text-sm font-medium text-negro transition-colors group-hover:bg-rojo-700">
           Buscar
         </span>
       </button>
@@ -326,7 +326,7 @@ export default function BuscadorRapido({
                 <button
                   type="button"
                   onClick={() => irA(href)}
-                  className="inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors hover:bg-rojo-700"
+                  className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors hover:bg-rojo-700"
                 >
                   {coincidentes.length > 0 ? `Ver ${coincidentes.length}` : 'Ver stock'}
                 </button>

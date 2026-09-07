@@ -69,7 +69,7 @@ export default function BotonCompartir({
       <button
         type="button"
         onClick={compartir}
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+        className="centrado-optico inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
       >
         <IconoCompartir className="h-4 w-4" />
         Compartir esta unidad

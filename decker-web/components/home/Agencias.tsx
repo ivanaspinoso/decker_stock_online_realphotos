@@ -85,7 +85,7 @@ export default function Agencias({
               aria-controls={`panel-${item.id}`}
               tabIndex={indice === activa ? 0 : -1}
               onClick={() => setActiva(indice)}
-              className={`inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors duration-rapido ${
+              className={`centrado-optico inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors duration-rapido ${
                 indice === activa
                   ? 'bg-negro text-white'
                   : 'bg-gris-100 text-gris-600 hover:bg-gris-200 hover:text-negro'
@@ -153,14 +153,14 @@ export default function Agencias({
                 // `sm:flex-1` y no `flex-1`: en mobile el contenedor es
                 // `flex-col`, y ahí `flex-1` fija la base sobre el eje
                 // vertical, pisando el `h-11` y aplastando el botón a ~22px.
-                className="inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-medium text-negro transition-colors hover:bg-rojo-700 sm:flex-1"
+                className="centrado-optico inline-flex h-11 items-center justify-center gap-2 rounded bg-rojo px-4 text-sm font-medium text-negro transition-colors hover:bg-rojo-700 sm:flex-1"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar por WhatsApp
               </a>
               <Link
                 href={`/catalogo?sucursal=${sucursal.id}`}
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded bg-gris-100 px-4 text-sm font-medium text-negro transition-colors hover:bg-gris-200 sm:flex-1"
+                className="centrado-optico group inline-flex h-11 items-center justify-center gap-2 rounded bg-gris-100 px-4 text-sm font-medium text-negro transition-colors hover:bg-gris-200 sm:flex-1"
               >
                 Ver su stock
                 <IconoFlecha className="h-4 w-4 transition-transform duration-medio ease-suave group-hover:translate-x-0.5" />

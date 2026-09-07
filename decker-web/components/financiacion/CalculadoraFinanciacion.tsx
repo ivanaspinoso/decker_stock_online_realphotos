@@ -161,7 +161,7 @@ export default function CalculadoraFinanciacion({
                     onClick={() =>
                       setAnticipo(String(Math.round((valorNum * porcentaje) / 100)))
                     }
-                    className={`dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-30 ${
+                    className={`centrado-optico dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-30 ${
                       activo
                         ? 'bg-amarillo text-negro'
                         : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
@@ -210,7 +210,7 @@ export default function CalculadoraFinanciacion({
                     type="button"
                     aria-pressed={activo}
                     onClick={() => setPlazo(cuotas)}
-                    className={`inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido ${
+                    className={`centrado-optico inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido ${
                       activo
                         ? 'bg-white text-negro'
                         : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
@@ -307,7 +307,7 @@ export default function CalculadoraFinanciacion({
                 href={linkConsultaFinanciacion(resultado, unidad)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
+                className="centrado-optico mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
               >
                 <IconoWhatsapp className="h-4 w-4" />
                 Consultar con un asesor

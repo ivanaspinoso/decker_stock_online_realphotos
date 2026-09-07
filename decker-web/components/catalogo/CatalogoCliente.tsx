@@ -172,7 +172,7 @@ export default function CatalogoCliente({
                   type="button"
                   onClick={() => setVista(modo)}
                   aria-pressed={vista === modo}
-                  className={`inline-flex h-10 items-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors duration-rapido ${
+                  className={`centrado-optico inline-flex h-10 items-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors duration-rapido ${
                     vista === modo
                       ? 'bg-white text-negro shadow-nivel-1'
                       : 'text-gris-500 hover:text-negro'
@@ -200,7 +200,7 @@ export default function CatalogoCliente({
             <button
               type="button"
               onClick={limpiar}
-              className="mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
+              className="centrado-optico mt-6 inline-flex h-11 items-center rounded bg-rojo px-6 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-rojo-700"
             >
               Limpiar filtros
             </button>

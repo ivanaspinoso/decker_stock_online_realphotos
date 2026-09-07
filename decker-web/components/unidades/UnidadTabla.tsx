@@ -126,7 +126,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                   <div className="flex justify-end gap-2">
                     <Link
                       href={`/unidad/${unidad.slug}`}
-                      className="inline-flex h-11 items-center rounded-sm bg-gris-100 px-3 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+                      className="centrado-optico inline-flex h-11 items-center rounded-sm bg-gris-100 px-3 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
                     >
                       Ficha
                     </Link>
