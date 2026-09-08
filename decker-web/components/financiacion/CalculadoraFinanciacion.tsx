@@ -28,6 +28,12 @@ import type { ParametrosFinanciacion, Unidad } from '@/lib/types';
  *   "85000000" hay que contarlo con el dedo.
  * - Plazo y anticipo salen de botones y no de un `<select>`: son pocas
  *   opciones, se comparan de un vistazo y se tocan en un gesto.
+ * - Los dos grupos de opciones —anticipo y plazo— comparten tratamiento:
+ *   activo en blanco pleno, inactivo en negro-800. El anticipo iba en
+ *   amarillo y el plazo en blanco, dos colores para dos grupos idénticos a
+ *   diez centímetros uno del otro: se leía como un error. Además el amarillo
+ *   acá tiene otro trabajo —es la señalética de 0 km y la cifra de la cuota—,
+ *   y gastarlo en un chip le sacaba peso al número que importa.
  */
 
 /** Atajos de anticipo, en porcentaje del valor de la unidad. */
@@ -45,16 +51,44 @@ export default function CalculadoraFinanciacion({
   unidad?: Unidad;
 }) {
   const id = useId();
-  const precioInicial = unidad?.precio ?? null;
 
-  const [valor, setValor] = useState<string>(precioInicial ? String(precioInicial) : '');
+  /**
+   * Los campos de importe arrancan VACÍOS y muestran el ejemplo como
+   * placeholder —"85.000.000" en gris—, no como valor cargado.
+   *
+   * Un importe escrito de verdad se lee como un dato de la operación: el
+   * simulador estaría afirmando un precio que nadie eligió, y el visitante
+   * tendría que borrarlo antes de poner el suyo. En gris, el mismo número
+   * enseña el formato y el orden de magnitud sin afirmar nada.
+   *
+   * Desde una ficha con precio sí arranca cargado: ahí el importe no es un
+   * ejemplo, es el precio de esa unidad.
+   */
+  const ejemploValor = parametros.valorEjemplo;
+  const ejemploAnticipo = Math.round(
+    (ejemploValor * parametros.anticipoSugeridoPorcentaje) / 100,
+  );
+
+  const [valor, setValor] = useState<string>(
+    unidad?.precio ? String(unidad.precio) : '',
+  );
   const [anticipo, setAnticipo] = useState<string>(
-    precioInicial
-      ? String(Math.round((precioInicial * parametros.anticipoSugeridoPorcentaje) / 100))
+    unidad?.precio
+      ? String(Math.round((unidad.precio * parametros.anticipoSugeridoPorcentaje) / 100))
       : '',
   );
   const [plazo, setPlazo] = useState<number>(parametros.plazoPorDefecto);
   const [tasa, setTasa] = useState<string>(String(parametros.tasaAnualPorDefecto));
+
+  /**
+   * Al entrar a un campo se selecciona todo lo que tenga.
+   *
+   * Con los campos vacíos no hace nada; sirve cuando ya hay un importe —el
+   * precio de una ficha, o lo que se cargó recién— y hay que reemplazarlo:
+   * se escribe encima en vez de borrar dígito por dígito.
+   */
+  const seleccionarTodo = (evento: React.FocusEvent<HTMLInputElement>) =>
+    evento.target.select();
 
   const valorNum = Number(valor);
   const anticipoNum = Number(anticipo);
@@ -105,9 +139,12 @@ export default function CalculadoraFinanciacion({
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                placeholder="85.000.000"
+                placeholder={conSeparadores(String(ejemploValor))}
                 value={conSeparadores(valor)}
-                onChange={(evento) => setValor(soloDigitos(evento.target.value))}
+                onFocus={seleccionarTodo}
+                onChange={(evento) => {
+                  setValor(soloDigitos(evento.target.value));
+                }}
               />
             </div>
           </div>
@@ -140,9 +177,12 @@ export default function CalculadoraFinanciacion({
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                placeholder="25.000.000"
+                placeholder={conSeparadores(String(ejemploAnticipo))}
                 value={conSeparadores(anticipo)}
-                onChange={(evento) => setAnticipo(soloDigitos(evento.target.value))}
+                onFocus={seleccionarTodo}
+                onChange={(evento) => {
+                  setAnticipo(soloDigitos(evento.target.value));
+                }}
                 aria-describedby={`${id}-anticipo-ayuda`}
               />
             </div>
@@ -163,7 +203,7 @@ export default function CalculadoraFinanciacion({
                     }
                     className={`centrado-optico dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-30 ${
                       activo
-                        ? 'bg-amarillo text-negro'
+                        ? 'bg-white text-negro'
                         : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
                     }`}
                   >
@@ -239,6 +279,7 @@ export default function CalculadoraFinanciacion({
               max={200}
               step={0.5}
               value={tasa}
+              onFocus={seleccionarTodo}
               onChange={(evento) => setTasa(evento.target.value)}
             />
           </div>

@@ -93,15 +93,34 @@ const config: Config = {
        * versalitas de una sola línea, donde 1.5 abriría un renglón que nunca
        * llega a existir.
        *
+       * LA MITAD DE ABAJO DE LA ESCALA SUBIÓ UN PUNTO —11/12/14/16/18 pasaron a
+       * 12/13/15/17/19— y los titulares quedaron donde estaban.
+       *
+       * El que compra un camión para su flota no es el usuario de veintipico
+       * que da por sentado el texto chico: es alguien de cincuenta o sesenta
+       * años leyendo specs en un teléfono, muchas veces afuera y con la vista
+       * cansada. En ese caso 14px no es "denso", es un dato que hay que acercar
+       * la pantalla para leer, y un sitio donde eso pasa se abandona antes de
+       * llegar al botón de WhatsApp.
+       *
+       * Los escalones grandes NO se tocaron a propósito: la jerarquía del sitio
+       * ya funcionaba, y subir el cuerpo sin subir los títulos justamente cierra
+       * la distancia donde sobraba —un párrafo de 17 contra un título de 32 se
+       * sigue leyendo como dos niveles—. Subir todo habría sido agrandar la
+       * página, no hacerla más legible.
+       *
+       * Los interlineados acompañan: `sm` pasó de 22 a 24 para no bajar de 1.5
+       * ahora que el cuerpo es 15, y `xs` de 18 a 20 por lo mismo.
+       *
        * Los títulos traen tracking negativo incorporado —a mayor cuerpo, más
        * cerrado— así no hay que acordarse de agregarlo en cada uso.
        */
       fontSize: {
-        '2xs': ['11px', { lineHeight: '16px' }],
-        xs: ['12px', { lineHeight: '18px' }],
-        sm: ['14px', { lineHeight: '22px' }],
-        base: ['16px', { lineHeight: '24px' }],
-        md: ['18px', { lineHeight: '28px' }],
+        '2xs': ['12px', { lineHeight: '16px' }],
+        xs: ['13px', { lineHeight: '20px' }],
+        sm: ['15px', { lineHeight: '24px' }],
+        base: ['17px', { lineHeight: '26px' }],
+        md: ['19px', { lineHeight: '29px' }],
         lg: ['20px', { lineHeight: '28px' }],
         xl: ['22px', { lineHeight: '30px', letterSpacing: '-0.01em' }],
         '2xl': ['26px', { lineHeight: '32px', letterSpacing: '-0.01em' }],

@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import BotonCompartir from '@/components/unidades/BotonCompartir';
 import BotonFavorito from '@/components/unidades/BotonFavorito';
 import GaleriaUnidad from '@/components/unidades/GaleriaUnidad';
+import Migas from '@/components/ui/Migas';
+import RegistrarVisita from '@/components/unidades/RegistrarVisita';
 import UnidadGrilla from '@/components/unidades/UnidadGrilla';
 import CalculadoraFinanciacion from '@/components/financiacion/CalculadoraFinanciacion';
 import EstadoBadge from '@/components/ui/EstadoBadge';
@@ -16,7 +18,13 @@ import {
   getUnidadPorSlug,
   getUnidadesRelacionadas,
 } from '@/lib/api';
-import { esCifra, formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
+import {
+  esCifra,
+  formatearAnio,
+  formatearKm,
+  formatearPrecio,
+  tieneKilometraje,
+} from '@/lib/format';
 import { linkConsultaUnidad, linkWhatsapp } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
 
@@ -65,32 +73,24 @@ export default async function FichaUnidad({ params }: Props) {
 
   return (
     <>
-      <nav aria-label="Miga de pan">
-        <div className="contenedor flex items-center gap-2 pb-4 pt-24 text-sm text-gris-500">
-          {/* `-my-1 py-1`: los enlaces de la miga medían 20px de alto, abajo de
-              los 24 que pide WCAG 2.5.8. El margen negativo devuelve el espacio,
-              así que crece el área tocable y la fila se ve igual. */}
-          <Link href="/" className="-my-1 py-1 transition-colors hover:text-negro">
-            Inicio
-          </Link>
-          {/* gris-300 sobre el lienzo daba 1.4:1: la barra se veía como un
-              renglón vacío entre los dos enlaces. gris-500 la deja legible sin
-              que compite con el nombre de la unidad, que es lo que manda acá. */}
-          <span aria-hidden="true" className="text-gris-500">
-            /
-          </span>
-          <Link href="/catalogo" className="-my-1 py-1 transition-colors hover:text-negro">
-            Stock
-          </Link>
-          {/* gris-300 sobre el lienzo daba 1.4:1: la barra se veía como un
-              renglón vacío entre los dos enlaces. gris-500 la deja legible sin
-              que compite con el nombre de la unidad, que es lo que manda acá. */}
-          <span aria-hidden="true" className="text-gris-500">
-            /
-          </span>
-          <span className="truncate text-negro">{unidad.nombre}</span>
-        </div>
-      </nav>
+      <RegistrarVisita slug={unidad.slug} />
+
+      {/* Cuatro niveles, con la MARCA en el medio: quien llega por un link
+          compartido cae en una unidad suelta y necesita una salida más corta
+          que "todo el stock". "Volvo" lo lleva a los camiones Volvo, que es
+          el vecindario de lo que estaba mirando. */}
+      <Migas
+        base="https://deckercamiones.com.ar"
+        niveles={[
+          { texto: 'Inicio', href: '/' },
+          { texto: 'Stock', href: '/catalogo' },
+          {
+            texto: unidad.marca,
+            href: `/catalogo?marca=${encodeURIComponent(unidad.marca)}`,
+          },
+          { texto: unidad.nombre },
+        ]}
+      />
 
       {/* Tres bloques con orden distinto por breakpoint.
 
@@ -188,6 +188,29 @@ export default async function FichaUnidad({ params }: Props) {
             <h1 className="titulo-expresivo mt-4 text-3xl sm:text-4xl">
               {unidad.nombre}
             </h1>
+
+            {/**
+             * El precio, arriba de todo lo demás.
+             *
+             * La columna se llamaba "de decisión" y no traía el dato con el que
+             * se decide: quedaban el año, los kilómetros y tres botones. Quien
+             * llega acá desde un link compartido no tenía forma de saber si la
+             * unidad está en su presupuesto sin escribirle a un asesor, que es
+             * exactamente el paso que el sitio existe para ahorrar.
+             *
+             * Sin precio cargado se dice qué hacer —consultarlo— y el botón de
+             * abajo es esa consulta. Un "—" o un precio en cero serían peores
+             * que no mostrar nada: uno parece un error y el otro, una ganga.
+             */}
+            {unidad.precio !== null ? (
+              <p className="dato mt-6 text-4xl font-medium leading-none text-negro">
+                {formatearPrecio(unidad.precio)}
+              </p>
+            ) : (
+              <p className="mt-6 text-md font-medium text-gris-500">
+                Precio a consultar con el asesor
+              </p>
+            )}
 
             <dl className="mt-6 flex gap-8">
               {/* Los dos valores caen en palabra más seguido de lo que parece:

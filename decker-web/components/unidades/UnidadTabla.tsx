@@ -1,8 +1,15 @@
 import FotoUnidad from '@/components/unidades/FotoUnidad';
 import Link from 'next/link';
 import EstadoBadge from '@/components/ui/EstadoBadge';
+import BotonComparar from '@/components/unidades/BotonComparar';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
-import { esCifra, formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
+import {
+  esCifra,
+  formatearAnio,
+  formatearKm,
+  formatearPrecio,
+  tieneKilometraje,
+} from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
 
@@ -17,7 +24,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
   return (
     <>
       <p className="rotulo-dato mb-3 block lg:hidden">
-        Deslizá la tabla para ver año, km y financiación →
+        Deslizá la tabla para ver precio, sucursal, año, km y financiación →
       </p>
       {/* El encabezado va `top-0` y no `top-20`: `overflow-x-auto` convierte a
           este div en contenedor de scroll, así que el `sticky` se mide contra
@@ -28,10 +35,15 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
           Un encabezado que acompañe el scroll de la página exigiría sacar el
           contenedor de scroll, y sin él la tabla se desborda de la tarjeta en
           vez de scrollear. */}
+      {/* 1000px y padding de 12: con la columna de precio sumada y el cuerpo un
+          punto más grande, a 1080 y con padding de 16 la tabla se pasaba del
+          ancho útil de un monitor de 1440 —el sidebar de filtros se lleva 312—
+          y la columna de acciones quedaba fuera de la pantalla. Los 12px por
+          lado son lo que devuelve esos 72 sin apretar las celdas. */}
       <div className="overflow-x-auto rounded-md bg-white shadow-nivel-1">
-        <table className="w-full min-w-[880px] border-collapse text-left">
+        <table className="w-full min-w-[1000px] border-collapse text-left">
           <caption className="sr-only">
-            Listado de unidades con sucursal, año, kilómetros, financiación y estado
+            Listado de unidades con estado, precio, sucursal, año, kilómetros y financiación
           </caption>
           <thead className="sticky top-0 z-10">
             <tr className="bg-negro text-white">
@@ -39,18 +51,29 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                   unidad ("Volvo FM 420", "Batea Randon"). Repetirla costaba
                   ~90px y empujaba la columna de acciones fuera del ancho. */}
               {[
-                { texto: 'Unidad', clase: 'rounded-tl-md' },
+                { texto: 'Comparar', clase: 'rounded-tl-md' },
+                { texto: 'Unidad', clase: '' },
+                // El precio va SEGUNDO, pegado al nombre y antes que todo lo
+                // demás: es la columna con la que se descarta, y en una tabla
+                // que scrollea en horizontal la que se descarta tiene que
+                // entrar en el primer ancho de pantalla.
+                { texto: 'Precio', clase: 'text-right' },
                 { texto: 'Sucursal', clase: '' },
                 { texto: 'Año', clase: 'text-right' },
                 { texto: 'Km / uso', clase: 'text-right' },
                 { texto: 'Financiación', clase: 'text-right' },
-                { texto: 'Estado', clase: '' },
+                // Sin columna "Estado": el badge se mudó adentro de la celda de
+                // la unidad, debajo del nombre. Era una columna entera de 170px
+                // —"Usado seleccionado" no se parte— para un dato que identifica
+                // a la unidad, no que se compare entre filas, y esos 170px eran
+                // los que dejaban la columna de acciones fuera de la pantalla en
+                // un monitor de 1440 con el panel de filtros al costado.
                 { texto: 'Acción', clase: 'rounded-tr-md text-right' },
               ].map((col) => (
                 <th
                   key={col.texto}
                   scope="col"
-                  className={`px-4 py-4 text-2xs font-medium tracking-[0.05em] ${col.clase}`}
+                  className={`px-3 py-4 text-2xs font-medium tracking-[0.05em] ${col.clase}`}
                 >
                   {col.texto}
                 </th>
@@ -63,7 +86,13 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                 key={unidad.slug}
                 className="border-t border-gris-200 transition-colors duration-rapido hover:bg-gris-50"
               >
-                <th scope="row" className="px-4 py-4 font-normal">
+                {/* La casilla va sola: el rótulo lo pone el encabezado de la
+                    columna una vez, en vez de repetir la palabra en las
+                    treinta y seis filas de una tabla que ya scrollea. */}
+                <td className="px-3 py-4">
+                  <BotonComparar slug={unidad.slug} nombre={unidad.nombre} soloCasilla />
+                </td>
+                <th scope="row" className="px-3 py-4 font-normal">
                   <div className="flex items-center gap-3">
                     {/* Mismo 4:3 y mismo esqueleto de carga que la tarjeta y la
                         galería: la miniatura de la tabla es la misma foto en
@@ -81,17 +110,35 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                       >
                         {unidad.nombre}
                       </Link>
-                      <span className="text-2xs text-gris-500">{unidad.tipo}</span>
+                      {/* Tipo y estado juntos, en el mismo renglón bajo el
+                          nombre: los dos dicen QUÉ es esta unidad, y el estado
+                          se lee mejor pegado a ella que en una columna al otro
+                          extremo de una tabla de mil píxeles. */}
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-2xs text-gris-500">{unidad.tipo}</span>
+                        <EstadoBadge estado={unidad.estado} />
+                      </div>
                     </div>
                   </div>
                 </th>
-                <td className="px-4 py-4 text-sm text-gris-600">
+                {/* Con precio, en negro y con `dato` para que la columna de
+                    importes se alinee dígito con dígito. Sin precio, gris:
+                    "Consultar" no es una cifra y no tiene que competir con las
+                    que sí lo son al recorrer la columna. */}
+                <td
+                  className={`px-3 py-4 text-right text-sm ${
+                    unidad.precio !== null ? 'dato font-medium text-negro' : 'text-gris-500'
+                  }`}
+                >
+                  {formatearPrecio(unidad.precio)}
+                </td>
+                <td className="px-3 py-4 text-sm text-gris-600">
                   {nombreDeSucursal(unidad.sucursalId)}
                 </td>
                 {/* "Consultar" cuando el año no está cargado: ahí no hay
                     cifra que alinear. */}
                 <td
-                  className={`px-4 py-4 text-right text-sm text-negro ${
+                  className={`px-3 py-4 text-right text-sm text-negro ${
                     esCifra(formatearAnio(unidad.anio)) ? 'dato' : ''
                   }`}
                 >
@@ -106,7 +153,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                     : (unidad.potencia ?? '—');
                   return (
                     <td
-                      className={`px-4 py-4 text-right text-sm text-gris-600 ${
+                      className={`px-3 py-4 text-right text-sm text-gris-600 ${
                         esCifra(valor) ? 'dato' : ''
                       }`}
                     >
@@ -116,13 +163,10 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                 })()}
                 {/* Sin `dato`: la monoespaciada está reservada para datos
                     numéricos. Esto es un estado, no una cifra. */}
-                <td className="px-4 py-4 text-right text-sm font-medium text-negro">
+                <td className="px-3 py-4 text-right text-sm font-medium text-negro">
                   {unidad.financiacion}
                 </td>
-                <td className="px-4 py-4">
-                  <EstadoBadge estado={unidad.estado} />
-                </td>
-                <td className="px-4 py-4">
+                <td className="px-3 py-4">
                   <div className="flex justify-end gap-2">
                     <Link
                       href={`/unidad/${unidad.slug}`}

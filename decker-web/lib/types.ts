@@ -133,6 +133,15 @@ export interface ParametrosFinanciacion {
   anticipoMinimoPorcentaje: number;
   /** Anticipo sugerido al abrir la calculadora, en porcentaje. */
   anticipoSugeridoPorcentaje: number;
+  /**
+   * Importe que la calculadora muestra como PLACEHOLDER cuando no se abre
+   * desde una unidad. Es un ejemplo en gris, no un valor cargado: enseña el
+   * formato y el orden de magnitud sin afirmar un precio que nadie eligió.
+   *
+   * Tiene que ser verosímil contra el stock publicado —la mediana ronda los
+   * $69.000.000—: un ejemplo fuera de escala enseña mal el formato.
+   */
+  valorEjemplo: number;
   /** Texto legal que acompaña todo resultado de la simulación. */
   leyenda: string;
 }
@@ -163,22 +172,21 @@ export interface OpcionesCatalogo {
 }
 
 /**
- * Accesos del subcatálogo de la home.
+ * Los accesos del catálogo de la home.
  *
  * NO es una taxonomía: es la lista de puertas de entrada al stock, y por eso
  * mezcla ejes a propósito. Se entra por estado (0 km, usados), por tipo (semis,
  * bateas) o por marca, porque así es como se pregunta por un camión: nadie
  * empieza eligiendo una dimensión y después la otra.
  *
- * `livianos` va aparte y sin abrir —ni por marca ni por estado—: el que busca
- * una camioneta o un utilitario mira lo que hay, no filtra.
+ * Autos, camionetas y utilitarios no tienen acceso propio: siguen en el
+ * catálogo y en su filtro por tipo, pero no en esta lista.
  */
-export interface Subcatalogo {
+export interface AccesosCatalogo {
   ceroKm: number;
   usados: number;
   semis: number;
   bateas: number;
   /** Sólo marcas con camiones en stock. Las de semis y bateas no entran acá. */
   marcasDeCamiones: { marca: string; total: number }[];
-  livianos: { tipo: TipoUnidad; total: number }[];
 }

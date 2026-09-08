@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import herostockImage from '@/public/marca/herostock.jpg';
 import CatalogoCliente from '@/components/catalogo/CatalogoCliente';
-import { getCatalogoCompleto, getOpcionesCatalogo, getSucursales } from '@/lib/api';
+import VistosRecientemente from '@/components/unidades/VistosRecientemente';
+import { getCatalogoCompleto, getOpcionesCatalogo, getResumenDeUnidades, getSucursales } from '@/lib/api';
 import type {
   EstadoUnidad,
   FiltrosCatalogo,
@@ -31,11 +32,12 @@ function aNumero(valor: string | undefined): number | undefined {
 }
 
 export default async function CatalogoPage({ searchParams }: Props) {
-  const [parametrosUrl, unidades, opciones, sucursales] = await Promise.all([
+  const [parametrosUrl, unidades, opciones, sucursales, resumen] = await Promise.all([
     searchParams,
     getCatalogoCompleto(),
     getOpcionesCatalogo(),
     getSucursales(),
+    getResumenDeUnidades(),
   ]);
 
   // Los filtros llegan por URL (desde el buscador de la home o un link
@@ -108,6 +110,12 @@ export default async function CatalogoPage({ searchParams }: Props) {
           sucursales={sucursales}
           filtrosIniciales={filtrosIniciales}
         />
+
+        {/* La franja va DESPUÉS del listado y no antes: primero está lo que
+            la persona vino a buscar, y recién al final —cuando ya recorrió y
+            no encontró— aparece la vuelta a lo que había mirado. Con la lista
+            vacía no se dibuja nada, ni el título. */}
+        <VistosRecientemente unidades={resumen} className="mt-14" />
       </div>
     </>
   );

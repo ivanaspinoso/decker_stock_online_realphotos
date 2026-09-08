@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Overpass } from 'next/font/google';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import BarraComparador from '@/components/unidades/BarraComparador';
+import { getResumenDeUnidades, getSucursales } from '@/lib/api';
 import './globals.css';
 
 /**
@@ -95,7 +97,16 @@ export const viewport: Viewport = {
   themeColor: '#0B0B0C',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /* El resumen de todo el stock, para el comparador: la lista guardada son
+     slugs sueltos y los datos tienen que estar en la página cuando se leen.
+     Va en el layout porque comparar cruza páginas —una unidad de la home,
+     otra del catálogo, otra de una ficha—. */
+  const [unidades, sucursales] = await Promise.all([
+    getResumenDeUnidades(),
+    getSucursales(),
+  ]);
+
   return (
     // `data-scroll-behavior="smooth"` lo pide Next 16: globals.css pone
     // `scroll-behavior: smooth` en el html, y sin este atributo el router
@@ -121,6 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <Footer />
+        <BarraComparador unidades={unidades} sucursales={sucursales} />
       </body>
     </html>
   );

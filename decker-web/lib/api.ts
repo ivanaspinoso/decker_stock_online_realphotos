@@ -2,12 +2,13 @@ import { UNIDADES } from '@/lib/data/unidades';
 import { SUCURSALES, WHATSAPP_GENERAL } from '@/lib/data/sucursales';
 import { PARAMETROS_FINANCIACION } from '@/lib/data/financiacion';
 import { cumpleFiltros, ordenarUnidades } from '@/lib/filtros';
+import type { ResumenComparacion } from '@/lib/comparador';
 import type {
   FiltrosCatalogo,
   IdSucursal,
   OpcionesCatalogo,
   ParametrosFinanciacion,
-  Subcatalogo,
+  AccesosCatalogo,
   Sucursal,
   SugerenciaUnidad,
   TipoUnidad,
@@ -86,6 +87,33 @@ export async function getIndiceBuscador(): Promise<SugerenciaUnidad[]> {
   }));
 }
 
+/**
+ * Resumen de TODAS las unidades: lo mínimo para ponerlas al lado o dibujarlas
+ * chiquitas, sin galerías ni descripciones.
+ *
+ * Lo consumen el comparador y la franja de vistas recientes, que son dos
+ * funciones del navegador: la lista de slugs vive en `localStorage` y no sabe
+ * nada de las unidades, así que los datos tienen que estar ya en la página
+ * cuando esa lista se lee. Con este volumen de stock entra entero y va en el
+ * layout; si el catálogo creciera a miles, esto pasa a ser un endpoint que se
+ * pide por los slugs guardados y ningún componente cambia.
+ */
+export async function getResumenDeUnidades(): Promise<ResumenComparacion[]> {
+  return UNIDADES.map((unidad) => ({
+    slug: unidad.slug,
+    nombre: unidad.nombre,
+    marca: unidad.marca,
+    modelo: unidad.modelo,
+    tipo: unidad.tipo,
+    estado: unidad.estado,
+    anio: unidad.anio,
+    km: unidad.km,
+    precio: unidad.precio,
+    sucursalId: unidad.sucursalId,
+    imagen: unidad.imagen,
+  }));
+}
+
 export async function getSucursales(): Promise<Sucursal[]> {
   return SUCURSALES;
 }
@@ -120,7 +148,7 @@ export async function getOpcionesCatalogo(): Promise<OpcionesCatalogo> {
 }
 
 /**
- * Los accesos del subcatálogo de la home, contados sobre el stock real.
+ * Los accesos del catálogo de la home, contados sobre el stock real.
  *
  * Ninguno de estos números está escrito a mano: si mañana entra un semi o se
  * vende el último Iveco, el acceso aparece o desaparece solo. Una puerta que
@@ -130,7 +158,7 @@ export async function getOpcionesCatalogo(): Promise<OpcionesCatalogo> {
  * y semis: si la lista se armara con todo el catálogo, "Marcas de camiones"
  * ofrecería una marca de acoplados.
  */
-export async function getSubcatalogo(): Promise<Subcatalogo> {
+export async function getAccesosCatalogo(): Promise<AccesosCatalogo> {
   const porTipo = (tipo: TipoUnidad) => UNIDADES.filter((u) => u.tipo === tipo).length;
 
   const porMarca = new Map<string, number>();
@@ -148,10 +176,6 @@ export async function getSubcatalogo(): Promise<Subcatalogo> {
       // Por cantidad y no alfabético: la marca con más stock es la que más
       // chances tiene de resolver la búsqueda, y va primera.
       .sort((a, b) => b.total - a.total || a.marca.localeCompare(b.marca, 'es')),
-    livianos: (['Auto/Camioneta', 'Utilitario'] as const).map((tipo) => ({
-      tipo,
-      total: porTipo(tipo),
-    })),
   };
 }
 

@@ -209,8 +209,13 @@
    *
    * 44px de alto mínimo: es el tamaño de toque que pide WCAG 2.5.8 y el que
    * necesita un dedo en la cabina de un camión. El cuerpo del texto es el
-   * mismo del contenido (15px) y no uno chico: a los 55 años, un campo de 13px
+   * mismo del contenido (17px) y no uno chico: a los 55 años, un campo de 13px
    * en un teléfono al sol no se lee.
+   *
+   * Que esté por encima de 16px además evita el zoom automático de Safari en
+   * iOS: el navegador acerca la página sola al enfocar un campo más chico que
+   * eso, y después la deja acercada. No es un detalle de estilo —es la
+   * diferencia entre completar el formulario y pelearse con la pantalla—.
    *
    * El placeholder es texto y cuenta para contraste: dice qué va en el campo.
    * Sobre blanco, gris-400 daba 2.6:1 —abajo del 4.5:1 de AA—; gris-500 da
@@ -229,11 +234,21 @@
            hover:border-negro-600 focus:border-amarillo;
   }
 
-  /* Mismo criterio que `rotulo-dato`, y a propósito los mismos valores: el
-     rótulo de un campo y el rótulo de un dato son la misma cosa —el nombre de
-     un valor— en dos momentos distintos, antes y después de cargarlo. */
+  /**
+   * Rótulo de un campo de formulario.
+   *
+   * Era igual que `rotulo-dato` —12px, gris, con tracking— y dejó de serlo. Los
+   * dos nombran un valor, pero no se leen en el mismo momento: el rótulo de un
+   * dato acompaña a un número que ya está en pantalla y el ojo lo usa de
+   * referencia, mientras que el de un campo hay que LEERLO ANTES de contestar,
+   * y es lo único que dice qué va adentro de la caja vacía de abajo.
+   *
+   * 15px y en gris-600: es el tamaño mínimo cómodo para alguien de sesenta años
+   * completando un formulario en un teléfono, que es el caso real de este sitio.
+   * A 12px, con la vista cansada, se contesta el campo equivocado.
+   */
   .campo-label {
-    @apply mb-2 block text-2xs font-medium tracking-[0.06em] text-gris-500;
+    @apply mb-2 block text-sm font-medium text-gris-600;
   }
 
   /* Superficie base de tarjeta: sin borde duro, con elevación de contacto. */

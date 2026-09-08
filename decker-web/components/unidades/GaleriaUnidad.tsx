@@ -47,7 +47,7 @@ export default function GaleriaUnidad({
         {fotos.length > 1 && (
           // Sobre el velo: dice en qué foto está parado sin depender de que las
           // miniaturas entren en pantalla.
-          <span className="dato absolute bottom-4 right-4 rounded-sm bg-negro/70 px-2 py-1 text-2xs font-medium text-white backdrop-blur-sm">
+          <span className="centrado-optico dato absolute bottom-4 right-4 inline-flex h-5 items-center rounded-sm bg-negro/70 px-2 text-2xs font-medium text-white backdrop-blur-sm">
             {activa + 1} / {fotos.length}
           </span>
         )}

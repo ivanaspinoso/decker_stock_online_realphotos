@@ -13,6 +13,7 @@ export const PARAMETROS_FINANCIACION: ParametrosFinanciacion = {
   plazoPorDefecto: 36,
   anticipoMinimoPorcentaje: 30,
   anticipoSugeridoPorcentaje: 40,
+  valorEjemplo: 85_000_000,
   leyenda:
     'Simulación orientativa por sistema francés de amortización. No constituye una oferta ' +
     'de crédito: la tasa, el plazo y las condiciones finales dependen de la operación ' +

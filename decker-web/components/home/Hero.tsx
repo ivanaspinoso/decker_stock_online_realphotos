@@ -79,18 +79,32 @@ export default function Hero({
           encima y mide 80px. */}
       <div className="contenedor relative flex flex-1 items-center pb-12 pt-28 sm:pt-32">
         <div className="mx-auto w-full max-w-3xl text-center">
-          {/* Tres escalones de la escala, no tres tamaños inventados: 32 en
-              teléfono, 40 en tablet, 52 en monitor. La caja alta, el peso 700 y
-              el tracking los pone `titulo-expresivo`. */}
+          {/* La frase de marca ES el titular, y no un renglón en el pie.
+
+              Antes acá decía "Elegí tu próxima unidad con respaldo Decker" —una
+              promesa correcta pero de nadie— y "Nuestro motor es el trabajo"
+              vivía a cuatro mil píxeles de scroll, arriba del footer. Mantener
+              una frase de marca no es guardarla: es ponerla donde se lee
+              primero. La promesa no se perdió, bajó a la línea de abajo, que es
+              donde tiene que estar lo que explica.
+
+              Sin el "Decker Camiones," de adelante: el logo está sesenta píxeles
+              más arriba, en la barra. Es la misma construcción que ya usa el pie
+              —logo, y debajo la frase—, y repetir el nombre tan cerca de la
+              marca lo gasta en vez de reforzarlo.
+
+              Tres escalones de la escala y no tres tamaños inventados: 32 en
+              teléfono, 40 en tablet, 52 en monitor. La caja alta, el peso y el
+              tracking los pone `titulo-expresivo`. */}
           <h1 className="titulo-expresivo text-3xl text-white sm:text-4xl lg:text-5xl">
-            Elegí tu próxima unidad con respaldo Decker
+            Nuestro motor es el trabajo
           </h1>
 
           {/* gris-200 y no gris-300: centrado, el texto cae sobre la parte más
               clara de la foto y el gris medio no llega a 4.5:1. */}
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-gris-200 sm:text-md">
-            Camiones 0 km y usados seleccionados, semis, bateas y utilitarios. Buscá por tipo,
-            marca o agencia.
+            Camiones 0 km y usados seleccionados, semis, bateas y utilitarios. Elegí tu
+            próxima unidad con respaldo Decker.
           </p>
 
           {/* El buscador es la acción principal, pero las dos salidas de abajo
@@ -128,7 +142,7 @@ export default function Hero({
            * único lugar de la home donde un número cuenta al entrar en pantalla:
            * es lo último que se lee del hero y lo que responde "¿tienen stock?".
            */}
-          <dl className="mt-8 flex items-center justify-center gap-6 sm:gap-8">
+         {/* <dl className="mt-8 flex items-center justify-center gap-6 sm:gap-8">
             <div>
               <dd className="dato text-xl font-medium text-white">
                 <NumeroAnimado valor={totalUnidades} formato="miles" desdeViewport />
@@ -144,7 +158,7 @@ export default function Hero({
               </dd>
               <dt className="rotulo-dato mt-1 text-gris-300">Agencias</dt>
             </div>
-          </dl>
+          </dl> */}
         </div>
       </div>
     </section>

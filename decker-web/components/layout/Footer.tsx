@@ -21,14 +21,17 @@ export default function Footer() {
           <p className="mt-5 font-display text-2xl font-extrabold leading-tight tracking-[-0.01em] text-white">
             Nuestro motor es el trabajo
           </p>
-          <p className="mt-3 max-w-xs text-sm leading-relaxed text-gris-400">
+          <p className="mt-3 max-w-xs text-base leading-relaxed text-gris-400">
             Camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas.
           </p>
         </div>
 
         <nav aria-label="Enlaces del sitio">
           <p className="etiqueta text-gris-400">Sitio</p>
-          <ul className="mt-5 space-y-3 text-sm">
+          {/* `space-y-1` y no `space-y-3`: el aire que se sacó de la lista se lo
+              quedó cada enlace como padding, así que la fila se ve igual pero
+              el blanco tocable pasó de 17px a 32. */}
+          <ul className="mt-4 space-y-1 text-base">
             {[
               { href: '/catalogo', texto: 'Stock' },
               { href: '/#destacadas', texto: 'Unidades seleccionadas' },
@@ -37,7 +40,14 @@ export default function Footer() {
               { href: '/#agencias', texto: 'Agencias' },
             ].map((enlace) => (
               <li key={enlace.href}>
-                <Link href={enlace.href} className="transition-colors hover:text-white">
+                {/* `inline-block` + padding: un enlace en línea mide lo que mide
+                    su letra —17px— y WCAG 2.5.8 pide 24 de lado. En el pie, que
+                    es donde caen los pulgares al final de la página, esa
+                    diferencia es tocar el enlace de al lado. */}
+                <Link
+                  href={enlace.href}
+                  className="inline-block py-1 transition-colors hover:text-white"
+                >
                   {enlace.texto}
                 </Link>
               </li>
@@ -49,9 +59,12 @@ export default function Footer() {
           <p className="etiqueta text-gris-400">Agencias</p>
           <ul className="mt-5 grid gap-5 sm:grid-cols-2">
             {SUCURSALES.map((sucursal) => (
-              <li key={sucursal.id} className="text-sm">
+              <li key={sucursal.id} className="text-base">
                 <p className="font-medium text-white">{sucursal.nombre}</p>
                 <p className="mt-0.5 text-gris-400">{sucursal.direccion}</p>
+                {/* El teléfono sube de 12 a 15px y gana padding: es un dato que
+                    se lee para marcarlo, no una nota al pie, y es el enlace más
+                    chico que tenía el sitio. */}
                 <a
                   href={linkWhatsapp(
                     sucursal.asesor.whatsapp,
@@ -59,7 +72,7 @@ export default function Footer() {
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="dato mt-1.5 inline-block text-xs text-amarillo transition-opacity hover:opacity-70"
+                  className="dato mt-1 inline-block py-1 text-sm text-amarillo transition-opacity hover:opacity-70"
                 >
                   {formatearWhatsapp(sucursal.asesor.whatsapp)}
                 </a>
@@ -70,7 +83,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-negro-800">
-        <div className="contenedor flex flex-col gap-2 py-6 text-xs text-gris-400 sm:flex-row sm:items-center sm:justify-between">
+        <div className="contenedor flex flex-col gap-2 py-6 text-sm text-gris-400 sm:flex-row sm:items-center sm:justify-between">
           <p>© {anio} Decker Camiones. Todos los derechos reservados.</p>
           <p className="max-w-xl sm:text-right">
             Precios y disponibilidad orientativos, sujetos a modificación sin previo aviso.

@@ -84,7 +84,7 @@ export default function CompraSegura() {
               <h3 className="titulo-tarjeta mt-5 text-negro">
                 {pilar.titulo}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-gris-500">{pilar.detalle}</p>
+              <p className="mt-2 text-base leading-relaxed text-gris-500">{pilar.detalle}</p>
             </article>
           ))}
         </div>

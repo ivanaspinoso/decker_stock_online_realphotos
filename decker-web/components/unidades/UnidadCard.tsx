@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import BotonFavorito from '@/components/unidades/BotonFavorito';
+import BotonComparar from '@/components/unidades/BotonComparar';
 import EstadoBadge from '@/components/ui/EstadoBadge';
 import FotoUnidad from '@/components/unidades/FotoUnidad';
 import {
@@ -11,7 +12,13 @@ import {
   IconoPotencia,
   IconoWhatsapp,
 } from '@/components/ui/Iconos';
-import { esCifra, formatearAnio, formatearKm, tieneKilometraje } from '@/lib/format';
+import {
+  esCifra,
+  formatearAnio,
+  formatearKm,
+  formatearPrecio,
+  tieneKilometraje,
+} from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
 
@@ -94,7 +101,7 @@ export default function UnidadCard({
         </div>
         {/* Tipo sobre la foto, como en el sitio original. */}
         <div className="absolute right-3 top-3">
-          <span className="inline-flex items-center rounded-sm bg-negro/85 px-2 py-1 text-2xs font-medium leading-none tracking-[0.04em] text-white backdrop-blur-sm">
+          <span className="centrado-optico inline-flex h-5 items-center rounded-sm bg-negro/85 px-2 text-2xs font-medium leading-none tracking-[0.04em] text-white backdrop-blur-sm">
             {unidad.tipo}
           </span>
         </div>
@@ -118,7 +125,29 @@ export default function UnidadCard({
           </Link>
         </h3>
 
-        <p className="mt-2 text-sm leading-relaxed text-gris-500">{unidad.descripcion}</p>
+        {/**
+         * El precio, debajo del nombre.
+         *
+         * La tarjeta no lo mostraba, y el argumento era que en la grilla se
+         * compara por unidad, estado y ubicación. No se sostiene: el precio es
+         * el primer filtro que aplica cualquiera que está reponiendo una unidad
+         * para su flota, y esconderlo obligaba a entrar a la ficha de a una
+         * para descartar. Un listado en el que hay que abrir cada tarjeta para
+         * saber si está dentro del presupuesto no es un listado.
+         *
+         * Cuando no está cargado dice "Consultar precio" y no un guión: el dato
+         * existe, hay que pedirlo. Va en gris y sin peso, para que una tarjeta
+         * sin precio no se lea como una con precio bajo.
+         */}
+        {unidad.precio !== null ? (
+          <p className="dato mt-2 text-xl font-medium text-negro">
+            {formatearPrecio(unidad.precio)}
+          </p>
+        ) : (
+          <p className="mt-2 text-base font-medium text-gris-500">Consultar precio</p>
+        )}
+
+        <p className="mt-2 text-base leading-relaxed text-gris-500">{unidad.descripcion}</p>
 
         <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gris-200 pt-4">
           {especificaciones.map((spec) => (
@@ -147,27 +176,36 @@ export default function UnidadCard({
           ))}
         </dl>
 
-        {/* Badges del sitio original. */}
-        <ul className="mt-4 flex flex-wrap gap-2">
-          <li
-            className={`inline-flex items-center gap-2 rounded-sm px-2 py-1 text-2xs font-medium leading-4 ${
-              unidad.financiacion === 'Disponible'
-                ? 'bg-amarillo-50 text-negro ring-1 ring-inset ring-amarillo'
-                : 'bg-gris-100 text-gris-600 ring-1 ring-inset ring-gris-200'
-            }`}
-          >
-            <IconoCheck className="h-4 w-4" />
-            Financiación: {unidad.financiacion}
-          </li>
-          <li className="inline-flex items-center gap-2 rounded-sm bg-gris-100 px-2 py-1 text-2xs font-medium leading-4 text-gris-600 ring-1 ring-inset ring-gris-200">
-            <IconoWhatsapp className="h-4 w-4" />
-            Consulta online
-          </li>
-        </ul>
+        {/* Un solo dato, a TODO EL ANCHO. Antes eran dos píldoras cortas puestas
+            una al lado de la otra; sacada "Consulta online" —que decía lo mismo
+            en las treinta y seis tarjetas—, la que quedaba flotaba sola contra
+            el borde izquierdo, y su ancho cambiaba según dijera "Disponible" o
+            "Consultar": en una grilla de tres columnas eso se leía como tres
+            tarjetas desprolijas, no como tres estados distintos.
 
-        {/* La tarjeta no muestra precio: en la grilla se compara por unidad,
-            estado y ubicación, y el precio se ve en la ficha o en la vista
-            lista, que es la pensada para comparar importes. */}
+            A todo el ancho es una banda: mide siempre lo mismo, se apoya en el
+            mismo eje que los dos botones de abajo, y lo único que cambia entre
+            tarjeta y tarjeta es lo que dice. */}
+        <p
+          className={`centrado-optico mt-4 flex h-9 w-full items-center gap-2 rounded-sm px-3 text-xs font-medium ${
+            unidad.financiacion === 'Disponible'
+              ? 'bg-amarillo-50 text-negro ring-1 ring-inset ring-amarillo'
+              : 'bg-gris-100 text-gris-600 ring-1 ring-inset ring-gris-200'
+          }`}
+        >
+          <IconoCheck className="h-4 w-4 shrink-0" />
+          Financiación: {unidad.financiacion}
+        </p>
+
+        {/* Comparar va ACÁ y no sobre la foto: sobre la foto ya está el
+            corazón, y dos controles encimados sobre una imagen se leen como
+            un par —guardar y comparar no son lo mismo ni se usan juntos—.
+            Además una casilla necesita su palabra al lado para explicarse, y
+            sobre la foto no hay lugar para ponerla. */}
+        <div className="relative z-10 mt-3">
+          <BotonComparar slug={unidad.slug} nombre={unidad.nombre} />
+        </div>
+
         <div className="mt-auto pt-6">
           {/* DOS acciones, no tres: ver la unidad y preguntar por ella. Eso es
               todo lo que se decide desde un listado.
@@ -183,10 +221,14 @@ export default function UnidadCard({
               Los dos botones miden 44px de alto: es el mínimo tocable de WCAG
               2.5.8, y no baja en mobile por más que la tarjeta quede más
               compacta. */}
+          {/* Los dos rótulos van a 17px y no a 15: son las acciones de la
+              tarjeta, y un botón de 44px de alto con la palabra en cuerpo de
+              nota al pie se lee como un control secundario. El alto ya estaba
+              resuelto para el dedo; esto lo resuelve para el ojo. */}
           <div className="relative z-10 flex gap-2">
             <Link
               href={`/unidad/${unidad.slug}`}
-              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center rounded-sm bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center rounded-sm bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
             >
               Ver ficha
             </Link>
@@ -194,7 +236,7 @@ export default function UnidadCard({
               href={linkConsultaUnidad(unidad)}
               target="_blank"
               rel="noopener noreferrer"
-              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-rojo text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
+              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-rojo text-base font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
               aria-label={`Consultar por ${unidad.nombre} por WhatsApp`}
             >
               <IconoWhatsapp className="h-4 w-4" />

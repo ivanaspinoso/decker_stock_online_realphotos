@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import HojaFiltros from '@/components/catalogo/HojaFiltros';
 import PanelFiltros from '@/components/catalogo/PanelFiltros';
 import UnidadGrilla from '@/components/unidades/UnidadGrilla';
 import UnidadTabla from '@/components/unidades/UnidadTabla';
@@ -17,9 +18,20 @@ import type {
 
 type Vista = 'grilla' | 'lista';
 
+/**
+ * Los órdenes vuelven a incluir precio.
+ *
+ * `ordenarUnidades` nunca dejó de soportarlos —`precio-asc` y `precio-desc`
+ * están en el tipo y en la función— pero el `<select>` no los ofrecía, así que
+ * la única forma de llegar a ellos era escribir `?orden=precio-asc` a mano.
+ *
+ * Las unidades sin precio publicado caen al final en los dos sentidos: no son
+ * ni las más baratas ni las más caras.
+ */
 const ORDENES: { valor: OrdenCatalogo; texto: string }[] = [
   { valor: 'relevancia', texto: 'Destacadas primero' },
- 
+  { valor: 'precio-asc', texto: 'Precio: menor a mayor' },
+  { valor: 'precio-desc', texto: 'Precio: mayor a menor' },
   { valor: 'anio-desc', texto: 'Año: más nuevas' },
   { valor: 'km-asc', texto: 'Kilómetros: menor a mayor' },
 ];
@@ -241,13 +253,30 @@ export default function CatalogoCliente({
               )}
             </p>
 
-            <div className="flex items-center gap-2">
+            {/* `flex-wrap` y no scroll horizontal: con el botón de filtros
+                sumado, en un teléfono angosto los tres controles no entran en
+                una línea, y una fila que se corta esconde el conmutador de
+                vista sin avisar. */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Sólo en mobile: en desktop los mismos campos están a la
+                  izquierda, desplegados, y un botón que abriera una ventana
+                  para repetirlos sería un segundo camino al mismo lugar. */}
+              <HojaFiltros
+                filtros={filtros}
+                opciones={opciones}
+                sucursales={sucursales}
+                onCambio={cambiar}
+                onLimpiar={limpiar}
+                resultados={resultados.length}
+                activos={filtrosActivos.length}
+              />
+
               <label htmlFor="catalogo-orden" className="sr-only">
                 Ordenar por
               </label>
               <select
                 id="catalogo-orden"
-                className="campo h-11 w-auto py-0 text-sm"
+                className="campo h-11 w-auto min-w-0 flex-1 py-0 text-sm sm:flex-none"
                 value={filtros.orden ?? 'relevancia'}
                 onChange={(evento) => cambiar({ orden: evento.target.value as OrdenCatalogo })}
               >
@@ -276,6 +305,12 @@ export default function CatalogoCliente({
                     type="button"
                     onClick={() => setVista(modo)}
                     aria-pressed={vista === modo}
+                    /* El rótulo se esconde abajo de `sm` para que el
+                       conmutador no coma el ancho de la fila, y sin esto el
+                       botón se quedaba sin nombre justo en mobile: un lector
+                       de pantalla anunciaba dos botones vacíos. El
+                       `aria-label` va siempre, se vea la palabra o no. */
+                    aria-label={`Ver en ${texto.toLowerCase()}`}
                     className={`centrado-optico inline-flex h-10 items-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors duration-rapido ${
                       vista === modo
                         ? 'bg-white text-negro shadow-nivel-1'
@@ -298,7 +333,7 @@ export default function CatalogoCliente({
           {resultados.length === 0 ? (
             <div className="animate-entrar rounded-lg bg-white p-12 text-center shadow-nivel-1">
               <p className="font-display text-lg font-extrabold text-negro">Sin resultados</p>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-gris-500">
+              <p className="mx-auto mt-2 max-w-sm text-base leading-relaxed text-gris-500">
                 Ninguna unidad coincide con esa combinación de filtros. Probá quitar la sucursal.
               </p>
               <button

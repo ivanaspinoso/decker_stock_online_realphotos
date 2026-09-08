@@ -172,7 +172,7 @@ export default function Header() {
                 key={enlace.href}
                 href={enlace.href}
                 onClick={(evento) => alClickEnlace(evento, enlace.href)}
-                className="rounded-sm px-3.5 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                className="centrado-optico inline-flex h-9 items-center rounded-sm px-3.5 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
               >
                 {enlace.texto}
               </Link>

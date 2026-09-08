@@ -2,63 +2,48 @@ import Hero from '@/components/home/Hero';
 import CompraSegura from '@/components/home/CompraSegura';
 import Agencias from '@/components/home/Agencias';
 import CtaDecker from '@/components/home/CtaDecker';
-import DestacadasCliente from '@/components/home/DestacadasCliente';
-import Subcatalogo from '@/components/home/Subcatalogo';
+import Catalogo from '@/components/home/Catalogo';
+import VistosRecientemente from '@/components/unidades/VistosRecientemente';
 import CalculadoraFinanciacion from '@/components/financiacion/CalculadoraFinanciacion';
 import FormCotizarUsado from '@/components/formularios/FormCotizarUsado';
 import EncabezadoSeccion from '@/components/ui/EncabezadoSeccion';
 import {
+  getAccesosCatalogo,
+  getCatalogoCompleto,
   getConteoPorSucursal,
   getIndiceBuscador,
+  getResumenDeUnidades,
   getParametrosFinanciacion,
-  getSubcatalogo,
   getSucursales,
-  getUnidadesDestacadas,
 } from '@/lib/api';
-import type { EstadoUnidad, FiltrosCatalogo, IdSucursal, TipoUnidad } from '@/lib/types';
 
 interface Props {
   // Desde Next 15 `searchParams` es una Promise: la página empieza a renderizar
   // antes de que se conozcan los parámetros, y recién se esperan cuando se usan.
-  searchParams: Promise<{
-    q?: string;
-    tipo?: string;
-    marca?: string;
-    sucursal?: string;
-    estado?: string;
-  }>;
+  searchParams: Promise<{ q?: string }>;
 }
 
 /** Los textos de las secciones son los del sitio original de Decker. */
 export default async function Home({ searchParams }: Props) {
   const [
     parametrosUrl,
-    destacadas,
+    unidades,
     sucursales,
     sugerencias,
     parametros,
     conteoPorSucursal,
-    subcatalogo,
+    accesos,
+    resumen,
   ] = await Promise.all([
     searchParams,
-    getUnidadesDestacadas(),
+    getCatalogoCompleto(),
     getSucursales(),
     getIndiceBuscador(),
     getParametrosFinanciacion(),
     getConteoPorSucursal(),
-    getSubcatalogo(),
+    getAccesosCatalogo(),
+    getResumenDeUnidades(),
   ]);
-
-  // Filtros que pueden venir por URL (un link compartido, o la vuelta desde el
-  // catálogo). Son el punto de partida de la sección de destacadas, que de ahí
-  // en más filtra en el cliente.
-  const filtros: FiltrosCatalogo = {
-    busqueda: parametrosUrl.q ?? '',
-    tipo: (parametrosUrl.tipo ?? '') as TipoUnidad | '',
-    marca: parametrosUrl.marca ?? '',
-    sucursalId: (parametrosUrl.sucursal ?? '') as IdSucursal | '',
-    estado: (parametrosUrl.estado ?? '') as EstadoUnidad | '',
-  };
 
   return (
     <>
@@ -66,24 +51,31 @@ export default async function Home({ searchParams }: Props) {
         sucursales={sucursales}
         sugerencias={sugerencias}
         totalUnidades={sugerencias.length}
-        busquedaInicial={filtros.busqueda}
+        busquedaInicial={parametrosUrl.q}
       />
 
-      {/* El subcatálogo va pegado al hero y ANTES de las destacadas: el hero
-          ofrece buscar por texto, y esto es la otra mitad de lo mismo —entrar
-          por lo que uno ya sabe que busca— para el que no tiene una palabra
-          para escribir. Las destacadas son vidriera y van después. */}
-      <Subcatalogo datos={subcatalogo} />
+      {/**
+       * Para el que vuelve, PRIMERO: lo que estaba mirando la otra vez, antes
+       * que los accesos por categoría. Comprar un camión no se resuelve en una
+       * sesión, y el que vuelve viene a terminar de mirar lo mismo —hacerle
+       * bajar hasta el final para reencontrarlo es pedirle que rehaga el camino
+       * que esta franja existe para ahorrarle—.
+       *
+       * El ancho y el aire van EN el componente y no en un envase alrededor:
+       * con la lista vacía —un visitante nuevo— devuelve `null`, y un `<div>`
+       * de afuera se quedaría igual con su padding. La home de alguien que
+       * entra por primera vez arrancaría con cien píxeles de lienzo vacío entre
+       * el hero y el catálogo, que es el hueco huérfano que esto evita.
+       *
+       * Sólo padding superior: el que separa esta franja del catálogo de abajo
+       * es el padding propio de esa sección, no uno sumado acá.
+       */}
+      <VistosRecientemente unidades={resumen} className="contenedor pt-16 sm:pt-20 lg:pt-24" />
 
-      <section id="destacadas" className="seccion scroll-mt-24">
-        <div className="contenedor">
-          <DestacadasCliente
-            unidades={destacadas}
-            sucursales={sucursales}
-            filtrosIniciales={filtros}
-          />
-        </div>
-      </section>
+      {/* Una sola sección de catálogo: el hero ofrece buscar por texto y esto
+          es la otra mitad de lo mismo —entrar por lo que uno ya sabe que
+          busca— para el que no tiene una palabra para escribir. */}
+      <Catalogo accesos={accesos} unidades={unidades} />
 
       {/* El cierre de marca va acá, no arriba del footer: corta la corrida de
           secciones claras y le da un próximo paso a quien acaba de mirar las

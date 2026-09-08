@@ -283,3 +283,25 @@ export function IconoEnlace(props: Props) {
     </Base>
   );
 }
+
+/** Comparar: dos columnas al lado, que es lo que hace la tabla. */
+export function IconoComparar(props: Props) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="6" width="7" height="14" rx="1" />
+      <rect x="14" y="3" width="7" height="17" rx="1" />
+    </Base>
+  );
+}
+
+/** Filtros: tres correderas, cada una con su tope en otro lugar. */
+export function IconoFiltros(props: Props) {
+  return (
+    <Base {...props}>
+      <path d="M4 6h16M4 12h16M4 18h16" />
+      <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
+      <circle cx="7" cy="18" r="2" fill="currentColor" stroke="none" />
+    </Base>
+  );
+}
