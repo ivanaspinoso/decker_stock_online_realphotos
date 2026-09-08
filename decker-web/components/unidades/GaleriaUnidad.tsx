@@ -39,6 +39,38 @@ export default function GaleriaUnidad({
   const disparador = useRef<HTMLButtonElement>(null);
   const ventana = useRef<HTMLDivElement>(null);
 
+  /**
+   * Cuándo se abrió, para ignorar el "click fantasma" del toque que la abrió.
+   *
+   * ES EL BUG POR EL QUE ESTO NO ANDABA EN EL TELÉFONO, y sólo ahí.
+   *
+   * Un navegador táctil, después de un toque, sintetiza un `click` y lo
+   * entrega a lo que haya quedado DEBAJO DEL DEDO en ese momento. Para
+   * entonces la ventana ya se montó, y debajo del dedo —en el medio de la
+   * pantalla— está el fondo de la foto, que cierra al tocarlo. Resultado: el
+   * mismo toque abría y cerraba, y desde afuera parecía que el botón no hacía
+   * nada.
+   *
+   * Con mouse no pasa: `mousedown`, `mouseup` y `click` salen del mismo
+   * elemento antes de que React pinte nada. Por eso pasaba todas las pruebas
+   * de escritorio.
+   *
+   * 350ms alcanzan para tapar el click sintetizado —llega a los ~300ms como
+   * mucho— y son menos de lo que tarda una persona en decidir cerrar.
+   */
+  const abiertaDesde = useRef(0);
+
+  const abrir = () => {
+    abiertaDesde.current = Date.now();
+    setAmpliada(true);
+  };
+
+  /** Cierra sólo si el click no es el fantasma del toque que abrió. */
+  const cerrarSiNoEsFantasma = () => {
+    if (Date.now() - abiertaDesde.current < 350) return;
+    setAmpliada(false);
+  };
+
   const hayVarias = fotos.length > 1;
 
   /* Dan la vuelta: de la última se pasa a la primera. En una galería de tres
@@ -109,7 +141,7 @@ export default function GaleriaUnidad({
       <button
         ref={disparador}
         type="button"
-        onClick={() => setAmpliada(true)}
+        onClick={abrir}
         aria-label={`Ampliar foto ${activa + 1} de ${fotos.length} de ${nombre}`}
         className="group relative block w-full cursor-zoom-in rounded-lg"
       >
@@ -223,7 +255,11 @@ export default function GaleriaUnidad({
               </p>
               <button
                 type="button"
-                onClick={() => setAmpliada(false)}
+                /* También protegida: el ícono de ampliar está arriba a la
+                   derecha de la foto y la X queda casi en el mismo punto, así
+                   que el click fantasma del toque que abrió puede caer justo
+                   acá. */
+                onClick={cerrarSiNoEsFantasma}
                 aria-label="Cerrar la foto"
                 className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-gris-300 transition-colors duration-rapido hover:bg-white/10 hover:text-white"
               >
@@ -233,10 +269,14 @@ export default function GaleriaUnidad({
 
             {/* El velo también cierra: tocar fuera de la foto es la salida que
                 todo el mundo prueba. El `contain` deja franjas negras a los
-                lados, y esas franjas son "fuera". */}
+                lados, y esas franjas son "fuera".
+
+                Va por `cerrarSiNoEsFantasma` y no directo: es justo el punto
+                donde caía el click sintetizado del toque que abría la ventana
+                —ver el comentario de `abiertaDesde` arriba—. */}
             <div
               className="relative min-h-0 flex-1"
-              onClick={() => setAmpliada(false)}
+              onClick={cerrarSiNoEsFantasma}
             >
               <Image
                 key={activa}
