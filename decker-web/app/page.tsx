@@ -101,17 +101,31 @@ export default async function Home({ searchParams }: Props) {
           —financiación y agencias van sobre el lienzo gris— sin ese golpe. */}
       <section id="cotizar" className="seccion scroll-mt-24 bg-white">
         <div className="contenedor grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
-          <div>
+          {/**
+           * Tres bloques con orden distinto por breakpoint, igual que la ficha.
+           *
+           * En mobile: título → FORMULARIO → pasos. El encabezado más la línea
+           * de tiempo ocupaban ~700px de los 844 de un teléfono, así que había
+           * que pasar de largo toda la explicación antes de ver el primer
+           * campo. Los pasos cuentan qué pasa DESPUÉS de enviar: abajo están en
+           * su momento, y el que ya sabe de qué se trata no los vuelve a leer.
+           *
+           * En desktop vuelven a la columna izquierda, debajo del título, donde
+           * se ven junto al formulario sin costo de scroll.
+           */}
+          <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
             <p className="etiqueta text-rojo">Parte de pago</p>
             <h2 className="titulo-seccion mt-3">Entregá tu usado y subite a otra unidad</h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-gris-500">
               Cargá los datos de tu unidad y generá una consulta directa para que el equipo
               comercial evalúe la operación.
             </p>
+          </div>
 
+          <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2 lg:-mt-6">
             {/* Los pasos como línea de tiempo: la guía vertical los liga en una
                 secuencia en vez de dejarlos como cuatro ítems sueltos. */}
-            <ol className="mt-10">
+            <ol>
               {[
                 'Completás los datos de tu unidad.',
                 'Se abre WhatsApp con el mensaje ya armado.',
@@ -136,7 +150,9 @@ export default async function Home({ searchParams }: Props) {
             </ol>
           </div>
 
-          <FormCotizarUsado sucursales={sucursales} />
+          <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <FormCotizarUsado sucursales={sucursales} />
+          </div>
         </div>
       </section>
 

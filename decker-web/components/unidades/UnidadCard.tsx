@@ -5,7 +5,6 @@ import EstadoBadge from '@/components/ui/EstadoBadge';
 import FotoUnidad from '@/components/unidades/FotoUnidad';
 import {
   IconoCalendario,
-  IconoCamion,
   IconoCheck,
   IconoMedidor,
   IconoPin,
@@ -25,11 +24,19 @@ import type { Unidad } from '@/lib/types';
 /**
  * Tarjeta de la vista grilla.
  *
- * Muestra la ficha COMPLETA sin abrir la unidad: los mismos campos que publicaba
- * el sitio original (marca, sucursal, estado, potencia/uso, financiación y
- * descripción) más los que se agregaron después (modelo, año, km y precio). Los
- * campos que todavía no están cargados se muestran igual, como "Consultar": el
- * comprador tiene que ver que el dato existe y hay que pedirlo, no que falta.
+ * Trae lo justo para DESCARTAR sin abrir la unidad: foto, nombre, precio, año,
+ * uso y sucursal. Todo eso está siempre a la vista, sin hover y sin desplegar
+ * nada —el hover no existe en un teléfono, y un dato que hay que descubrir es
+ * un dato que no está—.
+ *
+ * Dejó de intentar ser la ficha completa. Traía marca, modelo y potencia además
+ * de lo anterior, y marca y modelo ya estaban adentro del nombre: la tarjeta
+ * medía 794px de alto en un teléfono de 844, o sea una por pantalla, repitiendo
+ * la marca tres veces. Lo que se sacó no se escondió: está en la ficha, que es
+ * donde se evalúa una unidad después de haberla elegido de la lista.
+ *
+ * Los campos que todavía no están cargados se muestran igual, como "Consultar":
+ * el comprador tiene que ver que el dato existe y hay que pedirlo, no que falta.
  *
  * La superficie es una sola —foto y contenido sin línea divisoria— y la
  * separación con el fondo la da la elevación, no un marco de 1px.
@@ -46,21 +53,33 @@ export default function UnidadCard({
    */
   indice?: number;
 }) {
-  // Semis y bateas no llevan cuentakilómetros: ahí la fila no aplica.
+  // Semis y bateas no llevan cuentakilómetros: ahí el slot cambia de rótulo.
   const muestraKm = tieneKilometraje(unidad.tipo);
 
+  /**
+   * TRES slots, siempre los mismos y siempre en el mismo orden.
+   *
+   * Antes eran seis filas y dos de ellas —Marca y Modelo— repetían lo que ya
+   * decía el título: "Volvo FM 420 0 KM" traía la marca y el modelo adentro, y
+   * abajo estaban otra vez como pares rótulo/valor. Sumado a la volanta
+   * "Volvo · Camión" y al badge de tipo sobre la foto, la marca aparecía TRES
+   * veces en la misma tarjeta y el tipo dos. Medida en un teléfono de 844px de
+   * alto, la tarjeta daba 794: una por pantalla, y la mitad era repetición.
+   *
+   * Lo que queda es lo que se necesita para decidir si vale la pena entrar:
+   * año, uso y dónde está. Potencia se fue a la ficha —es un dato de
+   * evaluación, no de descarte—.
+   *
+   * El largo FIJO además arregla la alineación: con la lista variable, una
+   * batea (sin kilómetros) corría "Sucursal" a otra altura, y las tres
+   * tarjetas de una fila del catálogo mostraban sus datos en renglones
+   * distintos. Ahora el slot del medio cambia de rótulo, no de existencia.
+   */
   const especificaciones = [
-    { Icono: IconoCamion, etiqueta: 'Marca', valor: unidad.marca },
-    { Icono: IconoCamion, etiqueta: 'Modelo', valor: unidad.modelo },
     { Icono: IconoCalendario, etiqueta: 'Año', valor: formatearAnio(unidad.anio) },
-    ...(muestraKm
-      ? [{ Icono: IconoMedidor, etiqueta: 'Kilómetros', valor: formatearKm(unidad.km) }]
-      : []),
-    {
-      Icono: IconoPotencia,
-      etiqueta: 'Potencia / Uso',
-      valor: unidad.potencia ?? 'Consultar',
-    },
+    muestraKm
+      ? { Icono: IconoMedidor, etiqueta: 'Kilómetros', valor: formatearKm(unidad.km) }
+      : { Icono: IconoPotencia, etiqueta: 'Configuración', valor: unidad.potencia ?? 'Consultar' },
     { Icono: IconoPin, etiqueta: 'Sucursal', valor: nombreDeSucursal(unidad.sucursalId) },
   ];
 
@@ -108,15 +127,15 @@ export default function UnidadCard({
       </FotoUnidad>
 
       <div className="flex flex-1 flex-col p-4 sm:p-6">
-        <p className="rotulo-dato">
-          {unidad.marca} · {unidad.tipo}
-        </p>
+        {/* Sin volanta "Volvo · Camión": la marca ya abre el nombre de la
+            unidad y el tipo está en el badge sobre la foto. Era el tercer lugar
+            donde se leía la misma marca. */}
 
         {/* El nombre es lo más pesado de la tarjeta: Overpass 800 sobre negro
             pleno contra el resto, que va en gris y en peso normal. La jerarquía
             la hace el contraste de peso, no el tamaño: 20px no es grande, pero
             es lo único oscuro y macizo del bloque. */}
-        <h3 className="titulo-tarjeta mt-2 text-negro">
+        <h3 className="titulo-tarjeta text-negro">
           <Link
             href={`/unidad/${unidad.slug}`}
             className="after:absolute after:inset-0 group-hover:text-rojo"
@@ -147,27 +166,49 @@ export default function UnidadCard({
           <p className="mt-2 text-base font-medium text-gris-500">Consultar precio</p>
         )}
 
-        <p className="mt-2 text-base leading-relaxed text-gris-500">{unidad.descripcion}</p>
+        {/* La descripción se corta en dos renglones. Es texto de apoyo, no un
+            dato: los que existen hoy son de una o dos líneas, pero uno largo
+            estiraba una sola tarjeta de la fila y desalineaba las tres. El
+            texto completo está en la ficha, a un toque. */}
+        <p className="mt-2 line-clamp-2 text-base leading-relaxed text-gris-500">
+          {unidad.descripcion}
+        </p>
 
-        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gris-200 pt-4">
-          {especificaciones.map((spec) => (
-            <div key={spec.etiqueta}>
+        {/**
+         * Dos columnas para las cifras y un renglón entero para el lugar.
+         *
+         * Con los tres en una sola fila no entraban: la tarjeta mide ~344px en
+         * la grilla de tres columnas y ~350 en un teléfono, así que cada slot
+         * quedaba en unos 98px y "Bahía Blanca" se cortaba en "Bahía B…".
+         * "Comodoro Rivadavia" se cortaba todavía antes. Un dato esencial
+         * truncado no es un dato: la sucursal decide si la unidad se puede ir a
+         * ver el sábado o hay que cruzar tres provincias.
+         *
+         * Año y kilómetros sí conviven: son cifras cortas y se comparan de a
+         * pares. La sucursal se lleva el ancho completo abajo, que es lo que le
+         * hace falta para escribirse entera.
+         */}
+        <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-gris-200 pt-4">
+          {especificaciones.map((spec, indice) => (
+            <div
+              key={spec.etiqueta}
+              className={`min-w-0 ${indice === especificaciones.length - 1 ? 'col-span-2' : ''}`}
+            >
               <dt className="rotulo-dato">{spec.etiqueta}</dt>
-              <dd className="mt-1 flex items-center gap-2">
+              <dd className="mt-1 flex items-center gap-1.5">
                 <spec.Icono className="h-4 w-4 shrink-0 text-gris-400" />
-                {/* La monoespaciada SÓLO si el valor es una cifra.
-                    "Volvo", "Bahía Blanca" o "Consultar" en ancho fijo se leen
-                    como otra tipografía metida en la tarjeta, y el ancho fijo
-                    no les aporta nada: no hay ninguna columna de palabras que
-                    alinear. Es la misma regla que ya aplicaba la tabla.
+                {/* El ancho fijo SÓLO si el valor es una cifra: "Bahía Blanca"
+                    o "Consultar" no tienen nada que alinear. Es la misma regla
+                    que ya aplicaba la tabla.
 
-                    El peso es medio y no semibold en los dos casos: si el dato
-                    pesa lo mismo que el nombre de la unidad, la tarjeta deja de
-                    tener un primer renglón y pasa a tener ocho. */}
+                    El peso es medio y no semibold: si el dato pesa lo mismo que
+                    el nombre de la unidad, la tarjeta deja de tener un primer
+                    renglón. */}
                 <span
-                  className={`text-sm font-medium text-negro ${
+                  className={`truncate text-sm font-medium text-negro ${
                     esCifra(spec.valor) ? 'dato' : ''
                   }`}
+                  title={spec.valor}
                 >
                   {spec.valor}
                 </span>
@@ -176,37 +217,33 @@ export default function UnidadCard({
           ))}
         </dl>
 
-        {/* Un solo dato, a TODO EL ANCHO. Antes eran dos píldoras cortas puestas
-            una al lado de la otra; sacada "Consulta online" —que decía lo mismo
-            en las treinta y seis tarjetas—, la que quedaba flotaba sola contra
-            el borde izquierdo, y su ancho cambiaba según dijera "Disponible" o
-            "Consultar": en una grilla de tres columnas eso se leía como tres
-            tarjetas desprolijas, no como tres estados distintos.
+        {/* Financiación y comparar comparten renglón.
+            Antes la financiación era una banda a todo el ancho —36px de alto
+            para tres palabras— y la casilla de comparar quedaba sola en el
+            renglón siguiente, flotando entre la banda y los botones. Son las
+            dos cosas menos pesadas de la tarjeta: juntas en una línea ocupan lo
+            que ocupaba una sola.
 
-            A todo el ancho es una banda: mide siempre lo mismo, se apoya en el
-            mismo eje que los dos botones de abajo, y lo único que cambia entre
-            tarjeta y tarjeta es lo que dice. */}
-        <p
-          className={`centrado-optico mt-4 flex h-9 w-full items-center gap-2 rounded-sm px-3 text-xs font-medium ${
-            unidad.financiacion === 'Disponible'
-              ? 'bg-amarillo-50 text-negro ring-1 ring-inset ring-amarillo'
-              : 'bg-gris-100 text-gris-600 ring-1 ring-inset ring-gris-200'
-          }`}
-        >
-          <IconoCheck className="h-4 w-4 shrink-0" />
-          Financiación: {unidad.financiacion}
-        </p>
-
-        {/* Comparar va ACÁ y no sobre la foto: sobre la foto ya está el
-            corazón, y dos controles encimados sobre una imagen se leen como
-            un par —guardar y comparar no son lo mismo ni se usan juntos—.
-            Además una casilla necesita su palabra al lado para explicarse, y
-            sobre la foto no hay lugar para ponerla. */}
-        <div className="relative z-10 mt-3">
+            El chip mide siempre igual y sólo cambia de color y de palabra:
+            amarillo cuando hay financiación —que es señalética, lo que se
+            escanea—, gris cuando hay que consultarla. */}
+        <div className="relative z-10 mt-4 flex items-center justify-between gap-2">
           <BotonComparar slug={unidad.slug} nombre={unidad.nombre} />
+          <span
+            className={`centrado-optico inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm px-2 text-2xs font-medium ${
+              unidad.financiacion === 'Disponible'
+                ? 'bg-amarillo-50 text-negro ring-1 ring-inset ring-amarillo'
+                : 'bg-gris-100 text-gris-600 ring-1 ring-inset ring-gris-200'
+            }`}
+          >
+            <IconoCheck className="h-3.5 w-3.5 shrink-0" />
+            {unidad.financiacion === 'Disponible'
+              ? 'Con financiación'
+              : 'Financiación a consultar'}
+          </span>
         </div>
 
-        <div className="mt-auto pt-6">
+        <div className="mt-auto pt-4">
           {/* DOS acciones, no tres: ver la unidad y preguntar por ella. Eso es
               todo lo que se decide desde un listado.
 

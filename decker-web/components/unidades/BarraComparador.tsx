@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { IconoCerrar, IconoComparar } from '@/components/ui/Iconos';
-import EstadoBadge from '@/components/ui/EstadoBadge';
 import {
   MAXIMO_COMPARADOR,
   leerComparador,
@@ -88,6 +87,12 @@ export default function BarraComparador({
   const filas: { etiqueta: string; valor: (u: ResumenComparacion) => string; cifra?: boolean }[] =
     [
       { etiqueta: 'Precio', valor: (u) => formatearPrecio(u.precio), cifra: true },
+      /* El estado BAJÓ del encabezado a una fila.
+         Arriba era una píldora `whitespace-nowrap`: en una columna de 103px
+         "Usado seleccionado" se salía de su celda y desalineaba el encabezado
+         entero. Y era el único campo que no se podía leer renglón contra
+         renglón, que es exactamente para lo que existe esta ventana. */
+      { etiqueta: 'Estado', valor: (u) => u.estado },
       { etiqueta: 'Año', valor: (u) => formatearAnio(u.anio), cifra: true },
       {
         etiqueta: 'Kilómetros',
@@ -210,55 +215,84 @@ export default function BarraComparador({
 
               {/**
                * La tabla ENTRA en el ancho del teléfono. No es un detalle de
-               * apretado: con un `min-width` fijo de 560px, en una pantalla de
-               * 390 se veía una columna y media, o sea que para leer la segunda
-               * unidad había que desplazar y perder de vista la primera. Poner
-               * dos cosas al lado y obligar a mirarlas de a una es no compararlas
-               * —era la única función de esta ventana y no la cumplía—.
+               * apretado: si para leer la segunda unidad hay que desplazar y
+               * perder de vista la primera, no se están comparando —era la
+               * única función de esta ventana y no la cumplía—.
                *
-               * Lo que cede es el ancho de los rótulos y el padding, no las
-               * columnas: 80px alcanzan para "Kilómetros" en dos renglones, y
-               * ese renglón de más se paga una vez, no por unidad. De `sm` para
-               * arriba vuelve todo a la medida cómoda.
+               * `table-fixed` + `<colgroup>` es lo que lo garantiza, y es el
+               * arreglo del defecto que tenía: con `w-1/3` sobre los `<th>` y
+               * layout automático, el ancho lo repartía el CONTENIDO. Medido en
+               * 390px, las tres columnas daban 82 / 82 / 153px —la del nombre
+               * más largo se llevaba el doble— las fotos 50 / 49 / 103px de
+               * alto, y la tabla terminaba midiendo 398px dentro de una caja de
+               * 390: el scroll horizontal que este bloque decía evitar.
                *
-               * El scroll horizontal se queda para el caso de tres columnas en
-               * una pantalla muy angosta, y siempre DENTRO de la caja: la
-               * primera columna es `sticky`, así que al desplazarse se sigue
-               * sabiendo qué campo se está leyendo.
+               * En layout fijo el ancho lo mandan las columnas declaradas y no
+               * lo que traiga adentro: el rótulo se lleva su medida fija y el
+               * resto se reparte EN PARTES IGUALES. Tres columnas idénticas,
+               * fotos idénticas, sin desborde.
+               *
+               * Los 80px del rótulo alcanzan para "Kilómetros" en dos
+               * renglones, y ese renglón de más se paga una vez, no por unidad.
+               * De `sm` para arriba vuelve todo a la medida cómoda.
                */}
               <div className="overflow-auto">
-                <table className="w-full min-w-0 border-collapse text-left sm:min-w-[560px]">
-                  <thead>
+                <table className="w-full table-fixed border-separate border-spacing-0 text-left">
+                  <colgroup>
+                    <col className="w-20 sm:w-32" />
+                    {/* Sin ancho: en layout fijo, las columnas sin declarar se
+                        reparten lo que sobra en partes iguales. Son dos o tres
+                        según cuántas se hayan elegido, y no hay que calcular
+                        ningún porcentaje. */}
+                    {elegidas.map((unidad) => (
+                      <col key={unidad.slug} />
+                    ))}
+                  </colgroup>
+
+                  {/* Pegado arriba. Antes el encabezado se iba con el scroll:
+                      medido en desktop ocupaba 313px de los 637 visibles, y al
+                      bajar hasta "Sucursal" ya no se sabía de qué unidad era
+                      cada columna. Comparar es leer una fila sabiendo a qué
+                      pertenece cada valor; sin el encabezado a la vista, la
+                      tabla se convierte en tres números sin dueño. */}
+                  <thead className="sticky top-0 z-20 bg-white">
                     <tr>
                       <th
                         scope="col"
-                        className="sticky left-0 z-10 w-20 bg-white p-2 sm:w-32 sm:p-4"
+                        className="sticky left-0 z-30 border-b border-gris-300 bg-white p-2 sm:p-4"
                       >
                         <span className="sr-only">Campo</span>
                       </th>
                       {elegidas.map((unidad) => (
-                        <th
-                          key={unidad.slug}
-                          scope="col"
-                          className="w-1/3 p-2 align-top sm:p-4"
-                        >
+                        <th key={unidad.slug} scope="col" className="border-b border-gris-300 bg-white p-2 pb-3 align-top sm:p-4 sm:pb-5">
+                          {/* Alto FIJO, no proporción: la foto es la referencia
+                              visual de la columna y las tres tienen que apoyar
+                              el nombre en la misma línea. Con `aspect-[4/3]` el
+                              alto seguía al ancho, así que cualquier diferencia
+                              de columna se amplificaba en la foto. */}
                           <Image
                             src={unidad.imagen}
                             alt=""
                             width={240}
                             height={180}
-                            className="mb-3 aspect-[4/3] w-full rounded-sm object-cover"
+                            className="h-14 w-full rounded-sm object-cover sm:h-24"
                           />
-                          <EstadoBadge estado={unidad.estado} />
-                          {/* El nombre baja a 15px en el teléfono: a 20px, en
-                              una columna de 100px, "Volvo FM 420 0 KM" ocupaba
-                              cuatro renglones y empujaba la primera fila de
-                              datos fuera de la pantalla. Lo que hay que
-                              comparar son los datos, no los títulos. */}
+                          {/* El nombre baja a 15px en el teléfono y se corta en
+                              dos renglones: a 20px y sin tope, "Volvo FH 460
+                              Usado Seleccionado" ocupaba cuatro renglones en
+                              una columna y empujaba la primera fila de datos
+                              fuera de la pantalla. Lo que hay que comparar son
+                              los datos, no los títulos —el nombre completo
+                              sigue estando en el `title` y en la ficha—. */}
                           <Link
                             href={`/unidad/${unidad.slug}`}
                             onClick={() => setAbierta(false)}
-                            className="mt-2 block font-display text-sm font-extrabold leading-tight text-negro hover:text-rojo sm:text-lg"
+                            title={unidad.nombre}
+                            /* Sin `block`: `line-clamp` necesita quedarse con
+                               el `display` de la caja (`-webkit-box`), y una
+                               utilidad de display posterior lo pisaba —el
+                               nombre volvía a crecer a tres renglones—. */
+                            className="mt-2 line-clamp-2 font-display text-sm font-extrabold leading-tight text-negro hover:text-rojo sm:text-lg"
                           >
                             {unidad.nombre}
                           </Link>
@@ -278,17 +312,24 @@ export default function BarraComparador({
                         elegidas.length > 1 && new Set(valores).size === 1;
 
                       return (
-                        <tr key={fila.etiqueta} className="border-t border-gris-200">
+                        <tr key={fila.etiqueta}>
                           <th
                             scope="row"
-                            className="sticky left-0 z-10 bg-white p-2 align-top sm:p-4"
+                            className="sticky left-0 z-10 border-b border-gris-200 bg-white p-2 align-top sm:p-4"
                           >
                             <span className="rotulo-dato">{fila.etiqueta}</span>
                           </th>
                           {valores.map((valor, indice) => (
                             <td
                               key={elegidas[indice].slug}
-                              className={`p-2 align-top text-sm sm:p-4 ${fila.cifra ? 'dato' : ''} ${
+                              /* El borde va en la CELDA y no en la fila: la
+                                 tabla pasó a `border-separate` para que el
+                                 encabezado pegado pueda tener su propia línea
+                                 —con `border-collapse`, el navegador no pinta
+                                 bordes ni sombras de una celda `sticky`—, y en
+                                 ese modo un borde declarado sobre el `<tr>` no
+                                 se dibuja. */
+                              className={`border-b border-gris-200 p-2 align-top text-sm sm:p-4 ${fila.cifra ? 'dato' : ''} ${
                                 todasIguales ? 'text-gris-500' : 'font-medium text-negro'
                               }`}
                             >

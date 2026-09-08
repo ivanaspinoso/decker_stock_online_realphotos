@@ -21,12 +21,21 @@ export default function BotonCompartir({
   titulo,
   descripcion,
   ruta,
+  variante = 'boton',
   className = '',
 }: {
   titulo: string;
   descripcion: string;
   /** Ruta interna de la unidad, ej. `/unidad/volvo-fm-420-0km`. */
   ruta: string;
+  /**
+   * `boton` es la barra a todo el ancho con la palabra al lado. `icono` es el
+   * cuadrado de 44px, para cuando comparte renglón con el corazón de guardar:
+   * ahí las dos son acciones chicas del mismo rango, y una de ellas con rótulo
+   * y superficie pesaría como el botón de simular financiación que tiene
+   * arriba. El nombre accesible no se pierde —lo pone `aria-label`—.
+   */
+  variante?: 'boton' | 'icono';
   className?: string;
 }) {
   const [estado, setEstado] = useState<Estado>('quieto');
@@ -69,10 +78,16 @@ export default function BotonCompartir({
       <button
         type="button"
         onClick={compartir}
-        className="centrado-optico inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+        aria-label="Compartir esta unidad"
+        title="Compartir esta unidad"
+        className={
+          variante === 'icono'
+            ? 'inline-flex h-11 w-11 items-center justify-center rounded-sm text-gris-500 transition-colors duration-rapido hover:bg-gris-100 hover:text-negro'
+            : 'centrado-optico inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-gris-100 text-sm font-medium text-negro transition-colors duration-rapido hover:bg-gris-200'
+        }
       >
-        <IconoCompartir className="h-4 w-4" />
-        Compartir esta unidad
+        <IconoCompartir className={variante === 'icono' ? 'h-5 w-5' : 'h-4 w-4'} />
+        {variante === 'boton' && 'Compartir esta unidad'}
       </button>
 
       {/* El aviso se anuncia solo: quien navega con lector de pantalla tiene que
