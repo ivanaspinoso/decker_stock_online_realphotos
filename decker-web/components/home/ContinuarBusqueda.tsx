@@ -70,7 +70,18 @@ export default function ContinuarBusqueda({
   if (categorias.length === 0) return null;
 
   return (
-    <section className="seccion pt-0" aria-labelledby={`${id}-titulo`}>
+    /**
+     * Fondo BLANCO, y no el gris del lienzo.
+     *
+     * La home alterna negro / gris / blanco con un ritmo: hero negro, catálogo
+     * gris, cierre de marca negro, compra segura blanco, financiación gris,
+     * parte de pago blanco, agencias gris. Este bloque también quedaba gris,
+     * pegado a agencias y sin padding arriba: dos secciones seguidas del mismo
+     * color, las dos con tarjetas blancas adentro, que se leían como una sola
+     * cosa larga. Ahora el orden termina gris → blanco → negro (el pie), que es
+     * el mismo ritmo del resto.
+     */
+    <section className="seccion bg-white" aria-labelledby={`${id}-titulo`}>
       <div className="contenedor">
         {/* Encabezado propio y chico: no usa `EncabezadoSeccion` porque este
             bloque no anuncia nada, ordena. Un titular de sección acá lo pondría
@@ -83,7 +94,12 @@ export default function ContinuarBusqueda({
           filtro puesto.
         </p>
 
-        <div className="mt-6 overflow-hidden rounded-lg bg-white shadow-nivel-1">
+        {/* Sobre blanco, la lista se define con un filete y no con una tarjeta
+            elevada: una superficie blanca sobre otra blanca no se ve, y la
+            sombra sola la haría flotar sin motivo. El filete alcanza, y deja al
+            bloque más callado que las tarjetas del catálogo —que es lo que
+            corresponde a un cierre—. */}
+        <div className="mt-6 overflow-hidden rounded-lg ring-1 ring-gris-200">
           {categorias.map((categoria) => {
             const abierta = abiertas.includes(categoria.id);
             const idPanel = `${id}-${categoria.id}`;

@@ -64,9 +64,19 @@ export const metadata: Metadata = {
     default: 'Decker Camiones — Stock online de camiones 0 km y usados',
     template: '%s | Decker Camiones',
   },
+  /**
+   * Es lo que Google muestra debajo del título y lo que WhatsApp pone en la
+   * tarjeta del link. Había quedado empezando por la mitad —"Consultá
+   * financiación, entregá tu usado…"— sin decir en ninguna parte QUÉ vende
+   * este sitio ni dónde: la primera oración se había perdido en una edición.
+   *
+   * Arranca por el stock y las agencias, que es lo que alguien busca, y cierra
+   * con lo que se puede hacer acá. Entra en los ~155 caracteres que muestra
+   * Google sin cortar a la mitad.
+   */
   description:
-    'Encontrá camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas. ' +
-    'Consultá financiación, entregá tu usado y hablá con un asesor Decker.',
+    'Camiones 0 km y usados seleccionados, semis, bateas y utilitarios en las ' +
+    'cinco agencias Decker. Mirá el stock, simulá financiación y entregá tu usado.',
   metadataBase: new URL('https://deckercamiones.com.ar'),
   alternates: {
     canonical: '/',
@@ -76,16 +86,38 @@ export const metadata: Metadata = {
     locale: 'es_AR',
     siteName: 'Decker Camiones',
     url: '/',
-    // Sin esto, compartir el sitio por WhatsApp —que es el canal por el que
-    // entra la consulta— mostraba una tarjeta sin imagen.
+    /**
+     * Imagen de la tarjeta al compartir. WhatsApp es EL canal de este sitio,
+     * así que esto se ve más que cualquier otra cosa que no sea la home.
+     *
+     * Es una imagen propia y no la foto del banner. La del banner medía
+     * 1920x1440 —proporción 4:3— y las tarjetas de WhatsApp, Facebook y
+     * LinkedIn recortan a 1,91:1: se comían el tercio de arriba y el de abajo
+     * sin control. Además pesaba 826 KB, que es lo que tiene que bajar el
+     * servidor del otro lado antes de dibujar la miniatura.
+     *
+     * `og.jpg` es esa misma foto del patio ya recortada a 1200x630 —la medida
+     * que piden—, oscurecida y con el logo encima, y pesa 71 KB. La marca se
+     * lee en la miniatura, que es todo lo que se le pide.
+     */
     images: [
       {
-        url: '/marca/banner.jpg',
-        width: 1920,
-        height: 1440,
-        alt: 'Patio de unidades Decker Camiones',
+        url: '/marca/og.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Decker Camiones — patio de unidades',
       },
     ],
+  },
+
+  /**
+   * Twitter/X usa sus propias etiquetas y, sin ellas, algunos clientes que las
+   * leen —no sólo X— caen a una tarjeta chica sin imagen. `summary_large_image`
+   * es la que muestra la foto a todo el ancho; el resto de los datos los hereda
+   * de `openGraph`.
+   */
+  twitter: {
+    card: 'summary_large_image',
   },
   robots: {
     index: true,

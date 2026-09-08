@@ -14,9 +14,12 @@ import type {
 
 export const metadata: Metadata = {
   title: 'Stock online',
+  /* Había quedado sin la primera oración —decía sólo "Filtrá por tipo, marca,
+     año…"— y esta es LA página que Google indexa para "camiones usados": la
+     descripción tiene que empezar diciendo qué hay, no cómo se filtra. */
   description:
-    'Camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas. ' +
-    'Filtrá por tipo, marca, año, precio, sucursal y estado.',
+    'Camiones 0 km y usados seleccionados, semis, bateas y utilitarios en las ' +
+    'cinco agencias Decker. Filtrá por tipo, marca, año, precio y sucursal.',
 };
 
 interface Props {

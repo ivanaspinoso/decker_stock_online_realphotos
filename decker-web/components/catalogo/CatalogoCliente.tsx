@@ -274,9 +274,22 @@ export default function CatalogoCliente({
               <label htmlFor="catalogo-orden" className="sr-only">
                 Ordenar por
               </label>
+              {/**
+               * En el teléfono el orden se lleva su propio renglón.
+               *
+               * Compartía fila con el botón de filtros y el conmutador de
+               * vista: en 390px le quedaban 102px y "Destacadas primero"
+               * —el valor por defecto, o sea el que ve todo el mundo al
+               * entrar— se mostraba como "Destaca…". Un control que no puede
+               * decir en qué estado está no informa nada.
+               *
+               * `order-last w-full` lo manda abajo y a todo el ancho; los dos
+               * controles compactos se quedan arriba juntos. De `sm` para
+               * arriba vuelven los tres a la misma línea, donde sí entran.
+               */}
               <select
                 id="catalogo-orden"
-                className="campo h-11 w-auto min-w-0 flex-1 py-0 text-sm sm:flex-none"
+                className="campo order-last h-11 w-full min-w-0 py-0 text-sm sm:order-none sm:w-auto sm:flex-none"
                 value={filtros.orden ?? 'relevancia'}
                 onChange={(evento) => cambiar({ orden: evento.target.value as OrdenCatalogo })}
               >

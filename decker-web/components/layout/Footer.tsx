@@ -22,7 +22,7 @@ export default function Footer() {
             Nuestro motor es el trabajo
           </p>
           <p className="mt-3 max-w-xs text-base leading-relaxed text-gris-400">
-            Camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas.
+            Camiones 0 km y usados seleccionados, semis, bateas y utilitarios. 
           </p>
         </div>
 

@@ -43,7 +43,7 @@ export default function CtaDecker() {
             Stock, financiación y asesoramiento en un solo lugar.
           </h2>
           <p className="mt-4 text-base text-gris-200">
-            Camiones 0 km, usados, semis, bateas, utilitarios, autos y camionetas.
+            Camiones 0 km y usados seleccionados, semis, bateas y utilitarios. 
           </p>
 
           {/* Los botones bajan al bloque de texto: a la derecha quedaban sobre
