@@ -265,7 +265,7 @@ export default function UnidadCard({
           <div className="relative z-10 flex gap-2">
             <Link
               href={`/unidad/${unidad.slug}`}
-              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center rounded-sm bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
+              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center rounded-sm bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200 active:translate-y-px"
             >
               Ver ficha
             </Link>
@@ -273,7 +273,7 @@ export default function UnidadCard({
               href={linkConsultaUnidad(unidad)}
               target="_blank"
               rel="noopener noreferrer"
-              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-rojo text-base font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
+              className="centrado-optico inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-rojo text-base font-medium text-white transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
               aria-label={`Consultar por ${unidad.nombre} por WhatsApp`}
             >
               <IconoWhatsapp className="h-4 w-4" />

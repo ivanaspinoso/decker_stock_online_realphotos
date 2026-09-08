@@ -115,10 +115,16 @@ export default function BarraComparador({
       <div aria-hidden="true" className="h-[76px] sm:h-[84px]" />
 
       {/* Barra fija abajo. `data-destino`: es el punto de llegada del ícono que
-          sale de cada casilla al marcarla (ver `lib/vuelo.ts`). */}
+          sale de cada casilla al marcarla (ver `lib/vuelo.ts`).
+
+          `oscuro`: es una superficie negra y no lo declaraba, así que el foco
+          del teclado se dibujaba en el rojo de fondo claro —2,2:1 contra el
+          negro de la barra, invisible—. Con la clase, el aro pasa al amarillo
+          de señalética, que es lo que el sistema usa sobre negro. El header y
+          el pie ya lo hacían; esta barra se había quedado afuera. */}
       <div
         data-destino="comparador"
-        className="animate-aparecer fixed inset-x-0 bottom-0 z-40 border-t border-negro-800 bg-negro-950/95 backdrop-blur-sm"
+        className="oscuro animate-aparecer fixed inset-x-0 bottom-0 z-40 border-t border-negro-800 bg-negro-950/95 backdrop-blur-sm"
       >
         <div className="contenedor flex items-center gap-4 py-3">
           <IconoComparar className="hidden h-5 w-5 shrink-0 text-amarillo sm:block" />
@@ -174,7 +180,7 @@ export default function BarraComparador({
             /* Con una sola unidad no hay comparación posible. El botón se
                muestra igual, apagado: esconderlo haría aparecer un control de
                la nada al marcar la segunda. */
-            className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-5 text-sm font-medium text-white transition-colors hover:bg-rojo-700 disabled:cursor-not-allowed disabled:bg-negro-800 disabled:text-gris-400"
+            className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-5 text-sm font-medium text-white transition-colors hover:bg-rojo-700 active:translate-y-px disabled:cursor-not-allowed disabled:bg-negro-800 disabled:text-gris-400"
           >
             {elegidas.length < 2 ? 'Elegí otra' : `Comparar (${elegidas.length})`}
           </button>

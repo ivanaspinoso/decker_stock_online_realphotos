@@ -101,8 +101,13 @@ export default function ContinuarBusqueda({
                     aria-controls={idPanel}
                     /* El renglón entero es el control: en un teléfono nadie
                        apunta a un ícono de 20px en el borde derecho. 64px de
-                       alto y todo el ancho. */
-                    className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition-colors duration-rapido hover:bg-gris-50"
+                       alto y todo el ancho.
+
+                       `foco-interior` porque ocupa exactamente el ancho de la
+                       tarjeta: el aro de foco normal, que va 2px por afuera,
+                       se lo comía el `overflow-hidden` del contenedor y sólo
+                       quedaban dos rayas rojas cruzando la tarjeta. */
+                    className="foco-interior flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition-colors duration-rapido hover:bg-gris-50"
                   >
                     <span className="text-md font-medium text-negro">{categoria.titulo}</span>
                     <span className="flex shrink-0 items-center gap-3">

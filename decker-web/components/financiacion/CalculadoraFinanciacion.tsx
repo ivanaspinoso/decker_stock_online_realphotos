@@ -201,7 +201,7 @@ export default function CalculadoraFinanciacion({
                     onClick={() =>
                       setAnticipo(String(Math.round((valorNum * porcentaje) / 100)))
                     }
-                    className={`centrado-optico dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-30 ${
+                    className={`centrado-optico dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-40 ${
                       activo
                         ? 'bg-white text-negro'
                         : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'

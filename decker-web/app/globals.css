@@ -21,13 +21,72 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Foco visible en todo elemento interactivo. No se remueve en ningún lado. */
+  /**
+   * Foco visible en todo elemento interactivo. No se remueve en ningún lado.
+   *
+   * Es `outline` y ya no un `ring` de Tailwind, y el cambio no es de sintaxis.
+   * El `ring` se dibujaba con `ring-offset-2 ring-offset-white`: una banda
+   * BLANCA de 2px pegada al elemento y, por fuera, el aro rojo. Sobre el lienzo
+   * gris o sobre una foto esa banda no desaparecía —no era un hueco, era pintura
+   * blanca—, así que lo enfocado quedaba recortado como una calcomanía y el
+   * conjunto se leía como un cartel de error.
+   *
+   * El `outline` deja ver el fondo real por el hueco de los 2px, sigue el radio
+   * del elemento solo y no ocupa lugar en el layout.
+   *
+   * El rojo baja a `rojo-700`. El `rojo` pleno es el de los botones de acción y
+   * el que va a marcar los campos con error: si el foco usa exactamente ese
+   * tono, "estás escribiendo acá" y "esto está mal" se dicen con el mismo
+   * color. El 700 es más profundo, se lee como marca y no como alarma, y da
+   * 7,4:1 contra blanco —muy por encima del 3:1 que pide WCAG 2.4.11 para el
+   * indicador de foco—.
+   */
   :focus-visible {
-    @apply outline-none ring-2 ring-rojo ring-offset-2 ring-offset-white;
+    outline: 2px solid theme('colors.rojo.700');
+    outline-offset: 2px;
   }
 
+  /* Sobre negro el rojo no despega: ahí el foco lo da el amarillo, que es el
+     color de señalética del sistema. */
   .oscuro :focus-visible {
-    @apply ring-amarillo ring-offset-negro-950;
+    outline-color: theme('colors.amarillo.DEFAULT');
+  }
+
+  /**
+   * Sobre el rojo de marca, el foco va en NEGRO.
+   *
+   * El aro se dibuja 2px por afuera, así que contra el blanco de la página se
+   * ve bien igual. El problema es de lectura, no de contraste: un aro rojo
+   * oscuro rodeando un botón rojo pleno —el de WhatsApp, que es el control más
+   * importante del sitio— se lee como un borrón del mismo color, no como un
+   * control marcado. El negro lo despega de las dos cosas a la vez.
+   */
+  .bg-rojo:focus-visible {
+    outline-color: theme('colors.negro.DEFAULT');
+  }
+
+  /* ...salvo cuando ese botón rojo está sobre una superficie negra —el CTA del
+     header, el de la barra del comparador—: ahí el aro negro se pierde contra
+     el fondo. Sobre negro manda el amarillo, como en el resto del sistema.
+     Necesita ser más específica que la regla de arriba para ganarle. */
+  .oscuro .bg-rojo:focus-visible {
+    outline-color: theme('colors.amarillo.DEFAULT');
+  }
+
+  /**
+   * Foco dibujado HACIA ADENTRO.
+   *
+   * Para el control que ocupa todo el ancho de una caja que recorta —una fila
+   * de acordeón dentro de una tarjeta con `overflow-hidden`, por ejemplo—. Ahí
+   * el aro de afuera no se ve entero: el contenedor le corta los lados y
+   * quedan dos rayas rojas sueltas cruzando la tarjeta, que no se leen como
+   * "esto está enfocado" sino como que algo se rompió.
+   *
+   * Con el offset negativo el aro se dibuja por dentro del propio control:
+   * mismo grosor, mismo color, y se ve completo.
+   */
+  .foco-interior:focus-visible {
+    outline-offset: -2px;
   }
 
   /**
@@ -225,13 +284,61 @@
    */
   .campo {
     @apply block min-h-11 w-full rounded-sm border border-gris-200 bg-white px-4 py-3 text-base
-           text-negro transition-colors duration-rapido placeholder:text-gris-500
-           hover:border-gris-300 focus:border-negro focus:outline-none focus:ring-0;
+           text-negro transition-[border-color,box-shadow] duration-rapido
+           placeholder:text-gris-500 hover:border-gris-300;
+  }
+
+  /**
+   * Foco de un campo: NEUTRO, nunca rojo.
+   *
+   * El borde se va a negro y alrededor queda un halo gris muy tenue. Un campo
+   * enfocado es el estado más normal que tiene un formulario —pasa una vez por
+   * cada dato que se carga— y no puede verse como una advertencia. El negro da
+   * 20:1 contra el blanco del campo, así que se nota sin levantar la voz.
+   *
+   * Se apaga el `outline` global acá: el campo ya tiene un borde propio que
+   * cambia, y sumarle el aro de afuera dibujaba dos líneas concéntricas.
+   */
+  .campo:focus,
+  .campo:focus-visible {
+    @apply border-negro outline-none;
+    box-shadow: 0 0 0 3px rgba(11, 11, 12, 0.07);
+  }
+
+  /**
+   * Error de validación. ACÁ va el rojo pleno, y sólo acá.
+   *
+   * `:user-invalid` y no `:invalid`: un campo obligatorio y vacío es inválido
+   * desde que carga la página, así que con `:invalid` el formulario de parte de
+   * pago aparecería todo en rojo antes de que la persona escriba una letra.
+   * `:user-invalid` espera a que se haya interactuado con el campo o se haya
+   * intentado enviar, que es cuando el error es un error y no una casilla que
+   * todavía no le tocó el turno.
+   *
+   * El halo es del mismo tono que el borde: es la única parte del sistema donde
+   * el rojo rodea un control, y por eso se distingue del foco de un vistazo.
+   */
+  .campo:user-invalid {
+    @apply border-rojo;
+    box-shadow: 0 0 0 3px rgba(214, 0, 28, 0.12);
   }
 
   .campo-oscuro {
     @apply border-negro-700 bg-negro-800 text-white placeholder:text-gris-400
-           hover:border-negro-600 focus:border-amarillo;
+           hover:border-negro-600;
+  }
+
+  /* Sobre negro el foco del campo lo da el amarillo: el negro del borde no se
+     despegaría del fondo. */
+  .campo-oscuro:focus,
+  .campo-oscuro:focus-visible {
+    @apply border-amarillo;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, 0.16);
+  }
+
+  .campo-oscuro:user-invalid {
+    @apply border-rojo;
+    box-shadow: 0 0 0 3px rgba(214, 0, 28, 0.25);
   }
 
   /**

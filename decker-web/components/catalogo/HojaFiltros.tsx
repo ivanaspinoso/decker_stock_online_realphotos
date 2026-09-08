@@ -124,7 +124,7 @@ export default function HojaFiltros({
                     type="button"
                     onClick={onLimpiar}
                     disabled={!hayFiltrosPuestos(filtros)}
-                    className="px-2 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
+                    className="px-2 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-400"
                   >
                     Limpiar
                   </button>
@@ -157,7 +157,7 @@ export default function HojaFiltros({
                 <button
                   type="button"
                   onClick={() => setAbierta(false)}
-                  className="centrado-optico inline-flex h-12 w-full items-center justify-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
+                  className="centrado-optico inline-flex h-12 w-full items-center justify-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
                 >
                   {resultados === 0
                     ? 'Sin resultados: probá quitar un filtro'

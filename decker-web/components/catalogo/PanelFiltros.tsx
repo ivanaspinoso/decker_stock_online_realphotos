@@ -362,7 +362,7 @@ export default function PanelFiltros({
             type="button"
             onClick={onLimpiar}
             disabled={!hayFiltrosPuestos(filtros)}
-            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-300"
+            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-400"
           >
             Limpiar
           </button>

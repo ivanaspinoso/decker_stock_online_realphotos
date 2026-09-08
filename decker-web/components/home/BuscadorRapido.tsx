@@ -367,9 +367,24 @@ export default function BuscadorRapido({
                 </button>
               </div>
 
+              {/**
+               * El foco lo muestra LA FILA, no el input.
+               *
+               * El campo no tiene caja propia —es texto sobre el panel—, así que
+               * el aro global le quedaba flotando alrededor: un rectángulo rojo
+               * de 2px con hueco, que es exactamente la forma de un error de
+               * validación. Y era el primer estado que veía cualquiera, porque
+               * el campo se enfoca al abrir.
+               *
+               * En su lugar, la línea que ya separa esta fila del resto pasa de
+               * gris a negro. Es el gesto de un campo subrayado: alcanza para
+               * decir "estás escribiendo acá", no envuelve nada y no puede
+               * confundirse con un aviso. El grosor es 2px SIEMPRE y sólo cambia
+               * el color, así que al enfocar no se mueve un píxel.
+               */}
               <form
                 role="search"
-                className="flex items-center gap-3 border-b border-gris-200 px-5 py-3"
+                className="flex items-center gap-3 border-b-2 border-gris-200 px-5 py-3 transition-colors duration-rapido focus-within:border-negro"
                 onSubmit={(evento) => {
                   evento.preventDefault();
                   irA(href);
@@ -390,7 +405,9 @@ export default function BuscadorRapido({
                   aria-activedescendant={
                     resaltado >= 0 ? `${id}-unidad-${resaltado}` : undefined
                   }
-                  className="h-11 flex-1 border-0 bg-transparent text-md text-negro outline-none placeholder:text-gris-500"
+                  /* `focus-visible:outline-none`: el estado lo cuenta la línea
+                     de abajo (ver el comentario del `<form>`), no un aro. */
+                  className="h-11 flex-1 border-0 bg-transparent text-md text-negro outline-none focus-visible:outline-none placeholder:text-gris-500"
                   placeholder="Buscá por marca o modelo"
                   value={texto}
                   onChange={(evento) => setTexto(evento.target.value)}
@@ -517,7 +534,7 @@ export default function BuscadorRapido({
                 <button
                   type="button"
                   onClick={() => irA(href)}
-                  className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors hover:bg-rojo-700"
+                  className="centrado-optico inline-flex h-11 shrink-0 items-center rounded bg-rojo px-6 text-sm font-medium text-white transition-colors hover:bg-rojo-700 active:translate-y-px"
                 >
                   {coincidentes.length > 0 ? `Ver ${coincidentes.length}` : 'Ver stock'}
                 </button>

@@ -64,10 +64,19 @@ export default function GaleriaUnidad({
               aria-pressed={indice === activa}
               /* El estado activo es un anillo, no un cambio de opacidad: en el
                  teléfono no hay hover que lo confirme, así que la miniatura
-                 elegida tiene que verse elegida sola. */
+                 elegida tiene que verse elegida sola.
+
+                 El anillo es NEGRO y ya no rojo. El rojo pasó a ser el color
+                 del foco en todo el sitio, así que la miniatura que se está
+                 viendo y la que el teclado tiene marcada se dibujaban igual:
+                 dos significados distintos con el mismo anillo rojo, y quien
+                 recorre con Tab no podía saber cuál es la foto que está
+                 arriba. El negro además es el que ya usa el resto del sistema
+                 para "esta es la opción puesta" —los chips del buscador, el
+                 conmutador de vista—. */
               className={`relative rounded-md transition-opacity duration-rapido ease-suave ${
                 indice === activa
-                  ? 'ring-2 ring-rojo ring-offset-2'
+                  ? 'ring-2 ring-negro ring-offset-2'
                   : 'opacity-70 hover:opacity-100'
               }`}
             >
