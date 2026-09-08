@@ -97,13 +97,13 @@ export default function Hero({
               teléfono, 40 en tablet, 52 en monitor. La caja alta, el peso y el
               tracking los pone `titulo-expresivo`. */}
           <h1 className="titulo-expresivo text-3xl text-white sm:text-4xl lg:text-5xl">
-            Nuestro motor es el trabajo
+            NUESTRO MOTOR ES EL TRABAJO
           </h1>
 
           {/* gris-200 y no gris-300: centrado, el texto cae sobre la parte más
               clara de la foto y el gris medio no llega a 4.5:1. */}
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-gris-200 sm:text-md">
-            Camiones 0 km y usados seleccionados, semis, bateas y utilitarios. Elegí tu
+            Elegí tu
             próxima unidad con respaldo Decker.
           </p>
 
