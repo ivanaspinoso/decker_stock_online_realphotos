@@ -152,7 +152,25 @@ export default function BuscadorRapido({
   useEffect(() => {
     if (!abierto) return;
 
-    campo.current?.focus();
+    /**
+     * El campo se enfoca SÓLO donde hay teclado físico.
+     *
+     * En el teléfono, enfocarlo al abrir levantaba el teclado en el acto y se
+     * comía dos tercios de la pantalla. La ventana es `fixed` y en iOS no se
+     * achica con el teclado: la lista de unidades y el botón "Ver N" quedaban
+     * abajo del teclado, y como el fondo está bloqueado, arrastrar no movía
+     * nada. Recién al tocar en cualquier lado —lo que baja el teclado— la
+     * ventana volvía a entrar y el scroll "empezaba a andar". Ese era el
+     * síntoma: no fallaba el scroll, faltaba pantalla.
+     *
+     * Y no hace falta: en mobile lo primero que se usa acá son los chips de
+     * tipo, marca y sucursal, no el tecleo. Quien quiera escribir toca el
+     * campo, que es el gesto que espera de todas formas.
+     */
+    const conTecladoFisico =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (conTecladoFisico) campo.current?.focus();
 
     // La página de atrás no scrollea mientras la ventana está abierta.
     const overflowPrevio = document.body.style.overflow;
@@ -312,7 +330,17 @@ export default function BuscadorRapido({
           merced del `overflow-hidden` y del contexto de apilado de la sección. */}
       {abierto &&
         createPortal(
-          <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 pt-[8vh] sm:pt-[12vh]">
+          /**
+           * `dvh` y no `vh`.
+           *
+           * `vh` mide el viewport GRANDE —la pantalla con la barra del
+           * navegador escondida y sin teclado—, así que en un teléfono la
+           * ventana se dimensionaba contra una altura que en ese momento no
+           * existía y su mitad de abajo quedaba fuera de lo visible. `dvh`
+           * sigue el alto que de verdad hay: se achica cuando sube el teclado o
+           * baja la barra de direcciones, y la ventana siempre entra.
+           */
+          <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 pt-[6dvh] sm:pt-[12vh]">
             <div
               className="animate-velo absolute inset-0 bg-negro-950/70 backdrop-blur-sm"
               onClick={cerrar}
@@ -323,7 +351,7 @@ export default function BuscadorRapido({
               role="dialog"
               aria-modal="true"
               aria-labelledby={`${id}-titulo`}
-              className="animate-entrar-panel relative flex max-h-[84vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-nivel-3"
+              className="animate-entrar-panel relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-nivel-3"
             >
               <div className="flex items-center justify-between gap-4 border-b border-gris-200 px-5 pt-4">
                 <p id={`${id}-titulo`} className="etiqueta pb-4 text-rojo">
@@ -380,7 +408,12 @@ export default function BuscadorRapido({
                 )}
               </form>
 
-              <div className="overflow-y-auto px-5 py-5">
+              {/* `min-h-0`: un hijo de flex no se achica por debajo de su
+                  contenido salvo que se le diga, y sin eso el bloque no
+                  scrollea —se desborda y lo recorta el `overflow-hidden` del
+                  panel—. `overscroll-contain`: al llegar al final, el arrastre
+                  no se le pasa a la página de atrás. */}
+              <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5">
                 {/* Accesos directos a unidades concretas. Sólo cuando hay texto:
                     sin texto la lista serían las primeras del stock, que no
                     responden a ninguna intención. */}

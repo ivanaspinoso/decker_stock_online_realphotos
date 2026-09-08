@@ -1,6 +1,7 @@
 import Hero from '@/components/home/Hero';
 import CompraSegura from '@/components/home/CompraSegura';
 import Agencias from '@/components/home/Agencias';
+import ContinuarBusqueda from '@/components/home/ContinuarBusqueda';
 import CtaDecker from '@/components/home/CtaDecker';
 import Catalogo from '@/components/home/Catalogo';
 import VistosRecientemente from '@/components/unidades/VistosRecientemente';
@@ -16,6 +17,7 @@ import {
   getParametrosFinanciacion,
   getSucursales,
 } from '@/lib/api';
+import { armarCategoriasBusqueda } from '@/lib/exploracion';
 
 interface Props {
   // Desde Next 15 `searchParams` es una Promise: la página empieza a renderizar
@@ -102,47 +104,45 @@ export default async function Home({ searchParams }: Props) {
       <section id="cotizar" className="seccion scroll-mt-24 bg-white">
         <div className="contenedor grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
           {/**
-           * Tres bloques con orden distinto por breakpoint, igual que la ficha.
+           * Los pasos van ARRIBA del formulario, también en el teléfono.
            *
-           * En mobile: título → FORMULARIO → pasos. El encabezado más la línea
-           * de tiempo ocupaban ~700px de los 844 de un teléfono, así que había
-           * que pasar de largo toda la explicación antes de ver el primer
-           * campo. Los pasos cuentan qué pasa DESPUÉS de enviar: abajo están en
-           * su momento, y el que ya sabe de qué se trata no los vuelve a leer.
+           * Es lo que hay que leer antes de cargar nada: dicen que esto no
+           * manda un formulario a un buzón, sino que abre un WhatsApp con el
+           * mensaje ya armado y que después contesta un asesor. Sin eso, el
+           * primer campo aparece sin que se sepa a dónde va lo que se escribe.
            *
-           * En desktop vuelven a la columna izquierda, debajo del título, donde
-           * se ven junto al formulario sin costo de scroll.
+           * En mobile se los compacta —números de 28px y menos aire entre
+           * ítems— para que el formulario no quede a una pantalla de distancia.
+           * En desktop la línea de tiempo recupera su medida.
            */}
-          <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
+          <div>
             <p className="etiqueta text-rojo">Parte de pago</p>
             <h2 className="titulo-seccion mt-3">Entregá tu usado y subite a otra unidad</h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-gris-500">
               Cargá los datos de tu unidad y generá una consulta directa para que el equipo
               comercial evalúe la operación.
             </p>
-          </div>
 
-          <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2 lg:-mt-6">
             {/* Los pasos como línea de tiempo: la guía vertical los liga en una
                 secuencia en vez de dejarlos como cuatro ítems sueltos. */}
-            <ol>
+            <ol className="mt-6 lg:mt-10">
               {[
                 'Completás los datos de tu unidad.',
                 'Se abre WhatsApp con el mensaje ya armado.',
                 'El asesor evalúa la operación y te responde.',
                 'Coordinás la inspección en la agencia.',
               ].map((paso, indice, pasos) => (
-                <li key={paso} className="relative flex gap-4 pb-7 last:pb-0">
+                <li key={paso} className="relative flex gap-3 pb-4 last:pb-0 lg:gap-4 lg:pb-7">
                   {indice < pasos.length - 1 && (
                     <span
                       aria-hidden="true"
-                      className="absolute bottom-0 left-[15px] top-9 w-px bg-gris-200"
+                      className="absolute bottom-0 left-[13px] top-8 w-px bg-gris-200 lg:left-[15px] lg:top-9"
                     />
                   )}
-                  <span className="dato relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-negro text-sm font-medium text-white">
+                  <span className="dato relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-negro text-xs font-medium text-white lg:h-8 lg:w-8 lg:text-sm">
                     {indice + 1}
                   </span>
-                  <span className="pt-1.5 text-base leading-relaxed text-gris-600">
+                  <span className="pt-0.5 text-base leading-relaxed text-gris-600 lg:pt-1.5">
                     {paso}
                   </span>
                 </li>
@@ -150,13 +150,16 @@ export default async function Home({ searchParams }: Props) {
             </ol>
           </div>
 
-          <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <FormCotizarUsado sucursales={sucursales} />
-          </div>
+          <FormCotizarUsado sucursales={sucursales} />
         </div>
       </section>
 
       <Agencias sucursales={sucursales} conteo={conteoPorSucursal} />
+
+      {/* Último bloque antes del pie: por dónde volver a entrar al stock si
+          nada de lo de arriba cerró. Los grupos y los conteos se arman en el
+          servidor (`lib/exploracion`); acá abajo sólo se pliegan. */}
+      <ContinuarBusqueda categorias={armarCategoriasBusqueda(unidades, sucursales)} />
     </>
   );
 }

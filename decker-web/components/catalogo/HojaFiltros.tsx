@@ -113,7 +113,7 @@ export default function HojaFiltros({
               aria-modal="true"
               aria-labelledby="titulo-hoja-filtros"
               tabIndex={-1}
-              className="animate-entrar-panel relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-lg bg-white shadow-nivel-3 outline-none"
+              className="animate-entrar-panel relative flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-lg bg-white shadow-nivel-3 outline-none"
             >
               <div className="flex items-center justify-between gap-4 border-b border-gris-200 px-5 py-4">
                 <h2 id="titulo-hoja-filtros" className="titulo-tarjeta">
@@ -140,7 +140,7 @@ export default function HojaFiltros({
               </div>
 
               {/* Scrollea la hoja, no la página de atrás. */}
-              <div className="overflow-y-auto px-5 py-5">
+              <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5">
                 <CamposFiltros
                   filtros={filtros}
                   opciones={opciones}

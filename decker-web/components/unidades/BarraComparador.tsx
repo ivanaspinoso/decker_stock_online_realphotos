@@ -194,7 +194,7 @@ export default function BarraComparador({
               role="dialog"
               aria-modal="true"
               aria-labelledby="titulo-comparador"
-              className="animate-entrar-panel relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-lg bg-white shadow-nivel-3 sm:max-h-[88vh] sm:rounded-lg"
+              className="animate-entrar-panel relative flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-lg bg-white shadow-nivel-3 sm:max-h-[88dvh] sm:rounded-lg"
             >
               <div className="flex items-center justify-between gap-4 border-b border-gris-200 px-5 py-4">
                 <div>
@@ -236,7 +236,7 @@ export default function BarraComparador({
                * renglones, y ese renglón de más se paga una vez, no por unidad.
                * De `sm` para arriba vuelve todo a la medida cómoda.
                */}
-              <div className="overflow-auto">
+              <div className="min-h-0 overflow-auto overscroll-contain">
                 <table className="w-full table-fixed border-separate border-spacing-0 text-left">
                   <colgroup>
                     <col className="w-20 sm:w-32" />

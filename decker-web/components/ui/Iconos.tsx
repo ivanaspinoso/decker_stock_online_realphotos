@@ -305,3 +305,26 @@ export function IconoFiltros(props: Props) {
     </Base>
   );
 }
+
+/**
+ * Más / menos: abre y cierra un bloque plegado.
+ *
+ * No es un chevron. Una flecha dice "vas a ir a otro lado", y esto no lleva a
+ * ninguna parte: despliega ahí mismo. El más y el menos son el par que ya se
+ * entiende sin leer nada, y el paso de uno al otro es la única animación que
+ * lleva —la barra vertical se recoge sobre su centro—, así que el estado se ve
+ * en el dibujo y no hace falta un segundo ícono.
+ */
+export function IconoMasMenos({ abierto = false, ...props }: Props & { abierto?: boolean }) {
+  return (
+    <Base {...props}>
+      <path d="M5 12h14" />
+      <path
+        d="M12 5v14"
+        className={`origin-center transition-transform duration-medio ease-suave ${
+          abierto ? 'scale-y-0' : 'scale-y-100'
+        }`}
+      />
+    </Base>
+  );
+}
