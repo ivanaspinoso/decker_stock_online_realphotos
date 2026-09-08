@@ -328,3 +328,20 @@ export function IconoMasMenos({ abierto = false, ...props }: Props & { abierto?:
     </Base>
   );
 }
+
+/**
+ * Ampliar: cuatro esquinas abriéndose hacia afuera.
+ *
+ * Es el ícono universal de "ver a pantalla completa" —el mismo de cualquier
+ * reproductor de video—, y por eso no necesita rótulo encima de la foto. No es
+ * una lupa: una lupa dice "buscar" en el resto del sitio, donde ya está el
+ * buscador, y usarla acá para otra cosa sería enseñar dos significados para el
+ * mismo dibujo.
+ */
+export function IconoAmpliar(props: Props) {
+  return (
+    <Base {...props}>
+      <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />
+    </Base>
+  );
+}
