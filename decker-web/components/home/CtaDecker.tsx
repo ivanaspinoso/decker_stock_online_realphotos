@@ -13,15 +13,29 @@ import { linkConsultaGeneral } from '@/lib/whatsapp';
  * corrida de secciones claras que sigue (compra segura, financiación, cotizar,
  * agencias).
  *
- * La foto aérea del patio va de fondo, revelada del lado derecho. El texto y
- * los botones se quedan en la mitad izquierda, sobre negro casi sólido: es la
- * única forma de usarla de fondo sin que el velo necesario para leer encima la
- * deje irreconocible —la toma tiene techos de camión blancos, que son lo más
- * claro de toda la página—.
+ * La aérea del patio va de fondo, revelada del lado derecho. El texto y los
+ * botones se quedan en la mitad izquierda, sobre negro casi sólido: es la única
+ * forma de usarla de fondo sin que el velo necesario para leer encima la deje
+ * irreconocible —la toma tiene techos de camión blancos, que son lo más claro
+ * de toda la página—.
  */
 export default function CtaDecker() {
   return (
     <section className="oscuro relative overflow-hidden bg-negro-950">
+      {/* La foto NO se fue: queda de piso abajo del video.
+
+          Es el fallback real, y no un `poster`. Un `poster` toma la ruta cruda
+          de /public y serviría el JPG entero —826 KB— salteándose el optimizado
+          de next/image; así el navegador baja la versión chica y en el formato
+          moderno, con su blur mientras llega. El video pinta encima cuando
+          tiene cuadros, y si no llega a reproducirse —datos ahorrados, códec
+          rechazado, el usuario que pide menos movimiento— abajo queda la foto
+          que había, no un rectángulo negro.
+
+          Sin `preload`: esta sección vive bien abajo del scroll y no puede
+          pelearle el ancho de banda al video del hero, que sí es lo primero que
+          se ve. Los navegadores ya difieren la carga de un autoplay que está
+          fuera de pantalla. */}
       <Image
         src={bannerImage}
         alt=""
@@ -29,6 +43,22 @@ export default function CtaDecker() {
         sizes="100vw"
         className="object-cover object-center"
         placeholder="blur"
+      />
+
+      {/* Cenital de patio, en loop y muda. El encuadre es parejo —no hay un
+          sujeto que perder en el recorte, como sí pasa en el hero— así que va
+          centrada en todos los tamaños.
+
+          `muted` + `playsInline` son los que habilitan el autoplay en mobile;
+          `aria-hidden` porque es fondo, no contenido. */}
+      <video
+        className="absolute inset-0 h-full w-full object-cover object-center"
+        src="/marca/video2.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-hidden="true"
       />
 
       {/* Desktop: direccional, opaco bajo el texto y abierto sobre el patio.
