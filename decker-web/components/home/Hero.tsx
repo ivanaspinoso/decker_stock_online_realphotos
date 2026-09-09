@@ -1,3 +1,5 @@
+import Image from 'next/image';
+import heroImage from '@/public/marca/camiones.png';
 import Link from 'next/link';
 import BuscadorRapido from '@/components/home/BuscadorRapido';
 import NumeroAnimado from '@/components/ui/NumeroAnimado';
@@ -50,14 +52,29 @@ export default function Hero({
             índice va al principio y el navegador arranca mientras baja, en vez
             de esperar el archivo entero.
 
-            Los cuatro atributos no son decorativos, son los que hacen que
+            Los tres atributos no son decorativos, son los que hacen que
             arranque solo: `muted` + `playsInline` es lo único que los
             navegadores móviles aceptan para autoplay (sin `playsInline`, iOS lo
             abre a pantalla completa), `loop` lo encadena y `autoPlay` lo
-            dispara. `poster` es la foto que ya estaba: se ve mientras el video
-            baja, así el hero nunca arranca en negro.
+            dispara.
+
+            La foto queda abajo, de piso, y NO como `poster`: el atributo toma
+            la ruta cruda de /public y bajaría el PNG entero —1,7 MB— salteando
+            el optimizado de next/image. Con el <Image> debajo, el navegador
+            baja la versión chica en formato moderno y muestra su blur mientras
+            llega; el video la tapa cuando tiene cuadros. Sigue siendo la
+            candidata a LCP de la home, así que conserva su `preload`.
 
             `aria-hidden` y sin controles: es fondo, no contenido. */}
+        <Image
+          src={heroImage}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-[80%_center] lg:object-center"
+          placeholder="blur"
+          preload
+        />
         {/* El recorte horizontal es el problema entero del fondo en teléfono.
             El cuadro es 16:9 y la pantalla es 9:19,5: `object-cover` escala por
             altura y de los 1280 px de ancho quedan visibles 390, o sea el 26%.
@@ -76,7 +93,6 @@ export default function Hero({
         <video
           className="absolute inset-0 h-full w-full object-cover object-[80%_center] lg:object-center"
           src="/marca/videohero.mp4"
-          poster="/marca/camiones.png"
           autoPlay
           loop
           muted
