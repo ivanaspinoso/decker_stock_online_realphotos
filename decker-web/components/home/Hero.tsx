@@ -1,5 +1,3 @@
-import Image from 'next/image';
-import heroImage from '@/public/marca/camiones.png';
 import Link from 'next/link';
 import BuscadorRapido from '@/components/home/BuscadorRapido';
 import NumeroAnimado from '@/components/ui/NumeroAnimado';
@@ -42,24 +40,48 @@ export default function Hero({
     // muy bajas el hero crezca en vez de cortar contenido.
     <section className="oscuro relative flex min-h-svh flex-col overflow-hidden bg-negro-950">
       <div className="absolute inset-0">
-        {/* Con el contenido centrado, el camión va al centro: es lo que queda
-            detrás del titular y lo que sostiene la composición. */}
-        {/* `placeholder="blur"`: es la imagen LCP de la home y pesa ~1,7 MB.
-            Mientras baja, el visitante ve la miniatura difusa en vez del negro
-            plano, y el velo de abajo ya apoya sobre algo. El blur lo genera el
-            build a partir del import estático: no agrega pedidos de red.
+        {/* El fondo es el video en loop, no la foto del camión.
 
-            `preload` y no `priority`: desde Next 16 `priority` está deprecado y
-            esta es la única candidata a LCP de la home, que es justo el caso
-            en el que el <link> en el head vale la pena. */}
-        <Image
-          src={heroImage}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover object-[60%_center] lg:object-center"
-          placeholder="blur"
-          preload
+            Va como <video> nativo y no por next/image —Next no optimiza video—,
+            así que sale tal cual está en /public y el peso es responsabilidad
+            nuestra: el archivo se recomprimió de 8,9 MB a 2,2 MB (h264 CRF 28)
+            y se le sacó la pista de audio, que pesaba 128 kbps y no se oía
+            nunca porque el autoplay obliga a `muted`. Lleva `+faststart`: el
+            índice va al principio y el navegador arranca mientras baja, en vez
+            de esperar el archivo entero.
+
+            Los cuatro atributos no son decorativos, son los que hacen que
+            arranque solo: `muted` + `playsInline` es lo único que los
+            navegadores móviles aceptan para autoplay (sin `playsInline`, iOS lo
+            abre a pantalla completa), `loop` lo encadena y `autoPlay` lo
+            dispara. `poster` es la foto que ya estaba: se ve mientras el video
+            baja, así el hero nunca arranca en negro.
+
+            `aria-hidden` y sin controles: es fondo, no contenido. */}
+        {/* El recorte horizontal es el problema entero del fondo en teléfono.
+            El cuadro es 16:9 y la pantalla es 9:19,5: `object-cover` escala por
+            altura y de los 1280 px de ancho quedan visibles 390, o sea el 26%.
+            Elegir mal ese 26% es lo que hacía que el hero fuera pasto y asfalto.
+
+            El camión no está quieto: se aleja, y su centro corre del 58% al 82%
+            del cuadro entre el primer segundo y el último. Por eso el 80% no es
+            "más a la derecha" a ojo, es el valor que deja la ventana en 59-85 y
+            atrapa la unidad en TODO el clip y no solo en el cuadro que uno mira
+            cuando lo elige. Con el 60% que había —heredado del encuadre de la
+            foto, que era otra imagen— la ventana caía en 44-70: pasto, ruta, y
+            el camión entero afuera.
+
+            De `lg` para arriba no hace falta: ahí entra casi el cuadro completo
+            y el centro es el encuadre del camarógrafo, que siempre gana. */}
+        <video
+          className="absolute inset-0 h-full w-full object-cover object-[80%_center] lg:object-center"
+          src="/marca/videohero.mp4"
+          poster="/marca/camiones.png"
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
         />
         {/* El texto ya no vive en una banda lateral: cruza el centro de la foto,
             así que el velo tiene que ser parejo y no direccional. Va un plano
@@ -94,9 +116,21 @@ export default function Hero({
               marca lo gasta en vez de reforzarlo.
 
               Tres escalones de la escala y no tres tamaños inventados: 32 en
-              teléfono, 40 en tablet, 52 en monitor. La caja alta, el peso y el
-              tracking los pone `titulo-expresivo`. */}
-          <h1 className="titulo-expresivo text-3xl text-white sm:text-4xl lg:text-5xl">
+              teléfono, 40 en tablet, 52 en monitor. La caja alta viene del texto
+              y el tracking lo pone `titulo-expresivo`.
+
+              `font-medium` pisa el 900 que trae `titulo-expresivo`, y solo acá.
+              El 900 se dibujó para sostener el titular sobre fondo
+              plano; sobre el video, con el velo oscuro debajo, la letra ya tiene
+              todo el contraste que necesita y el peso alto queda de más. En 500
+              la caja alta se lee más abierta y el trazo fino la vuelve un rótulo
+              en vez de un grito.
+
+              Es un override local a propósito: los títulos de sección siguen en
+              900 y el sistema no se toca. Overpass es variable, así que cualquier
+              peso sale del mismo archivo: cambiar 500 por 300 o 700 no agrega ni
+              un byte de descarga. */}
+          <h1 className="titulo-expresivo text-3xl font-medium text-white sm:text-4xl lg:text-5xl">
             NUESTRO MOTOR ES EL TRABAJO
           </h1>
 
