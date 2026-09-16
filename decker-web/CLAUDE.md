@@ -18,7 +18,7 @@ El proyecto vive en **`C:\proyectos\decker-stock-online`** — NO en OneDrive
 1. Copiar `.env.local.example` a `.env.local`.
 2. Nada más. Los endpoints del catálogo son **públicos**: no hace falta API key.
 
-Para volver a los datos de prueba, `NEXT_PUBLIC_USE_MOCK_DATA=true`.
+Para volver a los datos de prueba, `USE_MOCK_DATA=true`.
 
 ## Lo que hay que saber antes de tocar nada
 

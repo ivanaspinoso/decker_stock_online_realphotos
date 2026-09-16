@@ -11,7 +11,7 @@
  *
  * EL INTERRUPTOR
  *
- * `NEXT_PUBLIC_USE_MOCK_DATA` decide de dónde salen las unidades:
+ * `USE_MOCK_DATA` decide de dónde salen las unidades:
  * - `true`: de los arrays de `lib/data/unidades.ts` (los datos de prueba).
  * - `false`: de la API.
  *
@@ -22,9 +22,25 @@
  * server mal configurado y la home quede en la pantalla de error.
  */
 
-/** El interruptor. Ver arriba por qué sólo `'false'` apaga los datos locales. */
+/**
+ * El interruptor. Ver arriba por qué sólo `'false'` apaga los datos locales.
+ *
+ * SIN `NEXT_PUBLIC_`, y el prefijo se sacó a propósito.
+ *
+ * Lo tuvo un tiempo por costumbre, no por necesidad: esta función se llama
+ * únicamente desde `lib/api.ts`, que corre en el servidor, y ningún componente
+ * cliente la importa. El prefijo hacía que Next escribiera el valor dentro del
+ * JavaScript que baja el navegador sin que nadie lo usara ahí, y Vercel avisaba
+ * —con razón— que estaba publicando algo que no hacía falta publicar.
+ *
+ * Se sigue leyendo el nombre viejo como respaldo para que un deploy hecho antes
+ * de renombrar la variable en Vercel no se despierte con el catálogo de prueba.
+ * Cuando `USE_MOCK_DATA` esté cargada en todos los entornos, la segunda mitad
+ * de esta línea se puede borrar.
+ */
 export function usaDatosMock(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
+  const valor = process.env.USE_MOCK_DATA ?? process.env.NEXT_PUBLIC_USE_MOCK_DATA;
+  return valor !== 'false';
 }
 
 /**
