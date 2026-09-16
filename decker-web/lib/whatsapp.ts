@@ -148,6 +148,8 @@ export interface DatosUsado {
   km: string;
   estado: string;
   sucursalId: IdSucursal;
+  /** Cuántas fotos cargó. Sólo para anunciarlas: no viajan en el link. */
+  cantidadDeFotos?: number;
 }
 
 /** Cotización de un usado como parte de pago. Deriva a la sucursal elegida. */
@@ -164,7 +166,30 @@ export function linkCotizarUsado(datos: DatosUsado): string {
     `Año: ${datos.anio}`,
     `Kilómetros / uso: ${datos.km}`,
     ...(datos.estado ? [`Estado general: ${datos.estado}`] : []),
-    `Sucursal de preferencia: ${nombreDeSucursal(datos.sucursalId)}`,
+      `Sucursal de preferencia: ${nombreDeSucursal(datos.sucursalId)}`,
+    /**
+     * LAS FOTOS NO VIAJAN EN EL LINK, Y NO HAY FORMA DE QUE LO HAGAN.
+     *
+     * Un `wa.me?text=` sólo lleva texto: WhatsApp no tiene ningún parámetro
+     * para adjuntar archivos, y no es algo que se arregle con más código. Las
+     * fotos que la persona cargó van al backend de Decker, no al chat.
+     *
+     * Entonces el mensaje las anuncia y pide que las mande. Sin esta línea
+     * pasa lo peor de los dos mundos: el visitante eligió cuatro fotos, dio
+     * por hecho que se mandaron, y del otro lado el asesor abre una consulta
+     * sin una sola imagen y tiene que pedirlas de nuevo.
+     *
+     * Va en primera persona —“te paso”— porque el mensaje lo escribe el
+     * visitante: es SUYO, y tiene que sonar como algo que él diría.
+     */
+    ...(datos.cantidadDeFotos
+      ? [
+          ``,
+          datos.cantidadDeFotos === 1
+            ? `Te paso una foto de la unidad acá abajo 👇`
+            : `Te paso ${datos.cantidadDeFotos} fotos de la unidad acá abajo 👇`,
+        ]
+      : []),
   ];
 
   return linkWhatsapp(whatsappDeSucursal(datos.sucursalId), lineas.join('\n'));

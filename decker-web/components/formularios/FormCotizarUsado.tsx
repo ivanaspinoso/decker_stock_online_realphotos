@@ -159,7 +159,11 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
         for (const foto of fotos) formulario.append('fotos', foto.dataUrl);
 
         registrarOfertaDeUsado(formulario);
-        window.open(linkCotizarUsado(datos), '_blank', 'noopener,noreferrer');
+        window.open(
+          linkCotizarUsado({ ...datos, cantidadDeFotos: fotos.length }),
+          '_blank',
+          'noopener,noreferrer',
+        );
       }}
       aria-label="Cotizar unidad usada como parte de pago"
     >
@@ -375,6 +379,25 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
           </ul>
         )}
 
+        {fotos.length > 0 && (
+          /* HAY QUE DECIRLE QUE LAS MANDE EN EL CHAT, Y DECIRLO ACÁ.
+             
+             Las fotos se guardan con la consulta, pero WhatsApp no deja
+             adjuntar archivos desde un enlace: cuando se abre el chat, el
+             mensaje va escrito y las fotos no. Si no avisamos, la persona ve
+             que las cargó, ve que WhatsApp se abre, y da por hecho que
+             viajaron. Del otro lado el asesor abre una consulta sin una sola
+             imagen.
+             
+             Va junto a las fotos y no al pie del formulario, para que se lea
+             mientras se piensa en ellas y no tres campos después. */
+          <p className="mt-3 rounded-sm bg-gris-100 p-3 text-sm leading-relaxed text-gris-600">
+            Quedan guardadas con tu consulta. Cuando se abra WhatsApp,{' '}
+            <span className="font-medium text-negro">adjuntalas también en el chat</span>: el
+            mensaje va escrito pero las fotos no se pueden mandar solas desde acá.
+          </p>
+        )}
+
         {avisoDeFotos && (
           /* `status` y no `alert`: es un aviso sobre algo que la persona acaba
              de hacer y ya está mirando, no una interrupción. */
@@ -405,7 +428,7 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
         <p role="status" className="text-sm leading-relaxed text-gris-600">
           Tu consulta quedó registrada.{' '}
           <a
-            href={linkCotizarUsado(datos)}
+            href={linkCotizarUsado({ ...datos, cantidadDeFotos: fotos.length })}
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-negro underline underline-offset-2"
