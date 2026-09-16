@@ -43,7 +43,7 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
       <div className="overflow-x-auto rounded-md bg-white shadow-nivel-1">
         <table className="w-full min-w-[1000px] border-collapse text-left">
           <caption className="sr-only">
-            Listado de unidades con estado, precio, sucursal, año, kilómetros y financiación
+            Listado de unidades con estado, precio, sucursal, año y kilómetros
           </caption>
           <thead className="sticky top-0 z-10">
             <tr className="bg-negro text-white">
@@ -61,7 +61,12 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                 { texto: 'Sucursal', clase: '' },
                 { texto: 'Año', clase: 'text-right' },
                 { texto: 'Km / uso', clase: 'text-right' },
-                { texto: 'Financiación', clase: 'text-right' },
+                /* Sin columna "Financiación": la API no tiene ese campo y las
+                   243 unidades salen como "Consultar", así que era una columna
+                   entera repitiendo la misma palabra en cada fila. En una tabla
+                   que ya scrollea en horizontal, ese ancho le hacía falta a las
+                   columnas que sí distinguen. Vuelve cuando el backend cargue
+                   el dato. */
                 // Sin columna "Estado": el badge se mudó adentro de la celda de
                 // la unidad, debajo del nombre. Era una columna entera de 170px
                 // —"Usado seleccionado" no se parte— para un dato que identifica
@@ -97,10 +102,27 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                     {/* Mismo 4:3 y mismo esqueleto de carga que la tarjeta y la
                         galería: la miniatura de la tabla es la misma foto en
                         chico, no otro recorte. */}
+                    {/**
+                     * MISMO `sizes` QUE LA TARJETA DE LA GRILLA, aunque acá la
+                     * foto se muestre a 64px y allá a 400.
+                     *
+                     * Parece un desperdicio y es al revés. Cada combinación de
+                     * ancho distinta hace que Next **baje el original otra vez**
+                     * del server de Decker para recodificarlo, y ese server se
+                     * bloquea por volumen acumulado. Con un `sizes="64px"`
+                     * propio, la vista lista pedía una variante que nadie más
+                     * usa: 24 descargas nuevas cada vez que alguien toca
+                     * "Lista", de fotos que ya estaban optimizadas.
+                     *
+                     * Compartiendo el `sizes`, la lista reusa exactamente la
+                     * imagen que la grilla ya tiene en caché: cero pedidos al
+                     * server de Decker. Lo que se paga son unos kilobytes de
+                     * más por fila, que al lado de un 504 no es nada.
+                     */}
                     <FotoUnidad
                       src={unidad.imagen}
                       alt=""
-                      sizes="64px"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="hidden w-16 shrink-0 rounded-sm sm:block"
                     />
                     <div className="min-w-0">
@@ -161,11 +183,6 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                     </td>
                   );
                 })()}
-                {/* Sin `dato`: la monoespaciada está reservada para datos
-                    numéricos. Esto es un estado, no una cifra. */}
-                <td className="px-3 py-4 text-right text-sm font-medium text-negro">
-                  {unidad.financiacion}
-                </td>
                 <td className="px-3 py-4">
                   <div className="flex justify-end gap-2">
                     <Link

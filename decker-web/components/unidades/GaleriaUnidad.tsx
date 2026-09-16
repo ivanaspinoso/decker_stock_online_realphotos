@@ -36,6 +36,27 @@ export default function GaleriaUnidad({
 }) {
   const [activa, setActiva] = useState(0);
   const [ampliada, setAmpliada] = useState(false);
+
+  /**
+   * Cuántas miniaturas se dejaron pedir hasta ahora.
+   *
+   * ESTO EVITA LOS 504 DE LA FICHA, y hace falta por cómo es el server de fotos
+   * de Decker: se bloquea por volumen acumulado —sirvió exactamente 100 fotos
+   * seguidas en una prueba y después dejó de contestar más de un minuto—.
+   *
+   * Sin esto, abrir una ficha dispara la foto grande MÁS todas las miniaturas
+   * al mismo tiempo: una unidad con diez fotos son once descargas simultáneas
+   * del original, y eso es lo que hacía que el optimizador de Next contestara
+   * `504 Gateway Timeout` en las últimas. El síntoma para el visitante: miniaturas
+   * grises que ya no se recuperan, porque el navegador no reintenta un 504.
+   *
+   * El orden acá es el orden de la atención: primero la foto grande —que es lo
+   * único que el visitante está mirando— y recién cuando ésa llegó, las
+   * miniaturas de a una. Nadie percibe la diferencia, y el server nunca ve más
+   * de un pedido nuestro a la vez.
+   */
+  const [miniaturasVisibles, setMiniaturasVisibles] = useState(0);
+  const [principalLista, setPrincipalLista] = useState(false);
   const disparador = useRef<HTMLButtonElement>(null);
   const ventana = useRef<HTMLDivElement>(null);
 
@@ -72,6 +93,47 @@ export default function GaleriaUnidad({
   };
 
   const hayVarias = fotos.length > 1;
+
+  /**
+   * Suelta las miniaturas de a una, 250 ms entre cada una, recién después de
+   * que la foto grande cargó. Ver `miniaturasVisibles`.
+   *
+   * 250 ms es lo que tarda el ojo en pasar de una miniatura a la siguiente, así
+   * que la tira se llena mientras se la mira. Con menos vuelve la ráfaga.
+   */
+  useEffect(() => {
+    if (!principalLista || !hayVarias) return;
+    if (miniaturasVisibles >= fotos.length) return;
+
+    const id = setTimeout(() => setMiniaturasVisibles((n) => n + 1), 250);
+    return () => clearTimeout(id);
+  }, [principalLista, hayVarias, miniaturasVisibles, fotos.length]);
+
+  /**
+   * Tope de seguridad: las miniaturas arrancan igual a los 2 segundos.
+   *
+   * Esperar a la foto grande es lo correcto mientras la foto grande llegue. Si
+   * NO llega —el server de fotos bloqueado, que es exactamente el escenario que
+   * este escalonado existe para sobrevivir— `onTermino` recién avisa después de
+   * agotar los dos reintentos, o sea **6,5 segundos**, y hasta entonces la tira
+   * de miniaturas queda en gris sin que pase nada. Medido: 8,7 segundos hasta
+   * la primera.
+   *
+   * Dos segundos es más de lo que tarda una foto que va a llegar, y mucho menos
+   * de lo que tarda una que no. La galería empieza a llenarse sola en vez de
+   * quedarse esperando algo que no viene.
+   */
+  useEffect(() => {
+    if (!hayVarias || principalLista) return;
+    const id = setTimeout(() => setPrincipalLista(true), 2_000);
+    return () => clearTimeout(id);
+  }, [hayVarias, principalLista]);
+
+  // Al cambiar de unidad se arranca de cero.
+  useEffect(() => {
+    setPrincipalLista(false);
+    setMiniaturasVisibles(0);
+  }, [fotos]);
 
   /* Dan la vuelta: de la última se pasa a la primera. En una galería de tres
      fotos, toparse con un botón muerto al final es peor que volver al inicio. */
@@ -154,6 +216,7 @@ export default function GaleriaUnidad({
           alt={`${nombre} — foto ${activa + 1} de ${fotos.length}`}
           sizes="(max-width: 1024px) 100vw, 60vw"
           preload={activa === 0}
+          onTermino={() => setPrincipalLista(true)}
           className="animate-aparecer rounded-lg"
         >
           <div className="velo-foto" />
@@ -204,7 +267,16 @@ export default function GaleriaUnidad({
                   : 'opacity-70 hover:opacity-100'
               }`}
             >
-              <FotoUnidad src={foto} alt="" sizes="180px" className="rounded-md" />
+              {/* El marco existe desde el principio —así la tira no cambia de
+                  alto cuando entran las fotos— pero la imagen recién se monta
+                  cuando le toca. Ver `miniaturasVisibles`. */}
+              {indice < miniaturasVisibles ? (
+                <FotoUnidad src={foto} alt="" sizes="180px" className="rounded-md" />
+              ) : (
+                <div className="foto-unidad rounded-md">
+                  <div className="esqueleto absolute inset-0" aria-hidden="true" />
+                </div>
+              )}
             </button>
           ))}
         </div>

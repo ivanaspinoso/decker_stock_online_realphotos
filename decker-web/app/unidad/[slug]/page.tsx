@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import BotonCompartir from '@/components/unidades/BotonCompartir';
+import BotonConsultar from '@/components/unidades/BotonConsultar';
 import BotonComparar from '@/components/unidades/BotonComparar';
 import BotonFavorito from '@/components/unidades/BotonFavorito';
 import GaleriaUnidad from '@/components/unidades/GaleriaUnidad';
@@ -19,14 +20,15 @@ import {
   IconoWhatsapp,
 } from '@/components/ui/Iconos';
 import {
+  getGaleriaDeUnidad,
   getParametrosFinanciacion,
-  getSlugsDeUnidades,
   getSucursalPorId,
   getUnidadPorSlug,
   getUnidadesRelacionadas,
 } from '@/lib/api';
 import {
   esCifra,
+  resumenTecnico,
   formatearAnio,
   formatearKm,
   formatearPrecio,
@@ -36,31 +38,76 @@ import { linkConsultaUnidad, linkWhatsapp } from '@/lib/whatsapp';
 import type { Sucursal, Unidad } from '@/lib/types';
 
 interface Props {
-  // Promise desde Next 15. `generateStaticParams` sigue devolviendo objetos
-  // planos: el cambio es sólo en lo que recibe la página.
+  // Promise desde Next 15: la página empieza a renderizar antes de que se
+  // conozca el slug, y recién se espera cuando se usa.
   params: Promise<{ slug: string }>;
 }
 
-/** Todas las fichas se generan estáticas en el build. */
-export async function generateStaticParams() {
-  const slugs = await getSlugsDeUnidades();
-  return slugs.map((slug) => ({ slug }));
-}
 
+/**
+ * `notFound()` VA ACÁ Y NO SÓLO EN LA PÁGINA, y el motivo es el código HTTP.
+ *
+ * Esta ruta es dinámica y va en streaming: en cuanto hay un límite de Suspense
+ * por encima, el envase de la página sale por la red antes de terminar de
+ * renderizar, y una vez que salió el código de respuesta ya está mandado. Un
+ * `notFound()` posterior dibuja "no encontramos esta unidad" con un **200 OK**:
+ * un soft 404. En un catálogo donde las unidades se venden y sus URLs quedan
+ * dando vueltas en links, marcadores y el índice de Google, eso es la
+ * diferencia entre que Google las saque o las deje ahí para siempre.
+ *
+ * `generateMetadata` corre ANTES de que se mande nada, así que un `notFound()`
+ * desde acá sí llega a poner el 404. La página lo vuelve a chequear igual: es
+ * la que sabe qué hacer con la unidad y no puede depender de que otra función
+ * haya cortado antes.
+ *
+ * LO OTRO QUE HAY QUE NO ROMPER: esta ficha NO tiene `loading.tsx`, y el de la
+ * home vive en `app/(home)/` y no en `app/` justamente por esto. Un
+ * `loading.tsx` en la raíz cubre por herencia todas las rutas que no tengan el
+ * suyo, incluida ésta, y vuelve el 404 un 200. Si alguien agrega uno acá o lo
+ * sube a la raíz, el soft 404 vuelve sin que nada falle ni avise.
+ *
+ * Se midió antes de sacarlo: una ficha nunca visitada, con su llamada de fotos
+ * incluida, tarda entre 0,28 y 0,43 segundos. Un esqueleto para eso no se
+ * alcanza a ver. La home y el catálogo sí lo conservan, porque ahí no hay
+ * ningún `notFound()` que perder y la espera en frío sí es de segundos.
+ */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const unidad = await getUnidadPorSlug(slug);
-  if (!unidad) return { title: 'Unidad no encontrada' };
+  if (!unidad) notFound();
 
   const sucursal = await getSucursalPorId(unidad.sucursalId);
 
   return {
     title: unidad.nombre,
-    description: `${unidad.nombre} · ${unidad.estado} · ${sucursal?.nombre ?? ''}. ${unidad.descripcion}`,
+    /* Con la descripción del aviso si existe —57 de 240 la tienen— y con la
+       ficha técnica si no: lo que Google muestra debajo del título no puede
+       quedar en blanco en tres de cada cuatro unidades. */
+    description: `${unidad.nombre} · ${unidad.estado} · ${sucursal?.nombre ?? ''}. ${
+      unidad.descripcion || resumenTecnico(unidad.ficha)
+    }`,
     openGraph: {
       title: `${unidad.nombre} | Decker Camiones`,
-      description: unidad.descripcion,
-      images: [{ url: unidad.imagen }],
+      description: unidad.descripcion || resumenTecnico(unidad.ficha),
+      /**
+       * LA IMAGEN DE MARCA, NO LA FOTO DE LA UNIDAD, Y ES A PROPÓSITO.
+       *
+       * La foto de la unidad vive en el server de Decker, que bloquea por IP
+       * cuando se le pide de más y entonces no contesta nada. WhatsApp y
+       * Facebook bajan la miniatura UNA vez, cuando alguien pega el link, y no
+       * reintentan: si en ese momento el server está bloqueado, el link se
+       * comparte pelado —sin imagen y a veces sin título— y así queda cacheado
+       * del lado de ellos por días.
+       *
+       * Un link que a veces se ve bien y a veces no es peor que uno que siempre
+       * se ve igual. Se pierde mostrar el camión en la previsualización; se gana
+       * que la previsualización exista siempre. El título y la descripción sí
+       * son de la unidad, así que el link igual dice de qué camión se trata.
+       *
+       * El día que las fotos estén en un CDN, acá vuelve `unidad.imagen`.
+       */
+      // Relativa: `metadataBase` de `app/layout.tsx` la vuelve absoluta.
+      images: [{ url: '/marca/og.jpg' }],
     },
   };
 }
@@ -85,13 +132,18 @@ export default async function FichaUnidad({ params }: Props) {
   const unidad = await getUnidadPorSlug(slug);
   if (!unidad) notFound();
 
-  const [sucursal, parametros, relacionadas] = await Promise.all([
+  // La galería es la única de las cuatro que sale de un endpoint propio
+  // (`/vehiculos/{id}/imagenes`): el listado sólo trae la miniatura. Va en el
+  // mismo `Promise.all` para que ese pedido viaje en paralelo con el resto y no
+  // sume su latencia a la de la página.
+  const [sucursal, parametros, relacionadas, galeria] = await Promise.all([
     getSucursalPorId(unidad.sucursalId),
     getParametrosFinanciacion(),
     getUnidadesRelacionadas(unidad.slug),
+    getGaleriaDeUnidad(unidad),
   ]);
 
-  const especificaciones = armarEspecificaciones(unidad, sucursal);
+  const especificaciones = armarEspecificaciones(unidad);
   const esenciales = armarEsenciales(unidad, sucursal);
 
   return (
@@ -129,7 +181,7 @@ export default async function FichaUnidad({ params }: Props) {
             columna ancha: en un usado, la foto ES el dato —el estado de la
             chapa, de las cubiertas y de la cabina no se escriben en una tabla—. */}
         <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
-          <GaleriaUnidad fotos={unidad.galeria} nombre={unidad.nombre} estado={unidad.estado} />
+          <GaleriaUnidad fotos={galeria} nombre={unidad.nombre} estado={unidad.estado} />
         </div>
 
         {/* 2 y 3. IDENTIDAD Y ACCIONES, en la misma superficie.
@@ -214,15 +266,7 @@ export default async function FichaUnidad({ params }: Props) {
              * bloque, con la mitad de alto y sin superficie de color.
              */}
             <div className="mt-7">
-              <a
-                href={linkConsultaUnidad(unidad)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="centrado-optico inline-flex h-14 w-full items-center justify-center gap-2 rounded bg-rojo text-md font-medium text-white transition-colors duration-rapido hover:bg-rojo-700 active:translate-y-px"
-              >
-                <IconoWhatsapp className="h-5 w-5" />
-                Consultar por WhatsApp
-              </a>
+              <BotonConsultar slug={unidad.slug} href={linkConsultaUnidad(unidad)} />
               <a
                 href="#financiar-unidad"
                 className="centrado-optico mt-2 inline-flex h-12 w-full items-center justify-center rounded bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200"
@@ -239,7 +283,7 @@ export default async function FichaUnidad({ params }: Props) {
                 />
                 <BotonCompartir
                   titulo={`${unidad.nombre} | Decker Camiones`}
-                  descripcion={unidad.descripcion}
+                  descripcion={unidad.descripcion || resumenTecnico(unidad.ficha)}
                   ruta={`/unidad/${unidad.slug}`}
                   variante="icono"
                 />
@@ -343,12 +387,22 @@ export default async function FichaUnidad({ params }: Props) {
            * ancho de la pantalla, es lo que evita perder el renglón entre el
            * rótulo y el número.
            *
-           * Ahora están TODOS los campos, incluidos precio y sucursal, y los
-           * que no tienen dato cargado dicen "Consultar" en vez de faltar. Que
-           * una fila desaparezca sin avisar deja dos fichas distintas del mismo
-           * modelo con distinta cantidad de renglones, y quien las compara no
-           * tiene forma de saber si el campo no aplica o si nadie lo cargó.
+           * QUÉ ENTRA ACÁ: sólo la ficha técnica del backend —motor, tracción,
+           * frenos, dirección, largo, color—. Marca, modelo, tipo, condición,
+           * año, kilómetros, potencia, precio y sucursal salieron: ya están en
+           * el título, en los chips y en la tira de datos de arriba, y bajar
+           * hasta acá para releerlos no le daba nada a nadie.
+           *
+           * Las filas sin dato no se dibujan. Es lo contrario de lo que decía
+           * este comentario antes —"que todas digan Consultar para que dos
+           * fichas tengan el mismo largo"— y el cambio lo trajo el dato real:
+           * la carga del backend es tan despareja (equipamiento en 3 unidades
+           * de 240) que la regla vieja producía tablas de ocho "Consultar" y un
+           * dato. Una tabla así no informa, ocupa.
+           *
+           * La sección entera desaparece si no quedó ninguna fila.
            */}
+          {especificaciones.length > 0 && (
           <section className="mt-14">
             <h2 className="font-display text-2xl font-extrabold">Ficha técnica</h2>
 
@@ -379,16 +433,26 @@ export default async function FichaUnidad({ params }: Props) {
               </dl>
             </div>
           </section>
+          )}
 
           {/* 6. LA DESCRIPCIÓN, al final. Es lo único de la página escrito por
               una persona y no medido: se lee cuando la unidad ya pasó todos los
               filtros de arriba. */}
-          <section className="mt-14">
-            <h2 className="font-display text-2xl font-extrabold">Descripción</h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-gris-600">
-              {unidad.descripcion}
-            </p>
-          </section>
+          {/* Sólo si el aviso trae texto propio. Antes esta sección mostraba
+              la ficha técnica concatenada en prosa —"Tracción: 4 X 2.
+              Combustible: DIESEL."— porque el mapeo la componía cuando el
+              backend no mandaba descripción. Esos datos ahora están arriba, en
+              su tabla; acá quedó lo que de verdad escribió alguien de Decker, y
+              en las 183 unidades donde no escribió nada la sección no aparece
+              en vez de repetir la tabla en párrafo. */}
+          {unidad.descripcion && (
+            <section className="mt-14">
+              <h2 className="font-display text-2xl font-extrabold">Descripción</h2>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-gris-600">
+                {unidad.descripcion}
+              </p>
+            </section>
+          )}
         </div>
       </div>
 
@@ -463,23 +527,35 @@ function armarEsenciales(unidad: Unidad, sucursal: Sucursal | null) {
  * aplica" de "nadie lo cargó todavía". La regla del sitio ya estaba escrita en
  * `lib/format`: lo que falta se pide, y se dice "Consultar".
  */
-function armarEspecificaciones(
-  unidad: Unidad,
-  sucursal: Sucursal | null,
-): { etiqueta: string; valor: string }[] {
-  return [
-    { etiqueta: 'Marca', valor: unidad.marca },
-    { etiqueta: 'Modelo', valor: unidad.modelo },
-    { etiqueta: 'Tipo', valor: unidad.tipo },
-    { etiqueta: 'Condición', valor: unidad.estado },
-    { etiqueta: 'Año', valor: formatearAnio(unidad.anio) },
-    {
-      etiqueta: 'Kilómetros',
-      valor: tieneKilometraje(unidad.tipo) ? formatearKm(unidad.km) : 'No aplica',
-    },
-    { etiqueta: 'Potencia / uso', valor: unidad.potencia ?? 'Consultar' },
-    { etiqueta: 'Precio', valor: formatearPrecio(unidad.precio) },
-    { etiqueta: 'Financiación', valor: unidad.financiacion },
-    { etiqueta: 'Sucursal', valor: sucursal?.nombre ?? 'Consultar' },
+function armarEspecificaciones(unidad: Unidad): { etiqueta: string; valor: string }[] {
+  const { ficha } = unidad;
+
+  /**
+   * SÓLO LO QUE NO ESTÁ YA ARRIBA. La tabla llegó a repetir nueve datos que la
+   * pantalla mostraba dos veces: marca y modelo están en el título, tipo y
+   * condición en los chips del panel, año, kilómetros, potencia y sucursal en
+   * la tira de datos, y el precio en el panel de la derecha. Bajar hasta una
+   * "ficha técnica" para releer lo mismo es trabajo del visitante a cambio de
+   * nada.
+   *
+   * Lo que sí va acá es lo que no entra arriba: la ficha técnica que manda el
+   * backend. Tracción, frenos, dirección y largo son los datos con los que se
+   * decide entre dos camiones parecidos, y hasta ahora vivían escondidos dentro
+   * del párrafo de descripción.
+   */
+  const filas = [
+    { etiqueta: 'Motor', valor: ficha.motor },
+    { etiqueta: 'Combustible', valor: ficha.combustible },
+    { etiqueta: 'Tracción', valor: ficha.traccion },
+    { etiqueta: 'Frenos', valor: ficha.frenos },
+    { etiqueta: 'Dirección', valor: ficha.direccion },
+    { etiqueta: 'Largo / configuración', valor: ficha.largo },
+    { etiqueta: 'Color', valor: ficha.color },
+    { etiqueta: 'Equipamiento', valor: ficha.equipamiento },
   ];
+
+  /* Sin filas de relleno: la carga del backend es despareja —el equipamiento
+     aparece en 3 unidades de 240— y una tabla mayormente "Consultar" no informa,
+     sólo ocupa. Lo que falta se pregunta por WhatsApp, que está al lado. */
+  return filas.filter((f): f is { etiqueta: string; valor: string } => Boolean(f.valor));
 }

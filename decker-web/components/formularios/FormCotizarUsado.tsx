@@ -2,20 +2,33 @@
 
 import { useId, useState } from 'react';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
+import { registrarOfertaDeUsado } from '@/lib/leads';
 import { linkCotizarUsado } from '@/lib/whatsapp';
 import type { IdSucursal, Sucursal } from '@/lib/types';
 
 /**
- * Toma de usados. No guarda nada: arma un WhatsApp prellenado y lo abre.
+ * Toma de usados. Hace DOS cosas al enviar, y las dos importan.
  *
- * El envío usa la validación nativa del formulario (`required`) y abre el link
- * dentro del gesto del usuario, así el navegador no lo bloquea como popup.
+ * 1. Deja la oferta registrada en el backend de Decker (`/api/contacto/vender`).
+ *    Es lo que hace que el usado quede anotado aunque el visitante abra
+ *    WhatsApp y no llegue a escribir.
+ * 2. Abre WhatsApp con el mensaje ya armado, dirigido al asesor de la sucursal
+ *    elegida. Es lo que el visitante entiende que hizo.
+ *
+ * EL ORDEN Y EL NO-AWAIT SON LO QUE HACE QUE FUNCIONE. El registro se dispara
+ * primero pero no se espera: si esperáramos la respuesta, entre el clic y el
+ * `window.open` pasaría un viaje de red, el navegador dejaría de considerarlo
+ * parte del gesto del usuario y bloquearía la pestaña como popup. Ver
+ * `lib/leads.ts`.
+ *
+ * La validación es la nativa del formulario (`required`).
  */
 export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[] }) {
   const id = useId();
   const [datos, setDatos] = useState({
     nombre: '',
     telefono: '',
+    email: '',
     marca: '',
     modelo: '',
     anio: '',
@@ -36,6 +49,24 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
       className="space-y-5 rounded-lg bg-white p-6 shadow-nivel-1 ring-1 ring-gris-200 sm:p-8"
       onSubmit={(evento) => {
         evento.preventDefault();
+
+        const formulario = new FormData();
+        formulario.set('nombre', datos.nombre);
+        formulario.set('telefono', datos.telefono);
+        formulario.set('email', datos.email);
+        formulario.set('marca', datos.marca);
+        formulario.set('modelo', datos.modelo);
+        formulario.set('anio', datos.anio);
+        formulario.set('km', datos.km);
+        formulario.set('estado', datos.estado);
+        // El nombre y no el id: es lo que el asesor lee, y la API no tiene
+        // campo de sucursal, así que viaja dentro del mensaje.
+        formulario.set(
+          'sucursal',
+          sucursales.find((sucursal) => sucursal.id === datos.sucursalId)?.nombre ?? '',
+        );
+
+        registrarOfertaDeUsado(formulario);
         window.open(linkCotizarUsado(datos), '_blank', 'noopener,noreferrer');
       }}
       aria-label="Cotizar unidad usada como parte de pago"
@@ -71,6 +102,27 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
             onChange={actualizar('telefono')}
           />
         </div>
+      </div>
+
+      {/* El email es OBLIGATORIO para la API de Decker: `POST /contactos/vender`
+          lo rechaza sin él. No es un campo de más "por las dudas" —sin esto la
+          cotización no queda registrada del lado de ellos y el asesor sólo se
+          entera por el WhatsApp—. */}
+      <div>
+        <label htmlFor={`${id}-email`} className="campo-label">
+          Email
+        </label>
+        <input
+          id={`${id}-email`}
+          className="campo"
+          required
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="juan@ejemplo.com"
+          value={datos.email}
+          onChange={actualizar('email')}
+        />
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -176,8 +228,8 @@ export default function FormCotizarUsado({ sucursales }: { sucursales: Sucursal[
       </button>
 
       <p className="text-xs leading-relaxed text-gris-500">
-        Se abre WhatsApp con el mensaje ya escrito, dirigido al asesor de la sucursal elegida.
-        Los datos no se guardan en este sitio.
+        Al enviar, tu consulta queda registrada en Decker y se abre WhatsApp con el mensaje ya
+        escrito, dirigido al asesor de la sucursal que elegiste.
       </p>
     </form>
   );

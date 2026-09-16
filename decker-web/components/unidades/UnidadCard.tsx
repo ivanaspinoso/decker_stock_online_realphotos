@@ -16,6 +16,7 @@ import {
   formatearAnio,
   formatearKm,
   formatearPrecio,
+  resumenTecnico,
   tieneKilometraje,
 } from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
@@ -78,10 +79,16 @@ export default function UnidadCard({
   const especificaciones = [
     { Icono: IconoCalendario, etiqueta: 'Año', valor: formatearAnio(unidad.anio) },
     muestraKm
+      /* CON el "km" de vuelta. Se lo había sacado porque el rótulo de arriba
+         lo decía; ahora que no hay rótulo, "1.145.960" a secas no dice de qué
+         es. El ícono del medidor ayuda pero no alcanza: al lado de un año de
+         cuatro cifras, un número largo sin unidad se lee como precio. */
       ? { Icono: IconoMedidor, etiqueta: 'Kilómetros', valor: formatearKm(unidad.km) }
       : { Icono: IconoPotencia, etiqueta: 'Configuración', valor: unidad.potencia ?? 'Consultar' },
     { Icono: IconoPin, etiqueta: 'Sucursal', valor: nombreDeSucursal(unidad.sucursalId) },
   ];
+
+  const resumen = unidad.descripcion || resumenTecnico(unidad.ficha);
 
   /* El escalonado se corta en la octava tarjeta: más allá, la última de una
      grilla de treinta esperaría más de un segundo para aparecer. 40ms es el
@@ -96,6 +103,20 @@ export default function UnidadCard({
       }`}
       style={retardo ? { animationDelay: retardo } : undefined}
     >
+      {/* UNA SOLA FOTO, y hubo un carrusel acá que se sacó.
+          
+          Dejaba pasar las fotos con las flechas o el dedo, sin entrar a la
+          ficha, y la mecánica funcionaba: las pedía sólo al detectar interés y
+          precargaba la siguiente. Lo que no funcionaba era el resultado: las
+          fotos de la galería viven en `/uploads/croped/`, una ruta que el
+          precalentado no cubre, así que la primera vez que alguien pasaba de
+          foto el optimizador de Next tenía que bajarla del server de Decker en
+          ese momento — y ese server contesta `504 Gateway Timeout` apenas se le
+          pide de más. El visitante tocaba la flecha y veía un rectángulo gris.
+          
+          Un carrusel que a veces no muestra la foto es peor que no tenerlo: la
+          tarjeta parece rota en vez de simple. Vuelve cuando las fotos no
+          dependan de ese server —ver "Las fotos" en CLAUDE.md—. */}
       <FotoUnidad
         src={unidad.imagen}
         alt={`${unidad.nombre} — ${unidad.estado}`}
@@ -166,82 +187,50 @@ export default function UnidadCard({
           <p className="mt-2 text-base font-medium text-gris-500">Consultar precio</p>
         )}
 
-        {/* La descripción se corta en dos renglones. Es texto de apoyo, no un
-            dato: los que existen hoy son de una o dos líneas, pero uno largo
-            estiraba una sola tarjeta de la fila y desalineaba las tres. El
-            texto completo está en la ficha, a un toque. */}
-        <p className="mt-2 line-clamp-2 text-base leading-relaxed text-gris-500">
-          {unidad.descripcion}
-        </p>
+        {/* La descripción del aviso, o la ficha técnica en una línea cuando no
+            hay: sólo 57 de 240 unidades traen texto escrito, y dejar el hueco
+            desalinea las tarjetas de la fila.
+
+            Se corta en dos renglones. Es texto de apoyo, no un dato: uno largo
+            estiraba una sola tarjeta y desalineaba las tres. El detalle
+            completo está en la ficha, a un toque. */}
+        {/* Si no hay ni descripción ni ficha técnica —pasa en 31 de las 240
+            unidades— el párrafo no se dibuja. Un `<p>` vacío dejaba dos
+            renglones de hueco; los botones igual se alinean entre tarjetas por
+            el `mt-auto` de más abajo, así que la fila no se descuadra. */}
+        {resumen && (
+          <p className="mt-2 line-clamp-2 text-base leading-relaxed text-gris-500">
+            {resumen}
+          </p>
+        )}
 
         {/**
-         * Dos columnas para las cifras y un renglón entero para el lugar.
+         * LOS DATOS EN DOS RENGLONES, SIN RÓTULOS.
          *
-         * Con los tres en una sola fila no entraban: la tarjeta mide ~344px en
-         * la grilla de tres columnas y ~350 en un teléfono, así que cada slot
-         * quedaba en unos 98px y "Bahía Blanca" se cortaba en "Bahía B…".
-         * "Comodoro Rivadavia" se cortaba todavía antes. Un dato esencial
-         * truncado no es un dato: la sucursal decide si la unidad se puede ir a
-         * ver el sábado o hay que cruzar tres provincias.
+         * Antes cada dato eran DOS líneas —el rótulo arriba, el valor abajo— en
+         * dos filas: 117px de la tarjeta para tres datos. Medido.
          *
-         * Año y kilómetros sí conviven: son cifras cortas y se comparan de a
-         * pares. La sucursal se lleva el ancho completo abajo, que es lo que le
-         * hace falta para escribirse entera.
+         * Los rótulos se fueron porque no agregaban nada que el dato no dijera
+         * solo: al lado del ícono de calendario, "2017" es un año; "1.145.960
+         * km" lleva su unidad; y junto al pin, "Mar del Plata" es la sucursal.
+         * Eran tres palabras en gris chiquito repitiendo lo obvio, en la parte
+         * de la tarjeta que se escanea más rápido.
+         *
+         * POR QUÉ LA SUCURSAL SIGUE EN SU PROPIO RENGLÓN: con los tres juntos
+         * cada slot queda en ~98px y "Comodoro Rivadavia" se corta. Un dato
+         * truncado no es un dato, y la sucursal decide si la unidad se puede ir
+         * a ver el sábado o hay que cruzar tres provincias.
          */}
-        <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-gris-200 pt-4">
-          {especificaciones.map((spec, indice) => (
-            <div
-              key={spec.etiqueta}
-              className={`min-w-0 ${indice === especificaciones.length - 1 ? 'col-span-2' : ''}`}
-            >
-              <dt className="rotulo-dato">{spec.etiqueta}</dt>
-              <dd className="mt-1 flex items-center gap-1.5">
-                <spec.Icono className="h-4 w-4 shrink-0 text-gris-400" />
-                {/* El ancho fijo SÓLO si el valor es una cifra: "Bahía Blanca"
-                    o "Consultar" no tienen nada que alinear. Es la misma regla
-                    que ya aplicaba la tabla.
-
-                    El peso es medio y no semibold: si el dato pesa lo mismo que
-                    el nombre de la unidad, la tarjeta deja de tener un primer
-                    renglón. */}
-                <span
-                  className={`truncate text-sm font-medium text-negro ${
-                    esCifra(spec.valor) ? 'dato' : ''
-                  }`}
-                  title={spec.valor}
-                >
-                  {spec.valor}
-                </span>
-              </dd>
-            </div>
+        <dl className="mt-4 space-y-2 border-t border-gris-200 pt-3">
+          <div className="flex items-center gap-4">
+            {especificaciones.slice(0, 2).map((spec) => (
+              <Dato key={spec.etiqueta} {...spec} />
+            ))}
+          </div>
+          {especificaciones.slice(2).map((spec) => (
+            <Dato key={spec.etiqueta} {...spec} />
           ))}
         </dl>
-
-        {/* Financiación y comparar comparten renglón.
-            Antes la financiación era una banda a todo el ancho —36px de alto
-            para tres palabras— y la casilla de comparar quedaba sola en el
-            renglón siguiente, flotando entre la banda y los botones. Son las
-            dos cosas menos pesadas de la tarjeta: juntas en una línea ocupan lo
-            que ocupaba una sola.
-
-            El chip mide siempre igual y sólo cambia de color y de palabra:
-            amarillo cuando hay financiación —que es señalética, lo que se
-            escanea—, gris cuando hay que consultarla. */}
-        <div className="relative z-10 mt-4 flex items-center justify-between gap-2">
-          <BotonComparar slug={unidad.slug} nombre={unidad.nombre} />
-          <span
-            className={`centrado-optico inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm px-2 text-2xs font-medium ${
-              unidad.financiacion === 'Disponible'
-                ? 'bg-amarillo-50 text-negro ring-1 ring-inset ring-amarillo'
-                : 'bg-gris-100 text-gris-600 ring-1 ring-inset ring-gris-200'
-            }`}
-          >
-            <IconoCheck className="h-3.5 w-3.5 shrink-0" />
-            {unidad.financiacion === 'Disponible'
-              ? 'Con financiación'
-              : 'Financiación a consultar'}
-          </span>
-        </div>
 
         <div className="mt-auto pt-4">
           {/* DOS acciones, no tres: ver la unidad y preguntar por ella. Eso es
@@ -262,7 +251,27 @@ export default function UnidadCard({
               tarjeta, y un botón de 44px de alto con la palabra en cuerpo de
               nota al pie se lee como un control secundario. El alto ya estaba
               resuelto para el dedo; esto lo resuelve para el ojo. */}
-          <div className="relative z-10 flex gap-2">
+          {/* COMPARAR VIVE ACÁ, con las acciones, y no en un renglón propio.
+              Tenía uno compartido con el chip de financiación; al sacarse el
+              chip —la API no manda ese dato y salía igual en las 240— la
+              casilla quedó sola contra el borde izquierdo, con media tarjeta de
+              aire al lado y un renglón entero para un control de 20px.
+
+              Acá abajo es además donde corresponde: es una acción, como "Ver
+              ficha" y "Consultar", y las tres se leen juntas. El chip amarillo
+              de financiación vuelve solo a este mismo renglón el día que el
+              backend cargue el dato. */}
+          <div className="relative z-10 flex items-center gap-2">
+            {unidad.financiacion === 'Disponible' && (
+              <span className="centrado-optico inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm bg-amarillo-50 px-2 text-2xs font-medium text-negro ring-1 ring-inset ring-amarillo">
+                <IconoCheck className="h-3.5 w-3.5 shrink-0" />
+                Con financiación
+              </span>
+            )}
+            <BotonComparar slug={unidad.slug} nombre={unidad.nombre} />
+          </div>
+
+          <div className="relative z-10 mt-3 flex gap-2">
             <Link
               href={`/unidad/${unidad.slug}`}
               className="centrado-optico inline-flex h-11 flex-1 items-center justify-center rounded-sm bg-gris-100 text-base font-medium text-negro transition-colors duration-rapido hover:bg-gris-200 active:translate-y-px"
@@ -283,5 +292,36 @@ export default function UnidadCard({
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * Un dato de la tarjeta: ícono y valor, sin rótulo visible.
+ *
+ * El rótulo existe igual para quien no ve la pantalla —va en el `<dt>` con
+ * `sr-only`—: un lector que anuncia "2017, 1.145.960 km, Mar del Plata" sin
+ * decir qué es cada cosa deja al oyente adivinando, aunque en pantalla el ícono
+ * lo resuelva de un vistazo.
+ */
+function Dato({
+  Icono,
+  etiqueta,
+  valor,
+}: {
+  Icono: (props: { className?: string }) => React.ReactElement;
+  etiqueta: string;
+  valor: string;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-1.5">
+      <dt className="sr-only">{etiqueta}</dt>
+      <Icono className="h-4 w-4 shrink-0 text-gris-400" />
+      <dd
+        className={`truncate text-sm font-medium text-negro ${esCifra(valor) ? 'dato' : ''}`}
+        title={valor}
+      >
+        {valor}
+      </dd>
+    </div>
   );
 }

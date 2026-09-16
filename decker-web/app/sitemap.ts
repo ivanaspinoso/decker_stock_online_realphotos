@@ -5,7 +5,7 @@ import { getSlugsDeUnidades } from '@/lib/api';
  * Sitemap de las rutas reales del sitio: home, catálogo y la ficha de cada
  * unidad publicada.
  *
- * Las fichas salen de la misma función que usa `generateStaticParams`, así que
+ * Las fichas salen de la capa de datos, así que
  * el sitemap no se puede desincronizar del stock: si entra una unidad nueva,
  * aparece acá sola en el próximo build.
  */

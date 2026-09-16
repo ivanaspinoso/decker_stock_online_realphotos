@@ -5,3 +5,6 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 .env*.local
+
+# Logs de servidores levantados a mano durante el desarrollo.
+*.log

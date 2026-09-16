@@ -1,3 +1,20 @@
+/**
+ * Cuántas unidades entran en una página del catálogo.
+ *
+ * VIVE ACÁ Y NO EN `CatalogoCliente` aunque sea quien la usa para cortar la
+ * lista, porque `app/catalogo/page.tsx` también la necesita: acota el
+ * `?pagina=` de la URL contra el stock antes de renderizar.
+ *
+ * Y no se puede importar desde el componente: `CatalogoCliente` es `'use
+ * client'`, y lo que un Server Component importa de un módulo cliente no es el
+ * valor sino una referencia. El cálculo daba `NaN` y el catálogo salía vacío.
+ * Este archivo no lleva `'use client'`, así que los dos lados leen el número.
+ *
+ * 24 es múltiplo de 2, 3 y 4: la última fila queda completa en las tres
+ * anchuras de la grilla, sin un hueco al final.
+ */
+export const UNIDADES_POR_PAGINA = 24;
+
 import type { FiltrosCatalogo, Unidad } from '@/lib/types';
 
 /**

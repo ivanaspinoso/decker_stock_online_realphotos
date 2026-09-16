@@ -40,7 +40,7 @@ export interface ResumenComparacion {
   anio: number | null;
   km: number | null;
   precio: number | null;
-  sucursalId: IdSucursal;
+  sucursalId: IdSucursal | null;
   imagen: string;
 }
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import HojaFiltros from '@/components/catalogo/HojaFiltros';
+import Paginacion from '@/components/catalogo/Paginacion';
 import PanelFiltros from '@/components/catalogo/PanelFiltros';
 import UnidadGrilla from '@/components/unidades/UnidadGrilla';
 import UnidadTabla from '@/components/unidades/UnidadTabla';
 import { IconoCerrar, IconoGrilla, IconoLista } from '@/components/ui/Iconos';
-import { cumpleFiltros, ordenarUnidades } from '@/lib/filtros';
+import { cumpleFiltros, ordenarUnidades, UNIDADES_POR_PAGINA } from '@/lib/filtros';
 import { formatearPrecio } from '@/lib/format';
 import type {
   FiltrosCatalogo,
@@ -19,22 +20,29 @@ import type {
 type Vista = 'grilla' | 'lista';
 
 /**
- * Los órdenes vuelven a incluir precio.
+ * Los órdenes disponibles, según lo que el stock tenga cargado.
  *
- * `ordenarUnidades` nunca dejó de soportarlos —`precio-asc` y `precio-desc`
- * están en el tipo y en la función— pero el `<select>` no los ofrecía, así que
- * la única forma de llegar a ellos era escribir `?orden=precio-asc` a mano.
+ * ORDENAR POR PRECIO SÓLO APARECE SI HAY PRECIOS. Hoy no los hay: la API no
+ * devuelve precio en ningún endpoint público. Un "Precio: menor a mayor" sobre
+ * un catálogo entero de "Consultar" no reordena nada, y eso se lee como que el
+ * sitio está roto, no como que falta el dato.
  *
- * Las unidades sin precio publicado caen al final en los dos sentidos: no son
- * ni las más baratas ni las más caras.
+ * Cuando haya precios, las unidades que igual no lo tengan caen al final en los
+ * dos sentidos: no son ni las más baratas ni las más caras.
  */
-const ORDENES: { valor: OrdenCatalogo; texto: string }[] = [
-  { valor: 'relevancia', texto: 'Destacadas primero' },
-  { valor: 'precio-asc', texto: 'Precio: menor a mayor' },
-  { valor: 'precio-desc', texto: 'Precio: mayor a menor' },
-  { valor: 'anio-desc', texto: 'Año: más nuevas' },
-  { valor: 'km-asc', texto: 'Kilómetros: menor a mayor' },
-];
+function ordenesDisponibles(hayPrecios: boolean): { valor: OrdenCatalogo; texto: string }[] {
+  return [
+    { valor: 'relevancia' as const, texto: 'Destacadas primero' },
+    ...(hayPrecios
+      ? [
+          { valor: 'precio-asc' as const, texto: 'Precio: menor a mayor' },
+          { valor: 'precio-desc' as const, texto: 'Precio: mayor a menor' },
+        ]
+      : []),
+    { valor: 'anio-desc' as const, texto: 'Año: más nuevas' },
+    { valor: 'km-asc' as const, texto: 'Kilómetros: menor a mayor' },
+  ];
+}
 
 /**
  * Catálogo interactivo.
@@ -47,19 +55,37 @@ const ORDENES: { valor: OrdenCatalogo; texto: string }[] = [
  * Los filtros se reflejan en la URL con `replaceState` para poder compartir una
  * búsqueda, sin re-renderizar la página en cada tecleo.
  */
+/**
+ * Cuántas unidades se muestran por página.
+ *
+ * POR QUÉ HAY QUE PAGINAR: con la API real el catálogo son 239 unidades y antes
+ * se dibujaban TODAS de una. Eso son 239 tarjetas con 239 fotos en el DOM: una
+ * página de scroll interminable, y el navegador del teléfono pidiendo doscientas
+ * imágenes al server de fotos de Decker —que corta las conexiones cuando se le
+ * piden muchas— así que la mitad ni llegaba.
+ *
+ * 24 es múltiplo de 2, 3 y 4: la última fila queda completa en las tres
+ * anchuras de la grilla, sin un hueco al final.
+ */
+const POR_PAGINA = UNIDADES_POR_PAGINA;
+
 export default function CatalogoCliente({
   unidades,
   opciones,
   sucursales,
   filtrosIniciales,
+  paginaInicial,
 }: {
   unidades: Unidad[];
   opciones: OpcionesCatalogo;
   sucursales: Sucursal[];
   filtrosIniciales: FiltrosCatalogo;
+  /** La página del `?pagina=` de la URL, ya saneada por el servidor. */
+  paginaInicial: number;
 }) {
   const [filtros, setFiltros] = useState<FiltrosCatalogo>(filtrosIniciales);
   const [vista, setVista] = useState<Vista>('grilla');
+  const [pagina, setPagina] = useState(paginaInicial);
 
   const resultados = useMemo(
     () =>
@@ -68,6 +94,42 @@ export default function CatalogoCliente({
         filtros.orden,
       ),
     [unidades, filtros],
+  );
+
+  const totalPaginas = Math.max(1, Math.ceil(resultados.length / POR_PAGINA));
+
+  /**
+   * Una página fuera de rango se corrige a la última que existe.
+   *
+   * Hace falta desde que la página entra por la URL: alguien puede llegar con
+   * `?pagina=99`, o con el link de la página 8 guardado de cuando había más
+   * stock. Sin esto vería una lista vacía con el contador diciendo que hay 240
+   * unidades, que se lee como sitio roto y no como link viejo.
+   */
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
+
+  /**
+   * Volver a la página 1 cuando cambian los filtros.
+   *
+   * Sin esto, alguien parado en la página 8 que filtra por "Batea" —23
+   * unidades, una sola página— se queda mirando una lista vacía con el contador
+   * diciendo 23. El bug clásico de toda paginación filtrable.
+   */
+  const montado = useRef(false);
+  useEffect(() => {
+    // En el primer render NO se toca: pisaría la página que venía en la URL.
+    if (!montado.current) {
+      montado.current = true;
+      return;
+    }
+    setPagina(1);
+  }, [filtros]);
+
+  const visibles = useMemo(
+    () => resultados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA),
+    [resultados, pagina],
   );
 
   useEffect(() => {
@@ -85,16 +147,35 @@ export default function CatalogoCliente({
     if (filtros.precioHasta !== undefined)
       params.set('precioHasta', String(filtros.precioHasta));
     if (filtros.orden && filtros.orden !== 'relevancia') params.set('orden', filtros.orden);
+    // La página también, porque también forma parte de "dónde estoy mirando".
+    // Sin esto, mandarle a alguien el link de la página 5 lo dejaba en la 1.
+    // La 1 no se escribe: es el estado por defecto y ensuciaría la URL.
+    if (pagina > 1) params.set('pagina', String(pagina));
 
     const query = params.toString();
     window.history.replaceState(null, '', query ? `?${query}` : window.location.pathname);
-  }, [filtros]);
+  }, [filtros, pagina]);
 
   const cambiar = useCallback((parcial: Partial<FiltrosCatalogo>) => {
     setFiltros((previo) => ({ ...previo, ...parcial }));
   }, []);
 
   const limpiar = useCallback(() => setFiltros({ orden: filtros.orden }), [filtros.orden]);
+
+  /**
+   * Cambia de página y sube al principio del listado.
+   *
+   * El scroll no es un adorno: los controles de paginación están al FINAL de la
+   * lista, así que sin esto el clic deja al visitante mirando el final de la
+   * página nueva —o peor, los mismos botones— y parece que no pasó nada.
+   *
+   * Sube al encabezado del listado y no al tope de la página: los filtros y el
+   * conteo quedan a la vista, que es el contexto de lo que se está mirando.
+   */
+  const irAPagina = useCallback((siguiente: number) => {
+    setPagina(siguiente);
+    document.getElementById('listado')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   /**
    * Firma de la combinación de filtros aplicada.
@@ -242,8 +323,12 @@ export default function CatalogoCliente({
         />
 
         {/* min-w-0: sin esto la tabla de la vista lista estira la celda del grid
-            y hace scrollear la página entera en horizontal. */}
-        <div className="min-w-0">
+            y hace scrollear la página entera en horizontal.
+
+            `id` y `scroll-mt-24`: es el ancla a la que sube el cambio de
+            página. El margen deja el encabezado abajo de la nav fija, que si no
+            lo tapa. */}
+        <div id="listado" className="min-w-0 scroll-mt-24">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-gris-500">
               <span className="dato text-md font-medium text-negro">{resultados.length}</span>{' '}
@@ -293,7 +378,7 @@ export default function CatalogoCliente({
                 value={filtros.orden ?? 'relevancia'}
                 onChange={(evento) => cambiar({ orden: evento.target.value as OrdenCatalogo })}
               >
-                {ORDENES.map((orden) => (
+                {ordenesDisponibles(opciones.precioMin !== null).map((orden) => (
                   <option key={orden.valor} value={orden.valor}>
                     {orden.texto}
                   </option>
@@ -357,10 +442,28 @@ export default function CatalogoCliente({
                 Limpiar filtros
               </button>
             </div>
-          ) : vista === 'grilla' ? (
-            <UnidadGrilla key={firmaFiltros} unidades={resultados} columnas={3} animar />
           ) : (
-            <UnidadTabla unidades={resultados} />
+            <>
+              {vista === 'grilla' ? (
+                <UnidadGrilla
+                  key={`${firmaFiltros}-${pagina}`}
+                  unidades={visibles}
+                  columnas={3}
+                  animar
+                />
+              ) : (
+                <UnidadTabla unidades={visibles} />
+              )}
+
+              <Paginacion
+                pagina={pagina}
+                totalPaginas={totalPaginas}
+                total={resultados.length}
+                desde={(pagina - 1) * POR_PAGINA + 1}
+                hasta={Math.min(pagina * POR_PAGINA, resultados.length)}
+                onIr={irAPagina}
+              />
+            </>
           )}
         </div>
       </div>

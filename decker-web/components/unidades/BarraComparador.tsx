@@ -76,7 +76,10 @@ export default function BarraComparador({
 
   if (elegidas.length === 0) return null;
 
-  const nombreSucursal = (id: string) =>
+  // `null` es un caso real: hay unidades publicadas que el backend no asigna a
+  // ninguna de las cinco agencias del sitio. Se muestran como "Consultar",
+  // igual que el resto de los datos que no están cargados.
+  const nombreSucursal = (id: string | null) =>
     sucursales.find((sucursal) => sucursal.id === id)?.nombre ?? 'Consultar';
 
   /**

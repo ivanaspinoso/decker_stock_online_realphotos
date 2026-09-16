@@ -21,6 +21,12 @@ export default function EncabezadoSeccion({
   return (
     <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
+        {/* LA REGLA DEL ACENTO, en una línea: rojo sobre claro, amarillo sobre
+            oscuro. No son dos acentos, es uno que cambia de superficie — el
+            rojo de marca no tiene contraste suficiente contra el negro.
+            El amarillo de los chips de 0 km es el mismo y por el mismo motivo:
+            apoyan sobre foto oscura. Quien vea amarillo en el sitio y piense
+            "esto debería ser sólo de 0 km", que lea esto antes de cambiarlo. */}
         <p className={`etiqueta ${oscuro ? 'text-amarillo' : 'text-rojo'}`}>{etiqueta}</p>
         <h2 className={`titulo-seccion mt-3 ${oscuro ? 'text-white' : 'text-negro'}`}>
           {titulo}

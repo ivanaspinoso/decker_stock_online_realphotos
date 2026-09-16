@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import herostockImage from '@/public/marca/herostock.jpg';
 import CatalogoCliente from '@/components/catalogo/CatalogoCliente';
+import { UNIDADES_POR_PAGINA } from '@/lib/filtros';
 import VistosRecientemente from '@/components/unidades/VistosRecientemente';
 import { getCatalogoCompleto, getOpcionesCatalogo, getResumenDeUnidades, getSucursales } from '@/lib/api';
 import type {
@@ -17,9 +18,13 @@ export const metadata: Metadata = {
   /* Había quedado sin la primera oración —decía sólo "Filtrá por tipo, marca,
      año…"— y esta es LA página que Google indexa para "camiones usados": la
      descripción tiene que empezar diciendo qué hay, no cómo se filtra. */
+  /* Sin "precio" en la lista de filtros: mientras la API no devuelva precios,
+     el control no está en pantalla, y prometerlo en el resultado de Google es
+     prometerlo dos veces mal —una en el buscador y otra al llegar—. La
+     descripción de la página, que sí es dinámica, se arma abajo. */
   description:
     'Camiones 0 km y usados seleccionados, semis, bateas y utilitarios en las ' +
-    'cinco agencias Decker. Filtrá por tipo, marca, año, precio y sucursal.',
+    'cinco agencias Decker. Filtrá por tipo, marca, año, sucursal y estado.',
 };
 
 interface Props {
@@ -59,6 +64,30 @@ export default async function CatalogoPage({ searchParams }: Props) {
     orden: (parametrosUrl.orden as OrdenCatalogo) ?? 'relevancia',
   };
 
+  /**
+   * La página pedida, saneada acá y no en el cliente.
+   *
+   * `?pagina=` es texto que escribe cualquiera: puede venir `abc`, `-3`, `0` o
+   * un número más grande que el stock. Todo eso se convierte en 1, y de pasarse
+   * del total se encarga el cliente, que es el único que sabe cuántas páginas
+   * quedan después de aplicar los filtros.
+   */
+  const paginaPedida = Math.max(1, Math.trunc(Number(parametrosUrl.pagina)) || 1);
+
+  /**
+   * Y acotada contra el stock, para que el HTML del servidor nunca salga vacío.
+   *
+   * El cliente también acota —es el único que sabe cuántas páginas quedan
+   * después de aplicar los filtros— pero lo hace al montar, así que sin esto un
+   * `?pagina=99` sirve una lista vacía que recién se corrige cuando arranca el
+   * JavaScript. Quien llega con un link viejo ve un parpadeo en blanco, y un
+   * buscador que no ejecuta JavaScript ve una página de catálogo sin catálogo.
+   */
+  const paginaInicial = Math.min(
+    paginaPedida,
+    Math.max(1, Math.ceil(unidades.length / UNIDADES_POR_PAGINA)),
+  );
+
   return (
     <>
       {/* Banda de encabezado con la foto DE FONDO, detrás del título y la
@@ -97,9 +126,15 @@ export default async function CatalogoPage({ searchParams }: Props) {
 
               gris-200 y no gris-400: sobre la foto, el gris medio no llega a
               4.5:1 contra los techos blancos de los camiones. */}
+          {/* La lista de filtros se arma con los que REALMENTE están en
+              pantalla. El precio sólo se nombra si hay precios en el stock:
+              hoy la API no los devuelve, el filtro se esconde solo (ver
+              `getOpcionesCatalogo`) y esta bajada prometía un control que el
+              visitante después buscaba y no encontraba. */}
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-gris-200">
-            El stock de las cinco agencias. Filtrá por tipo, marca, año, precio, sucursal o
-            estado, y cambiá a vista lista para comparar varias de un vistazo.
+            El stock de las cinco agencias. Filtrá por tipo, marca, año
+            {opciones.precioMin !== null ? ', precio' : ''}, sucursal o estado, y cambiá a
+            vista lista para comparar varias de un vistazo.
           </p>
         </div>
       </div>
@@ -112,6 +147,7 @@ export default async function CatalogoPage({ searchParams }: Props) {
           opciones={opciones}
           sucursales={sucursales}
           filtrosIniciales={filtrosIniciales}
+          paginaInicial={paginaInicial}
         />
 
         {/* La franja va DESPUÉS del listado y no antes: primero está lo que

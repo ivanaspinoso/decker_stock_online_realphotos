@@ -9,6 +9,34 @@ const PESOS = new Intl.NumberFormat('es-AR', {
 const NUMERO = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
 /**
+ * Un porcentaje que puede tener decimales, con hasta dos y sin ceros de relleno.
+ *
+ * `formatearNumero` redondea a entero, que está bien para pesos y kilómetros
+ * pero miente con las tasas: el aumento del leasing es 1,25% mensual y se
+ * mostraba como "1%". Quien leía el resultado veía una cuota calculada con
+ * 1,25 y un cartel diciendo 1, y no había forma de saber cuál era el bueno.
+ *
+ * Sin ceros de relleno para que 20 siga siendo "20" y no "20,00": la mayoría de
+ * las tasas son redondas y no hay motivo para ensuciarlas.
+ */
+const PORCENTAJE = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+
+/**
+ * Dólares. Sólo aparecen en la calculadora de financiación —el stock se cotiza
+ * en USD— y nunca como precio de catálogo o de ficha, que siguen en pesos.
+ *
+ * Se muestra "US$" y no "$" a secas justamente porque conviven las dos monedas
+ * en la misma pantalla: un "$" ambiguo al lado de una cuota en pesos es un
+ * error de lectura de tres ceros.
+ */
+const DOLARES = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'USD',
+  currencyDisplay: 'narrowSymbol',
+  maximumFractionDigits: 0,
+});
+
+/**
  * Los campos sin cargar se muestran como "Consultar", nunca como `0`.
  * Las unidades que vienen del sitio original no tienen precio, año ni km.
  */
@@ -27,8 +55,19 @@ export function formatearKm(km: number | null): string {
   return `${NUMERO.format(km)} km`;
 }
 
+
 export function formatearNumero(valor: number): string {
   return NUMERO.format(valor);
+}
+
+/** Un porcentaje con sus decimales. Ver `PORCENTAJE`. */
+export function formatearPorcentaje(valor: number): string {
+  return PORCENTAJE.format(valor);
+}
+
+export function formatearUsd(valor: number | null): string {
+  if (valor === null) return 'Consultar';
+  return `US${DOLARES.format(valor)}`;
 }
 
 /** Semis y bateas no llevan kilometraje: ahí se muestra la configuración. */
@@ -79,4 +118,40 @@ export function formatearWhatsapp(numero: string): string {
   if (!movilArgentino) return `+${digitos}`;
   const [, caracteristica, bloque, resto] = movilArgentino;
   return `+54 9 ${caracteristica} ${bloque}-${resto}`;
+}
+
+/**
+ * Una línea con los datos técnicos que tenga la unidad.
+ *
+ * PARA QUÉ: sólo 57 de las 240 unidades traen descripción escrita por Decker.
+ * En las otras, los lugares que esperaban un párrafo —la tarjeta del catálogo y
+ * la meta descripción que lee Google— quedarían vacíos.
+ *
+ * Antes esto se resolvía metiendo los datos técnicos DENTRO de `descripcion`
+ * durante el mapeo, y traía dos problemas: en la ficha salían como prosa en vez
+ * de como tabla, y el texto empezaba repitiendo el nombre del camión que ya
+ * estaba en el título.
+ *
+ * Ahora los datos viven en `unidad.ficha` y esto arma la línea sólo donde hace
+ * falta una. No inventa nada: enumera lo que el backend mandó, en el orden en
+ * que se mira un camión.
+ */
+export function resumenTecnico(ficha: {
+  motor?: string;
+  combustible?: string;
+  traccion?: string;
+  frenos?: string;
+  largo?: string;
+  color?: string;
+}): string {
+  return [
+    ficha.motor && `Motor ${ficha.motor}`,
+    ficha.combustible,
+    ficha.traccion && `Tracción ${ficha.traccion}`,
+    ficha.frenos && `Frenos ${ficha.frenos}`,
+    ficha.largo,
+    ficha.color,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }

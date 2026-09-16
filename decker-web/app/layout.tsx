@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Overpass } from 'next/font/google';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import AvisoDeLead from '@/components/ui/AvisoDeLead';
 import BarraComparador from '@/components/unidades/BarraComparador';
 import { getResumenDeUnidades, getSucursales } from '@/lib/api';
 import './globals.css';
@@ -133,9 +134,27 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   /* El resumen de todo el stock, para el comparador: la lista guardada son
      slugs sueltos y los datos tienen que estar en la página cuando se leen.
      Va en el layout porque comparar cruza páginas —una unidad de la home,
-     otra del catálogo, otra de una ficha—. */
+     otra del catálogo, otra de una ficha—.
+
+     ESTE ES EL ÚNICO LUGAR QUE ATRAPA EL ERROR DE LA API, y es por dónde está
+     parado, no por lo que hace. Un error acá arriba no lo puede agarrar
+     `app/error.tsx` —que cuelga más abajo—: se lleva puesto el árbol entero y
+     deja el sitio en la pantalla de error genérica de Next, con la nav y el pie
+     incluidos.
+
+     Y no hace falta que pase: la barra del comparador es accesorio. Sin estos
+     datos el resto de la página funciona igual, así que ante una falla se
+     siguen de largo con las listas vacías —el comparador no aparece— y cada
+     página decide por su cuenta qué mostrar. La home y el catálogo, que sí
+     dependen del stock, van a fallar por su lado y ahí sí los atrapa
+     `app/error.tsx` con una pantalla que explica.
+
+     Con los datos de prueba esto nunca se ejecuta. */
   const [unidades, sucursales] = await Promise.all([
-    getResumenDeUnidades(),
+    getResumenDeUnidades().catch((error) => {
+      console.error('[layout] no se pudo cargar el resumen del stock', error);
+      return [];
+    }),
     getSucursales(),
   ]);
 
@@ -165,6 +184,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </main>
         <Footer />
         <BarraComparador unidades={unidades} sucursales={sucursales} />
+        {/* En el layout, como el comparador: el aviso de que una consulta no
+            quedó registrada llega DESPUÉS de que el visitante se fue a
+            WhatsApp, y tiene que estar donde vuelva, sea la página que sea. */}
+        <AvisoDeLead />
       </body>
     </html>
   );

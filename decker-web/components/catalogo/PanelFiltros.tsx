@@ -176,7 +176,14 @@ export function CamposFiltros({
 
       {/* 2. CUÁNTO. Los dos rangos juntos, que es como se piensan: el
           presupuesto y la antigüedad son la misma decisión de plata. */}
-      <GrupoFiltros titulo="Presupuesto y antigüedad">
+      {/* El rótulo se adapta a lo que el grupo realmente contiene. Sin precios
+          en el stock —hoy, porque la API no los devuelve— el filtro de precio
+          se esconde y el grupo se queda sólo con el año: un encabezado que
+          dice "Presupuesto" arriba de un único campo de año promete un control
+          que no está, y el visitante lo busca. */}
+      <GrupoFiltros
+        titulo={opciones.precioMin !== null ? 'Presupuesto y antigüedad' : 'Antigüedad'}
+      >
         {/**
          * Precio. El sitio lo prometía —el título del catálogo dice "filtrá por
          * tipo, marca, año, precio, sucursal o estado"— y el control no estaba:
@@ -187,39 +194,55 @@ export function CamposFiltros({
          * se acota el rango, porque no se puede afirmar que entre. Por eso el pie
          * lo aclara en vez de dejar que la lista se acorte en silencio.
          */}
-        <fieldset className="col-span-2 lg:col-span-1">
-          <legend className="campo-label">Precio, en millones de $</legend>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              className="campo dato"
-              inputMode="numeric"
-              min={0}
-              placeholder={enMillones(opciones.precioMin)}
-              aria-label="Precio desde, en millones de pesos"
-              value={enMillones(filtros.precioDesde)}
-              onChange={(evento) => onCambio({ precioDesde: aPesos(evento.target.value) })}
-            />
-            <span aria-hidden="true" className="text-gris-500">
-              –
-            </span>
-            <input
-              type="number"
-              className="campo dato"
-              inputMode="numeric"
-              min={0}
-              placeholder={enMillones(opciones.precioMax)}
-              aria-label="Precio hasta, en millones de pesos"
-              value={enMillones(filtros.precioHasta)}
-              onChange={(evento) => onCambio({ precioHasta: aPesos(evento.target.value) })}
-            />
-          </div>
-          {(filtros.precioDesde !== undefined || filtros.precioHasta !== undefined) && (
-            <p className="mt-2 text-xs leading-relaxed text-gris-500">
-              Con el precio acotado quedan afuera las unidades sin precio publicado.
-            </p>
-          )}
-        </fieldset>
+        {/**
+         * EL FILTRO DE PRECIO SÓLO EXISTE SI HAY PRECIOS.
+         *
+         * `precioMin` llega en `null` cuando ninguna unidad del stock tiene
+         * precio cargado, que es exactamente la situación de hoy: la API no
+         * devuelve precio en ningún endpoint público. Con el control a la
+         * vista, el primer número que alguien escriba deja la lista vacía —una
+         * unidad sin precio no se puede afirmar dentro del rango— y el catálogo
+         * parece roto.
+         *
+         * Se esconde el control, no se desactiva la maquinaria: `cumpleFiltros`
+         * sigue soportando el rango y un `?precioDesde=` en la URL sigue
+         * funcionando. El día que se enchufe `/precios`, el filtro vuelve solo.
+         */}
+        {opciones.precioMin !== null && (
+          <fieldset className="col-span-2 lg:col-span-1">
+            <legend className="campo-label">Precio, en millones de $</legend>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                className="campo dato"
+                inputMode="numeric"
+                min={0}
+                placeholder={enMillones(opciones.precioMin)}
+                aria-label="Precio desde, en millones de pesos"
+                value={enMillones(filtros.precioDesde)}
+                onChange={(evento) => onCambio({ precioDesde: aPesos(evento.target.value) })}
+              />
+              <span aria-hidden="true" className="text-gris-500">
+                –
+              </span>
+              <input
+                type="number"
+                className="campo dato"
+                inputMode="numeric"
+                min={0}
+                placeholder={enMillones(opciones.precioMax ?? undefined)}
+                aria-label="Precio hasta, en millones de pesos"
+                value={enMillones(filtros.precioHasta)}
+                onChange={(evento) => onCambio({ precioHasta: aPesos(evento.target.value) })}
+              />
+            </div>
+            {(filtros.precioDesde !== undefined || filtros.precioHasta !== undefined) && (
+              <p className="mt-2 text-xs leading-relaxed text-gris-500">
+                Con el precio acotado quedan afuera las unidades sin precio publicado.
+              </p>
+            )}
+          </fieldset>
+        )}
 
         <fieldset className="col-span-2 lg:col-span-1">
           <legend className="campo-label">Año</legend>
@@ -228,9 +251,9 @@ export function CamposFiltros({
               type="number"
               className="campo dato"
               inputMode="numeric"
-              min={opciones.anioMin}
-              max={opciones.anioMax}
-              placeholder={String(opciones.anioMin)}
+              min={opciones.anioMin ?? undefined}
+              max={opciones.anioMax ?? undefined}
+              placeholder={opciones.anioMin === null ? '' : String(opciones.anioMin)}
               aria-label="Año desde"
               value={filtros.anioDesde ?? ''}
               onChange={(evento) => onCambio({ anioDesde: aNumero(evento.target.value) })}
@@ -245,9 +268,9 @@ export function CamposFiltros({
               type="number"
               className="campo dato"
               inputMode="numeric"
-              min={opciones.anioMin}
-              max={opciones.anioMax}
-              placeholder={String(opciones.anioMax)}
+              min={opciones.anioMin ?? undefined}
+              max={opciones.anioMax ?? undefined}
+              placeholder={opciones.anioMax === null ? '' : String(opciones.anioMax)}
               aria-label="Año hasta"
               value={filtros.anioHasta ?? ''}
               onChange={(evento) => onCambio({ anioHasta: aNumero(evento.target.value) })}
@@ -313,8 +336,21 @@ export function CamposFiltros({
           </select>
         </div>
 
-        {/* El buscador de la home puede llegar con este filtro puesto: tiene
-            que verse acá para poder sacarlo. */}
+        {/**
+         * Mismo criterio que el precio: si NINGUNA unidad del stock tiene
+         * financiación confirmada, la casilla no se muestra, porque tildarla
+         * vacía el catálogo entero.
+         *
+         * Hoy es el caso: la API no tiene campo de financiación, así que todas
+         * las unidades salen como "Consultar". Afirmar "Disponible" sin que
+         * nadie lo haya dicho sería prometer un crédito.
+         *
+         * La excepción es cuando el filtro YA viene puesto —el buscador de la
+         * home puede llegar con él desde un link viejo—: ahí la casilla tiene
+         * que verse aunque no haya stock que la cumpla, si no el visitante ve
+         * cero resultados y no encuentra qué destildar.
+         */}
+        {(opciones.hayFinanciacion || filtros.financiacion === 'Disponible') && (
         <label className="col-span-2 flex items-center gap-2.5 lg:col-span-1">
           <input
             type="checkbox"
@@ -329,6 +365,7 @@ export function CamposFiltros({
           />
           <span className="text-sm text-gris-600">Sólo con financiación disponible</span>
         </label>
+        )}
       </GrupoFiltros>
     </div>
   );
