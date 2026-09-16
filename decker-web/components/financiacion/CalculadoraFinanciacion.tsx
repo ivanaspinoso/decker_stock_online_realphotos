@@ -453,7 +453,10 @@ export default function CalculadoraFinanciacion({
             <>
               {selectorPlazo}
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:max-w-md">
+              {/* Dos campos cortos, uno al lado del otro. `max-w-lg` y no
+                  `max-w-md`: con 448px repartidos en dos, el rótulo más largo
+                  se partía en dos líneas y desalineaba los campos entre sí. */}
+              <div className="mt-6 grid gap-4 sm:max-w-lg sm:grid-cols-2">
                 <div>
                   <label htmlFor={`${id}-tasa-leasing`} className="campo-label text-gris-400">
                     Tasa anual (%)
@@ -473,7 +476,7 @@ export default function CalculadoraFinanciacion({
                 </div>
                 <div>
                   <label htmlFor={`${id}-aumento`} className="campo-label text-gris-400">
-                    Aumento de la cuota (% mensual)
+                    Aumento mensual (%)
                   </label>
                   <input
                     id={`${id}-aumento`}
@@ -491,7 +494,7 @@ export default function CalculadoraFinanciacion({
                 </div>
                 <p id={`${id}-aumento-ayuda`} className="text-sm text-gris-400 sm:col-span-2">
                   Las cuotas no son fijas: arrancan en un valor y suben ese
-                  porcentaje cada mes.
+                  porcentaje todos los meses.
                 </p>
               </div>
 
