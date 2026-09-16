@@ -73,7 +73,10 @@ export default function Migas({
                    así que crece el área tocable y la fila se ve igual. */
                 <Link
                   href={nivel.href}
-                  className="-my-1 truncate py-1 transition-colors hover:text-negro"
+                  /* Área tocable de 44px. Las migas se tocan seguido en el
+                     teléfono —es la forma de volver al catálogo sin perder los
+                     filtros— y son de los enlaces más chicos del sitio. */
+                  className="-my-2 inline-flex min-h-11 max-w-full items-center truncate transition-colors hover:text-negro"
                 >
                   {nivel.texto}
                 </Link>

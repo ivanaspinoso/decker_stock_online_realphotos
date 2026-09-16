@@ -153,8 +153,83 @@ export default function CatalogoCliente({
     if (pagina > 1) params.set('pagina', String(pagina));
 
     const query = params.toString();
-    window.history.replaceState(null, '', query ? `?${query}` : window.location.pathname);
+    const destino = query ? `?${query}` : window.location.pathname;
+    const actual = window.location.search || window.location.pathname;
+
+    // Sin cambio, no se toca el historial: el efecto se vuelve a ejecutar por
+    // motivos que no son una elección de la persona, y cada uno apilaría un
+    // paso atrás idéntico al anterior.
+    if (destino === actual) return;
+
+    // Y si el cambio vino de tocar "atrás", tampoco: el navegador ya movió el
+    // historial, empujar otra entrada lo dejaría atrapado —cada atrás volvería
+    // al mismo lugar—. Ver el `popstate` de abajo.
+    if (volviendo.current) {
+      volviendo.current = false;
+      return;
+    }
+
+    /**
+     * `pushState` Y NO `replaceState`, para que "atrás" deshaga el filtro.
+     *
+     * Esto usaba `replaceState`, que actualiza la URL sin dejar rastro en el
+     * historial. La URL quedaba compartible —que era el objetivo— pero el botón
+     * de atrás no deshacía nada: alguien que probaba cuatro filtros seguidos y
+     * tocaba atrás se iba del catálogo de una, a la página anterior, perdiendo
+     * las cuatro elecciones juntas.
+     *
+     * Con `pushState`, cada cambio es un paso atrás. La guarda de arriba evita
+     * apilar entradas repetidas cuando el efecto se vuelve a ejecutar sin que
+     * la URL haya cambiado; sin ella, un solo clic podía dejar dos o tres pasos
+     * idénticos y haría falta tocar atrás varias veces para ver un cambio.
+     *
+     * El estado inicial NO entra acá: lo pone el servidor leyendo la URL, y
+     * empujarlo otra vez agregaría un paso al abrir la página.
+     */
+    window.history.pushState(null, '', destino);
   }, [filtros, pagina]);
+
+  /**
+   * Cuando la persona toca atrás o adelante, los filtros siguen a la URL.
+   *
+   * Sin esto, `pushState` haría lo peor de los dos mundos: la barra de
+   * direcciones cambiaría al ir hacia atrás pero la lista seguiría mostrando
+   * los filtros viejos, porque el estado de React no se entera de la
+   * navegación. Se lee la URL y se reconstruyen.
+   */
+  /** Marca que el cambio de filtros lo produjo el botón atrás, no la persona. */
+  const volviendo = useRef(false);
+
+  useEffect(() => {
+    const alNavegar = () => {
+      volviendo.current = true;
+      const p = new URLSearchParams(window.location.search);
+      const numero = (clave: string) => {
+        const valor = p.get(clave);
+        return valor !== null && valor !== '' && Number.isFinite(Number(valor))
+          ? Number(valor)
+          : undefined;
+      };
+
+      setFiltros({
+        busqueda: p.get('q') ?? '',
+        tipo: (p.get('tipo') ?? '') as FiltrosCatalogo['tipo'],
+        marca: p.get('marca') ?? '',
+        sucursalId: (p.get('sucursal') ?? '') as FiltrosCatalogo['sucursalId'],
+        estado: (p.get('estado') ?? '') as FiltrosCatalogo['estado'],
+        financiacion: p.get('financiacion') === 'Disponible' ? 'Disponible' : '',
+        anioDesde: numero('anioDesde'),
+        anioHasta: numero('anioHasta'),
+        precioDesde: numero('precioDesde'),
+        precioHasta: numero('precioHasta'),
+        orden: (p.get('orden') as FiltrosCatalogo['orden']) ?? 'relevancia',
+      });
+      setPagina(Math.max(1, Number(p.get('pagina')) || 1));
+    };
+
+    window.addEventListener('popstate', alNavegar);
+    return () => window.removeEventListener('popstate', alNavegar);
+  }, []);
 
   const cambiar = useCallback((parcial: Partial<FiltrosCatalogo>) => {
     setFiltros((previo) => ({ ...previo, ...parcial }));
@@ -304,7 +379,7 @@ export default function CatalogoCliente({
             <button
               type="button"
               onClick={limpiar}
-              className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70"
+              className="-my-2 -mr-3 inline-flex h-11 items-center px-3 text-sm font-medium text-rojo transition-opacity hover:opacity-70"
             >
               Limpiar todo
             </button>
@@ -409,7 +484,7 @@ export default function CatalogoCliente({
                        de pantalla anunciaba dos botones vacíos. El
                        `aria-label` va siempre, se vea la palabra o no. */
                     aria-label={`Ver en ${texto.toLowerCase()}`}
-                    className={`centrado-optico inline-flex h-10 items-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors duration-rapido ${
+                    className={`centrado-optico inline-flex h-11 items-center gap-2 rounded-sm px-3 text-sm font-medium transition-colors duration-rapido ${
                       vista === modo
                         ? 'bg-white text-negro shadow-nivel-1'
                         : 'text-gris-500 hover:text-negro'

@@ -399,7 +399,9 @@ export default function PanelFiltros({
             type="button"
             onClick={onLimpiar}
             disabled={!hayFiltrosPuestos(filtros)}
-            className="-my-1 py-1 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-400"
+            /* Área de 44px con márgenes negativos, para que crezca lo tocable
+               sin que el texto se despegue del título de al lado. */
+            className="-my-2 -mr-3 inline-flex h-11 items-center px-3 text-sm font-medium text-rojo transition-opacity hover:opacity-70 disabled:pointer-events-none disabled:text-gris-400"
           >
             Limpiar
           </button>

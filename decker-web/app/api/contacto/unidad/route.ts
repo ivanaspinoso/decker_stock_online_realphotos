@@ -1,5 +1,6 @@
 import { registrarConsultaPorUnidad } from '@/lib/rutasur/contacto';
 import { idDeSlug } from '@/lib/rutasur/mapeo';
+import { getSucursalPorId, getUnidadPorSlug } from '@/lib/api';
 
 /**
  * `POST /api/contacto/unidad` — deja registrada una consulta por una unidad.
@@ -37,11 +38,29 @@ export async function POST(pedido: Request) {
     return Response.json({ registrada: false, motivo: 'la unidad no tiene id de la API' });
   }
 
+  /**
+   * EL NOMBRE DE LA UNIDAD Y DE LA AGENCIA, NO SUS IDs.
+   *
+   * `POST /vehiculos/contacto` guarda los dos como texto libre —es lo que el
+   * asesor lee al abrir la consulta— así que mandar el id lo dejaría leyendo
+   * "agencia 1, vehículo 3455". Se buscan acá, en el servidor, porque el
+   * navegador manda sólo el slug: es el único dato que la tarjeta y la ficha
+   * tienen a mano en los dos lugares desde donde se dispara esto.
+   *
+   * Si la unidad ya no está en el catálogo —se vendió entre que cargó la página
+   * y tocó el botón— se manda el slug como nombre. Es feo pero legible, y es
+   * mejor que perder la consulta por un dato de presentación.
+   */
+  const unidad = await getUnidadPorSlug(slug);
+  const sucursal = unidad ? await getSucursalPorId(unidad.sucursalId) : null;
+
   const resultado = await registrarConsultaPorUnidad({
-    vehiculoId,
+    vehiculo: unidad?.nombre ?? slug,
+    agencia: sucursal?.nombre ?? '',
     nombre: texto(datos.nombre),
     telefono: texto(datos.telefono),
     email: texto(datos.email),
+    localidad: texto(datos.localidad),
     mensaje: texto(datos.mensaje),
   });
 

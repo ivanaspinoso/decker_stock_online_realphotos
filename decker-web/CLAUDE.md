@@ -213,6 +213,28 @@ navegación. Ver `lib/leads.ts`.
 Y por eso las rutas de `/api/contacto/` **siempre contestan 200**: nadie lee esa
 respuesta. Los errores van al log del servidor.
 
+### Los campos, según la documentación oficial
+
+Salieron de la guía de integración que mandó Eduardo (v1.1, 16/09/2026), no de
+adivinar. Tres cosas que los 422 NO decían y que estaban mal de nuestro lado:
+
+- **`/contactos/vender` es JSON, no multipart.** Las fotos van adentro del JSON
+  como Data URL Base64 en `fileSource1` … `fileSource4`, no como archivos. Un
+  `FormData` con `imagenes[]` no lo lee nadie.
+- **`anio` es entero y `kilometros` es número.** Los `<input>` los dan como
+  texto y hay que convertirlos.
+- **`agencia` y `vehiculo` de `/vehiculos/contacto` son TEXTO LIBRE**: el
+  *nombre* de la agencia y el *nombre* de la unidad. Mandábamos los ids. El 422
+  de `validation.string` se arreglaba con un `String()` —y el resultado seguía
+  siendo inútil: el asesor leía "agencia 1, vehículo 3455"—. **Pasar una
+  validación no es lo mismo que mandar el dato bien.**
+
+`modelo`, `estado` y `mensaje` no existen en `/contactos/vender`: lo que hay es
+`observaciones`, un texto libre de 5.000 caracteres. Los tres se juntan ahí.
+
+Los topes de largo por campo están en `lib/rutasur/limites.ts`, que no importa
+nada y lo leen tanto el servidor como el formulario.
+
 ### Los campos, ya confirmados contra la API
 
 Salieron de los 422 de la API real, no de la documentación. Son **en castellano**
@@ -244,6 +266,18 @@ Y es un bug del backend, no nuestro. Está verificado así:
 - Probado con JSON, `multipart/form-data` y `x-www-form-urlencoded`; con los
   valores como texto y como número; con el cuerpo mínimo y con campos de más.
   Siempre 500.
+
+**Y tampoco es el payload.** Con la documentación en la mano se probó el cuerpo
+EXACTO de cada endpoint, copiado de los ejemplos: los tres siguen en 500. La
+prueba que cierra la discusión es `POST /servicios/contacto`, que recibe **un
+solo campo**:
+
+```
+{"tipo_contacto":"WhatsApp"}   →   500 Server Error
+```
+
+Un endpoint de un campo, con el valor del ejemplo de la documentación, también
+falla. No hay payload que arregle esto.
 
 **No es la API key.** `PUT /key` acepta las credenciales igual por cabecera
 (`user:`, `pass:`) que por cuerpo, y las rutas de contacto están documentadas

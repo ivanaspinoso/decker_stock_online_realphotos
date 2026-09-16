@@ -1,4 +1,5 @@
 import { pedir } from '@/lib/rutasur/cliente';
+import { LARGOS, MAXIMO_DE_FOTOS } from '@/lib/rutasur/limites';
 import { ErrorDeApi, type CausaDeError } from '@/lib/rutasur/errores';
 
 
@@ -75,27 +76,38 @@ export interface ConsultaPorUnidad {
   email?: string;
   localidad?: string;
   mensaje?: string;
-  /** El `vehicle_id`, que sale del final del slug con `idDeSlug()`. */
-  vehiculoId: number;
-  /** El `company_id` de la agencia donde está la unidad. */
-  agenciaId?: number;
+  /** El NOMBRE de la unidad, como se lee en la ficha. No el id. */
+  vehiculo: string;
+  /** El NOMBRE de la agencia. No el `company_id`. */
+  agencia: string;
 }
 
-/** Consulta por una unidad puntual. Se dispara junto con el botón de WhatsApp. */
+/**
+ * Consulta por una unidad puntual. Se dispara junto con el botón de WhatsApp.
+ *
+ * `agencia` Y `vehiculo` VAN COMO NOMBRE, NO COMO ID, y esto costó dos vueltas.
+ *
+ * Primero se mandaban como número y la API contestaba `422 validation.string`.
+ * El arreglo obvio fue convertirlos a texto con `String()`, y la validación
+ * pasó —pero mandaba `"1"` y `"3455"`—. La documentación aclara lo que el 422
+ * no decía: son campos de TEXTO LIBRE, `agencia` es "el nombre de la agencia"
+ * hasta 150 caracteres y `vehiculo` "la unidad consultada" hasta 255.
+ *
+ * O sea que el 422 se arreglaba pasando el id a texto, y el resultado seguía
+ * siendo inútil: el asesor abría la consulta y leía "agencia 1, vehículo 3455".
+ * Pasar una validación no es lo mismo que mandar el dato bien.
+ */
 export async function registrarConsultaPorUnidad(
   datos: ConsultaPorUnidad,
 ): Promise<ResultadoDeEnvio> {
   return enviar(RUTAS.porUnidad, {
-    // COMO TEXTO, NO COMO NÚMERO. Son ids y se leen como números, pero la API
-    // los valida con `string` y manda 422 `validation.string` si viajan como
-    // enteros de JSON. Verificado contra la API real.
-    vehiculo: String(datos.vehiculoId),
-    agencia: datos.agenciaId === undefined ? undefined : String(datos.agenciaId),
-    nombre: datos.nombre,
-    telefono: datos.telefono,
-    email: datos.email ?? '',
-    localidad: datos.localidad ?? '',
-    mensaje: datos.mensaje ?? '',
+    nombre: recortar(datos.nombre, LARGOS.nombre),
+    email: recortar(datos.email ?? '', LARGOS.email),
+    localidad: recortar(datos.localidad ?? '', LARGOS.localidad),
+    telefono: recortar(datos.telefono, LARGOS.telefono),
+    mensaje: recortar(datos.mensaje ?? '', LARGOS.mensaje),
+    agencia: recortar(datos.agencia, LARGOS.agencia),
+    vehiculo: recortar(datos.vehiculo, LARGOS.vehiculo),
   });
 }
 
@@ -109,36 +121,90 @@ export interface OfertaDeUsado {
   km: string;
   estado?: string;
   mensaje?: string;
-  /** Fotos del usado, si el visitante las cargó. */
-  imagenes?: File[];
+  /**
+   * Fotos del usado, ya convertidas a Data URL Base64 por el navegador.
+   * Como máximo cuatro: la API sólo tiene `fileSource1` a `fileSource4`.
+   */
+  fotos?: string[];
 }
+
+
+/**
+ * Corta un texto al largo que la API acepta.
+ *
+ * Sin esto, un mensaje de más de 5.000 caracteres vuelve como 422 y el
+ * visitante ve "revisá los datos" sin entender cuál. Es preferible que llegue
+ * recortado a que no llegue: el asesor igual lo va a contestar por WhatsApp,
+ * donde el texto viaja entero.
+ */
+const recortar = (valor: string, tope: number) => valor.trim().slice(0, tope);
 
 /**
  * Formulario de parte de pago.
  *
- * Va como `FormData` y no como JSON porque puede llevar fotos. Los campos de
- * texto viajan igual; `cliente.ts` no le pone `Content-Type` a mano para que
- * `fetch` arme el `boundary` que PHP necesita para separar los archivos.
+ * VA COMO JSON, NO COMO MULTIPART, y las fotos adentro del JSON.
  *
- * Las imágenes se mandan como `images[]`, que es la convención que espera
- * Laravel para un array de archivos. A confirmar con el primer 422 real.
+ * Esto antes mandaba un `FormData` con los archivos como `imagenes[]`, que es
+ * la convención de Laravel y era una suposición razonable. La documentación de
+ * Eduardo dice otra cosa: el cuerpo es `application/json` y cada foto viaja
+ * como un **Data URL Base64 completo** —con el prefijo `data:image/jpeg;base64,`
+ * incluido— en un campo propio, `fileSource1` a `fileSource4`. Un multipart no
+ * lo lee.
+ *
+ * LOS TIPOS TAMPOCO SON LIBRES
+ *
+ * `anio` es un entero entre 1900 y el año que viene, y `kilometros` un número.
+ * El formulario los tiene como texto —son `<input>`— y acá se convierten. Un
+ * `"2019"` entre comillas pasa la validación de Laravel por casualidad; un
+ * campo vacío que se convierte en `NaN`, no.
+ *
+ * LO QUE SE SACÓ
+ *
+ * `modelo`, `estado` y `mensaje` no existen en esta API. Se mandaban "por si
+ * el backend los guarda", y no los guarda: los descarta. Lo que sí existe es
+ * `observaciones`, un texto libre de hasta 5.000 caracteres, así que los tres
+ * se juntan ahí en vez de perderse.
  */
 export async function registrarOfertaDeUsado(datos: OfertaDeUsado): Promise<ResultadoDeEnvio> {
-  const cuerpo = new FormData();
-  cuerpo.set('nombre', datos.nombre);
-  cuerpo.set('telefono', datos.telefono);
-  cuerpo.set('email', datos.email ?? '');
-  cuerpo.set('marca', datos.marca);
-  cuerpo.set('anio', datos.anio);
-  cuerpo.set('kilometros', datos.km);
-  // `modelo`, `estado` y `mensaje` no están en la lista de obligatorios del
-  // 422, pero se mandan igual: si el backend los guarda, mejor para el asesor.
-  cuerpo.set('modelo', datos.modelo);
-  cuerpo.set('estado', datos.estado ?? '');
-  cuerpo.set('mensaje', datos.mensaje ?? '');
-  for (const imagen of datos.imagenes ?? []) cuerpo.append('imagenes[]', imagen);
+  const anio = Number.parseInt(datos.anio, 10);
+  const kilometros = Number.parseInt(String(datos.km).replace(/\D/g, ''), 10);
+
+  const cuerpo: Record<string, unknown> = {
+    nombre: recortar(datos.nombre, LARGOS.nombre),
+    email: recortar(datos.email ?? '', LARGOS.email),
+    telefono: recortar(datos.telefono, LARGOS.telefono),
+    marca: recortar(datos.marca, LARGOS.marca),
+    // `NaN` no se manda: que la API conteste "falta el año" es más claro que
+    // recibir un número inventado.
+    anio: Number.isFinite(anio) ? anio : undefined,
+    kilometros: Number.isFinite(kilometros) ? kilometros : undefined,
+    observaciones: recortar(observacionesDe(datos), LARGOS.observaciones),
+  };
+
+  // Las fotos ocupan un campo numerado cada una. Se manda sólo lo que haya.
+  (datos.fotos ?? []).slice(0, MAXIMO_DE_FOTOS).forEach((foto, indice) => {
+    cuerpo[`fileSource${indice + 1}`] = foto;
+  });
 
   return enviar(RUTAS.vender, cuerpo);
+}
+
+/**
+ * Junta en un solo texto lo que la API no tiene campo para guardar.
+ *
+ * El modelo, el estado de la unidad y la sucursal elegida son datos que el
+ * visitante se tomó el trabajo de cargar. Perderlos porque la API no los
+ * contempla obligaría al asesor a volver a preguntar exactamente lo que ya
+ * le respondieron.
+ */
+function observacionesDe(datos: OfertaDeUsado): string {
+  return [
+    datos.modelo ? `Modelo: ${datos.modelo}` : '',
+    datos.estado ? `Estado: ${datos.estado}` : '',
+    datos.mensaje ?? '',
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 export interface ConsultaGeneral {
@@ -147,19 +213,29 @@ export interface ConsultaGeneral {
   email?: string;
   localidad?: string;
   mensaje: string;
+  /** El `vehicle_id`, si la consulta salió de una ficha. Entero, opcional. */
+  unidadId?: number;
 }
 
-/** Contacto general del sitio, sin unidad de referencia. */
+/**
+ * Contacto general del sitio.
+ *
+ * `contact_unidad` es el único campo opcional de esta API y es un ENTERO —el id
+ * del vehículo—, al revés de `/vehiculos/contacto`, donde la unidad va por
+ * nombre. No es un descuido de la documentación: son dos formularios distintos
+ * del backend viejo y cada uno guarda lo suyo. Se manda sólo si hay unidad.
+ */
 export async function registrarConsultaGeneral(datos: ConsultaGeneral): Promise<ResultadoDeEnvio> {
   return enviar(RUTAS.general, {
-    contact_name: datos.nombre,
-    contact_phone: datos.telefono,
-    contact_email: datos.email ?? '',
-    contact_city: datos.localidad ?? '',
-    contact_msj: datos.mensaje,
+    contact_name: recortar(datos.nombre, LARGOS.nombre),
+    contact_phone: recortar(datos.telefono, LARGOS.telefono),
+    contact_email: recortar(datos.email ?? '', LARGOS.email),
+    contact_city: recortar(datos.localidad ?? '', LARGOS.localidad),
+    contact_msj: recortar(datos.mensaje, LARGOS.mensaje),
     // De dónde salió la consulta. El backend lo exige; "Web" es lo que
     // corresponde a este sitio.
     contact_desde: 'Web',
+    ...(Number.isFinite(datos.unidadId) ? { contact_unidad: datos.unidadId } : {}),
   });
 }
 

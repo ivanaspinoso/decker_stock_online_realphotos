@@ -97,7 +97,7 @@ export default function Paginacion({
                  El activo va en negro relleno, que es lo que el sistema usa en
                  todo el sitio para "esta es la opción puesta" —el rojo está
                  reservado para el foco del teclado—. */
-              className={`centrado-optico dato inline-flex h-10 min-w-10 items-center justify-center rounded px-2 text-sm font-medium transition-colors duration-rapido ${
+              className={`centrado-optico dato inline-flex h-11 min-w-11 items-center justify-center rounded px-2 text-sm font-medium transition-colors duration-rapido ${
                 numero === pagina
                   ? 'bg-negro text-white'
                   : 'text-gris-600 hover:bg-gris-100 hover:text-negro'
@@ -138,7 +138,7 @@ function BotonFlecha({
       /* `disabled` de verdad y no un `pointer-events-none`: en la primera
          página, el botón "anterior" tiene que estar fuera del recorrido del
          teclado, no sólo verse apagado. */
-      className="centrado-optico inline-flex h-10 w-10 items-center justify-center rounded text-gris-600 transition-colors duration-rapido hover:bg-gris-100 hover:text-negro disabled:pointer-events-none disabled:opacity-30"
+      className="centrado-optico inline-flex h-11 w-11 items-center justify-center rounded text-gris-600 transition-colors duration-rapido hover:bg-gris-100 hover:text-negro disabled:pointer-events-none disabled:opacity-30"
     >
       <IconoFlecha className={`h-4 w-4 ${esAnterior ? 'rotate-180' : ''}`} />
     </button>

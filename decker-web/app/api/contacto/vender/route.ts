@@ -1,4 +1,9 @@
 import { registrarOfertaDeUsado } from '@/lib/rutasur/contacto';
+import {
+  DATA_URL_DE_IMAGEN,
+  LARGO_MAXIMO_DE_DATA_URL,
+  MAXIMO_DE_FOTOS,
+} from '@/lib/rutasur/limites';
 
 /**
  * `POST /api/contacto/vender` — deja registrado un usado ofrecido como parte
@@ -40,13 +45,39 @@ export async function POST(pedido: Request) {
     // tiene campo para eso, y perderla obligaría al asesor a volver a preguntar
     // lo único que el visitante ya eligió.
     mensaje: sucursalComoMensaje(formulario),
-    imagenes: formulario.getAll('imagenes').filter((valor): valor is File => valor instanceof File),
+    // Las fotos llegan del navegador ya convertidas a Data URL Base64: la API
+    // las quiere así, dentro del JSON, no como archivos. Ver `MAXIMO_DE_FOTOS`
+    // y el comentario de `registrarOfertaDeUsado`.
+    fotos: fotosDe(formulario),
   });
 
   return Response.json({
     registrada: resultado.ok,
     mensaje: resultado.ok ? undefined : mensajeDeLead(resultado),
   });
+}
+
+/**
+ * Las fotos que mandó el navegador, validadas antes de reenviarlas.
+ *
+ * QUÉ SE COMPRUEBA ACÁ Y POR QUÉ NO ALCANZA CON EL NAVEGADOR
+ *
+ * El formulario ya limita tipo y tamaño, pero esa validación vive en el
+ * cliente y cualquiera puede saltearla mandando un POST a mano a esta ruta.
+ * Si dejáramos pasar un Data URL de cien megas, el que se cuelga esperando es
+ * nuestro servidor, no el suyo.
+ *
+ * Los límites son los de la API: sólo JPEG, PNG o WebP, como máximo cuatro, y
+ * cada Data URL hasta 14.000.000 de caracteres —que en Base64 son unos 10 MB
+ * de archivo real—. Lo que no cumple se descarta en silencio: la consulta vale
+ * más que la foto, y perderla entera por una imagen mal formada sería peor.
+ */
+function fotosDe(formulario: FormData): string[] {
+  return formulario
+    .getAll('fotos')
+    .filter((valor): valor is string => typeof valor === 'string')
+    .filter((foto) => DATA_URL_DE_IMAGEN.test(foto) && foto.length <= LARGO_MAXIMO_DE_DATA_URL)
+    .slice(0, MAXIMO_DE_FOTOS);
 }
 
 function texto(formulario: FormData, campo: string): string {

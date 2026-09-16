@@ -152,6 +152,14 @@ export default function Catalogo({
                   Hay <span className="dato">{coincidencias.length - visibles.length}</span>{' '}
                   {coincidencias.length - visibles.length === 1 ? 'unidad más' : 'unidades más'}{' '}
                   con este filtro.{' '}
+                  {/* ESTE ENLACE NO LLEGA A LOS 44px Y ESTÁ BIEN ASÍ.
+                      
+                      Va dentro de una oración, no es un control suelto:
+                      estirarlo a 44px de alto abriría el interlineado del
+                      párrafo y se leería como un renglón roto. La pauta de
+                      tamaño mínimo exceptúa justamente los enlaces en línea,
+                      porque el texto que los rodea ya da el contexto para
+                      apuntar. El resto de los controles del sitio sí llegan. */}
                   <Link
                     href={hrefCatalogo}
                     className="font-medium text-negro underline underline-offset-4 hover:text-rojo"

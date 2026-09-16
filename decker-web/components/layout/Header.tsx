@@ -172,7 +172,10 @@ export default function Header() {
                 key={enlace.href}
                 href={enlace.href}
                 onClick={(evento) => alClickEnlace(evento, enlace.href)}
-                className="centrado-optico inline-flex h-9 items-center rounded-sm px-3.5 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                /* 44px de alto: es el mínimo que se toca sin apuntar, y vale también
+                   en escritorio —un trackpad con la mano cansada falla igual que
+                   un pulgar en la ruta—. Antes eran 36. */
+                className="centrado-optico inline-flex h-11 items-center rounded-sm px-3.5 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
               >
                 {enlace.texto}
               </Link>

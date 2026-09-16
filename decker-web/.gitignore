@@ -8,3 +8,6 @@ next-env.d.ts
 
 # Logs de servidores levantados a mano durante el desarrollo.
 *.log
+
+# Carpeta de scripts de testeo manual con navegador.
+/qa/

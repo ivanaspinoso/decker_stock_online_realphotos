@@ -46,7 +46,9 @@ export default function Footer() {
                     diferencia es tocar el enlace de al lado. */}
                 <Link
                   href={enlace.href}
-                  className="inline-block py-1 transition-colors hover:text-white"
+                  /* 44px de alto tocable. El `-my-1.5` compensa el relleno para que
+                       la lista no se estire: crece lo que se toca, no lo que se ve. */
+                    className="-my-1.5 inline-flex min-h-11 items-center transition-colors hover:text-white"
                 >
                   {enlace.texto}
                 </Link>
@@ -72,7 +74,8 @@ export default function Footer() {
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="dato mt-1 inline-block py-1 text-sm text-amarillo transition-opacity hover:opacity-70"
+                  /* Un teléfono en el footer se toca desde el celular: 44px. */
+                  className="dato -my-1.5 mt-1 inline-flex min-h-11 items-center text-sm text-amarillo transition-opacity hover:opacity-70"
                 >
                   {formatearWhatsapp(sucursal.asesor.whatsapp)}
                 </a>
