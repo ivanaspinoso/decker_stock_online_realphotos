@@ -144,14 +144,41 @@ export default function AccesosCatalogo({
           a todas. Sólo salen las que tienen camiones: Randon está en el stock,
           pero en bateas y semis. */}
       <div className="mt-4 rounded-md bg-white p-5 shadow-nivel-1 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <h3 className="titulo-tarjeta text-negro">Marcas de camiones</h3>
             <p className="mt-1 text-sm text-gris-500">
               Elegí la marca y la selección de abajo queda con los camiones de esa marca.
             </p>
           </div>
-          <ul className="flex flex-wrap gap-2">
+          {/* GRILLA DE COLUMNAS PAREJAS, NO `flex-wrap`, Y NO EN LA MISMA FILA
+              QUE EL TÍTULO.
+              
+              Antes los botones compartían el renglón con el título y se
+              repartían lo que sobraba. Con ocho marcas eso daba siete arriba y
+              una sola abajo: el último botón quedaba colgado, que se lee como
+              algo que se rompió y no como una lista.
+              
+              Dos cambios. Los botones bajan a su propia fila, así usan el ancho
+              entero de la tarjeta. Y se acomodan en columnas de ancho igual que
+              se reparten el espacio: las marcas quedan alineadas en grilla y
+              todos los botones miden lo mismo, sin importar si la marca se
+              llama "Ford" o "Mercedes Benz".
+              
+              CUATRO COLUMNAS FIJAS, Y NO `auto-fit`. Lo primero que probé fue
+              `repeat(auto-fit, minmax(8.5rem, 1fr))`, que parecía más flexible
+              y era peor: a 1152px entraban siete columnas y volvía a quedar
+              una marca sola abajo, exactamente el problema original. La
+              cantidad de columnas la decidía el ancho disponible, no la
+              cantidad de marcas, así que tarde o temprano caía en un número
+              que dejaba resto.
+              
+              Con dos y cuatro, las ocho marcas dan 4+4 en pantalla grande y
+              2+2+2+2 en teléfono: parejo en las dos. Cuatro columnas además
+              aguanta bien cualquier cantidad entre cinco y doce; si el stock
+              algún día trae nueve marcas, la última fila queda con una y hay
+              que volver a mirar esto. */}
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {datos.marcasDeCamiones.map(({ marca, total }) => {
               const activo = seleccionado === marca;
               return (
@@ -160,7 +187,11 @@ export default function AccesosCatalogo({
                     type="button"
                     aria-pressed={activo}
                     onClick={() => alternar(marca, { tipo: 'Camión', marca })}
-                    className={`centrado-optico inline-flex h-11 items-center gap-2 rounded-sm px-4 text-sm font-medium transition-colors duration-rapido ${
+                    /* `w-full` y `justify-between`: el botón llena su columna y
+                       el total se apoya siempre en el borde derecho, así los
+                       números quedan en una línea vertical y se comparan de un
+                       vistazo en vez de flotar detrás de cada nombre. */
+                    className={`centrado-optico flex h-11 w-full items-center justify-between gap-2 rounded-sm px-4 text-sm font-medium transition-colors duration-rapido ${
                       activo ? 'bg-negro text-white' : 'bg-gris-100 text-negro hover:bg-gris-200'
                     }`}
                   >
