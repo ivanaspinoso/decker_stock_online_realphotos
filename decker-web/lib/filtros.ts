@@ -1,3 +1,5 @@
+import { PARAMETROS_FINANCIACION } from '@/lib/data/financiacion';
+import { cotizacionConMargen } from '@/lib/financiacion';
 /**
  * Cuántas unidades entran en una página del catálogo.
  *
@@ -28,6 +30,41 @@ import type { FiltrosCatalogo, Unidad } from '@/lib/types';
  * afuera si el usuario acotó activamente ese rango. Si no filtró por precio, la
  * unidad "a consultar" tiene que seguir apareciendo.
  */
+
+/**
+ * El precio de una unidad llevado a pesos, para poder compararlas entre sí.
+ *
+ * POR QUÉ HACE FALTA CONVERTIR, Y POR QUÉ SÓLO ACÁ
+ *
+ * El catálogo tiene las dos monedas mezcladas: 151 unidades en dólares y 61 en
+ * pesos. Ordenar por precio o filtrar por rango comparando los números crudos
+ * pondría un camión de US$ 90.000 por debajo de una batea de $ 38.000.000, que
+ * vale veinte veces menos. Hay que llevarlos a una sola moneda antes de
+ * compararlos.
+ *
+ * Esto NO se usa para mostrar. En pantalla cada unidad va en su moneda real
+ * —ver `formatearPrecioDeUnidad`—: el visitante tiene que ver el precio que le
+ * van a cobrar, no una conversión nuestra. Convertir es sólo para poder
+ * ordenar.
+ *
+ * La cotización sale del mismo lugar que la de la calculadora, así que hay un
+ * solo número que mantener cuando el dólar se mueve.
+ */
+export function precioComparable(unidad: {
+  precio: number | null;
+  precioUsd: number | null;
+}): number | null {
+  if (unidad.precioUsd !== null) {
+    return (
+      unidad.precioUsd *
+      cotizacionConMargen(
+        PARAMETROS_FINANCIACION.dolarOficialVenta,
+        PARAMETROS_FINANCIACION.margenDolarPorcentaje,
+      )
+    );
+  }
+  return unidad.precio;
+}
 
 export function cumpleFiltros(unidad: Unidad, filtros: FiltrosCatalogo): boolean {
   const {
@@ -63,9 +100,12 @@ export function cumpleFiltros(unidad: Unidad, filtros: FiltrosCatalogo): boolean
   }
 
   if (precioDesde !== undefined || precioHasta !== undefined) {
-    if (unidad.precio === null) return false;
-    if (precioDesde !== undefined && unidad.precio < precioDesde) return false;
-    if (precioHasta !== undefined && unidad.precio > precioHasta) return false;
+    // En pesos las dos puntas: el rango que escribe la persona está en pesos y
+    // la mitad del catálogo está en dólares. Ver `precioComparable`.
+    const precio = precioComparable(unidad);
+    if (precio === null) return false;
+    if (precioDesde !== undefined && precio < precioDesde) return false;
+    if (precioHasta !== undefined && precio > precioHasta) return false;
   }
 
   return true;
@@ -82,12 +122,16 @@ export function ordenarUnidades(
 
   switch (orden) {
     case 'precio-asc':
-      return copia.sort((a, b) => alFinal(a.precio) - alFinal(b.precio));
+      return copia.sort((a, b) => alFinal(precioComparable(a)) - alFinal(precioComparable(b)));
     case 'precio-desc':
       return copia.sort((a, b) => {
-        if (a.precio === null) return 1;
-        if (b.precio === null) return -1;
-        return b.precio - a.precio;
+        const pa = precioComparable(a);
+        const pb = precioComparable(b);
+        // Las que no tienen precio van al final en los dos sentidos: "sin
+        // precio" no es "el más caro" ni "el más barato", es otra cosa.
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return pb - pa;
       });
     case 'anio-desc':
       return copia.sort((a, b) => {

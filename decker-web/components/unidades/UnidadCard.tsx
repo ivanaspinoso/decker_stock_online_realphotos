@@ -15,9 +15,10 @@ import {
   esCifra,
   formatearAnio,
   formatearKm,
-  formatearPrecio,
+  formatearPrecioDeUnidad,
   resumenTecnico,
   tieneKilometraje,
+  tienePrecio,
 } from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
@@ -179,9 +180,9 @@ export default function UnidadCard({
          * existe, hay que pedirlo. Va en gris y sin peso, para que una tarjeta
          * sin precio no se lea como una con precio bajo.
          */}
-        {unidad.precio !== null ? (
+        {tienePrecio(unidad) ? (
           <p className="dato mt-2 text-xl font-medium text-negro">
-            {formatearPrecio(unidad.precio)}
+            {formatearPrecioDeUnidad(unidad)}
           </p>
         ) : (
           <p className="mt-2 text-base font-medium text-gris-500">Consultar precio</p>

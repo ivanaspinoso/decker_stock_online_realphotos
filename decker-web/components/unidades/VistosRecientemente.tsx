@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { leerRecientes, suscribirARecientes } from '@/lib/recientes';
-import { formatearPrecio } from '@/lib/format';
+import {
+  formatearPrecioDeUnidad,
+  tienePrecio,
+} from '@/lib/format';
 import type { ResumenComparacion } from '@/lib/comparador';
 
 /**
@@ -111,9 +114,9 @@ export default function VistosRecientemente({
                     —"Volvo FH 460"— y el precio es lo que hace que valga la
                     pena volver a entrar. Sin precio publicado se dice qué falta,
                     en gris, para que no se lea como una unidad más barata. */}
-                {unidad.precio !== null ? (
+                {tienePrecio(unidad) ? (
                   <p className="dato mt-1 text-sm font-medium text-negro">
-                    {formatearPrecio(unidad.precio)}
+                    {formatearPrecioDeUnidad(unidad)}
                   </p>
                 ) : (
                   <p className="mt-1 text-sm text-gris-500">Consultar precio</p>

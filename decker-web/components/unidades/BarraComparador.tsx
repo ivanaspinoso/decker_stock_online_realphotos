@@ -13,7 +13,12 @@ import {
   vaciarComparador,
   type ResumenComparacion,
 } from '@/lib/comparador';
-import { formatearAnio, formatearKm, formatearPrecio, tieneKilometraje } from '@/lib/format';
+import {
+  formatearAnio,
+  formatearKm,
+  formatearPrecioDeUnidad,
+  tieneKilometraje,
+} from '@/lib/format';
 import type { Sucursal } from '@/lib/types';
 
 /**
@@ -89,7 +94,7 @@ export default function BarraComparador({
    */
   const filas: { etiqueta: string; valor: (u: ResumenComparacion) => string; cifra?: boolean }[] =
     [
-      { etiqueta: 'Precio', valor: (u) => formatearPrecio(u.precio), cifra: true },
+      { etiqueta: 'Precio', valor: (u) => formatearPrecioDeUnidad(u), cifra: true },
       /* El estado BAJÓ del encabezado a una fila.
          Arriba era una píldora `whitespace-nowrap`: en una columna de 103px
          "Usado seleccionado" se salía de su celda y desalineaba el encabezado

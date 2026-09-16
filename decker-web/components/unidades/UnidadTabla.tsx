@@ -7,8 +7,9 @@ import {
   esCifra,
   formatearAnio,
   formatearKm,
-  formatearPrecio,
+  formatearPrecioDeUnidad,
   tieneKilometraje,
+  tienePrecio,
 } from '@/lib/format';
 import { linkConsultaUnidad, nombreDeSucursal } from '@/lib/whatsapp';
 import type { Unidad } from '@/lib/types';
@@ -149,10 +150,10 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                     que sí lo son al recorrer la columna. */}
                 <td
                   className={`px-3 py-4 text-right text-sm ${
-                    unidad.precio !== null ? 'dato font-medium text-negro' : 'text-gris-500'
+                    tienePrecio(unidad) ? 'dato font-medium text-negro' : 'text-gris-500'
                   }`}
                 >
-                  {formatearPrecio(unidad.precio)}
+                  {formatearPrecioDeUnidad(unidad)}
                 </td>
                 <td className="px-3 py-4 text-sm text-gris-600">
                   {nombreDeSucursal(unidad.sucursalId)}

@@ -45,6 +45,38 @@ export function formatearPrecio(valor: number | null): string {
   return PESOS.format(valor);
 }
 
+/**
+ * El precio de una unidad, en su moneda, listo para mostrar.
+ *
+ * DOS MONEDAS, Y NO SE PUEDEN MEZCLAR. La API guarda el importe en
+ * `seller_price` y la moneda aparte en `seller_pricetype`: de las 240 unidades
+ * publicadas, unas están en dólares y otras en pesos, sin un criterio que
+ * permita deducirlo. Un camión a 90.000 es noventa mil dólares; una batea a
+ * 38.000.000 son treinta y ocho millones de pesos. Mostrar uno con el símbolo
+ * del otro se equivoca por un factor de mil quinientos.
+ *
+ * Por eso existe esta función y por eso devuelve el símbolo adentro. Antes cada
+ * pantalla hacía `formatearPrecio(unidad.precio)`, que asume pesos: las
+ * unidades en dólares tienen `precio: null` y salían todas como "Consultar"
+ * —212 precios cargados y ni uno visible—.
+ *
+ * `null` en las dos monedas es un caso real y legítimo: la unidad no tiene
+ * precio cargado, o lo tiene sin moneda declarada, y ahí "Consultar" es la
+ * verdad. Ver `monedaDe` en `lib/rutasur/precios.ts`.
+ */
+export function formatearPrecioDeUnidad(unidad: {
+  precio: number | null;
+  precioUsd: number | null;
+}): string {
+  if (unidad.precioUsd !== null) return formatearUsd(unidad.precioUsd);
+  return formatearPrecio(unidad.precio);
+}
+
+/** Si la unidad tiene un precio publicado, en cualquiera de las dos monedas. */
+export function tienePrecio(unidad: { precio: number | null; precioUsd: number | null }): boolean {
+  return unidad.precio !== null || unidad.precioUsd !== null;
+}
+
 export function formatearAnio(anio: number | null): string {
   return anio === null ? 'Consultar' : String(anio);
 }

@@ -40,6 +40,15 @@ export interface ResumenComparacion {
   anio: number | null;
   km: number | null;
   precio: number | null;
+  /**
+   * El precio en dólares, que en esta API es lo más común.
+   *
+   * Van los dos campos y no uno solo porque la moneda no se puede deducir del
+   * importe: hay unidades a 90.000 dólares y otras a 38.000.000 de pesos. Sin
+   * esto, el comparador mostraba "Consultar" en todas las que están en dólares
+   * —la mayoría— aunque el precio estuviera cargado.
+   */
+  precioUsd: number | null;
   sucursalId: IdSucursal | null;
   imagen: string;
 }

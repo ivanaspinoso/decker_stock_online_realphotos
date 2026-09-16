@@ -283,6 +283,7 @@ export async function getResumenDeUnidades(): Promise<ResumenComparacion[]> {
     anio: unidad.anio,
     km: unidad.km,
     precio: unidad.precio,
+    precioUsd: unidad.precioUsd,
     sucursalId: unidad.sucursalId,
     imagen: unidad.imagen,
   }));

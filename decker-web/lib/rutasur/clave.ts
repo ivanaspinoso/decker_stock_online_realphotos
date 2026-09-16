@@ -46,7 +46,39 @@ if (typeof window !== 'undefined') {
  * donde cambiarlo por un storage compartido (Redis, KV) es esta variable y la
  * función de abajo; nada más del proyecto se entera.
  */
-let cacheEnMemoria: { clave: string; vence: number } | null = null;
+interface CacheDeClave {
+  clave: string;
+  vence: number;
+}
+
+/**
+ * La caché vive en `globalThis` Y NO EN UNA VARIABLE DEL MÓDULO.
+ *
+ * Next empaqueta cada ruta por separado, así que `/`, `/catalogo` y
+ * `/api/unidades` cargan su PROPIA copia de este archivo. Una variable de
+ * módulo se duplica con ellas: cada ruta guardaría su key por su cuenta y
+ * pediría la suya.
+ *
+ * Eso rompió los precios de la forma más confusa posible. La primera ruta
+ * sacaba su key y cargaba los 2.155 precios bien; la segunda y la tercera
+ * pedían otra, y a la tercera `PUT /key` contestaba 429 —la documentación avisa
+ * que la creación de claves tiene límite por minuto—. En el log se veía una
+ * línea de éxito seguida de dos de "demasiados pedidos", y en el sitio, cero
+ * precios.
+ *
+ * `globalThis` es uno solo por proceso de Node, así que las tres rutas comparten
+ * la misma key y se pide una sola vez.
+ */
+const CLAVE = Symbol.for('decker.rutasur.clave');
+type Global = typeof globalThis & { [CLAVE]?: CacheDeClave | null };
+
+function leerCache(): CacheDeClave | null {
+  return (globalThis as Global)[CLAVE] ?? null;
+}
+
+function guardarCache(valor: CacheDeClave | null): void {
+  (globalThis as Global)[CLAVE] = valor;
+}
 
 /** Margen antes del vencimiento, para no usar una key que expira en el camino. */
 const MARGEN_MS = 60_000;
@@ -61,9 +93,8 @@ export async function asegurarClave(): Promise<string> {
   const delEntorno = process.env.RUTASUR_API_KEY?.trim();
   if (delEntorno) return delEntorno;
 
-  if (cacheEnMemoria && cacheEnMemoria.vence - MARGEN_MS > Date.now()) {
-    return cacheEnMemoria.clave;
-  }
+  const guardada = leerCache();
+  if (guardada && guardada.vence - MARGEN_MS > Date.now()) return guardada.clave;
 
   return generarClave();
 }
@@ -86,7 +117,7 @@ export async function asegurarClave(): Promise<string> {
  * vuelo, se cambia en el entorno. El reintento la volvería a leer idéntica.
  */
 export function olvidarClave(): void {
-  cacheEnMemoria = null;
+  guardarCache(null);
 }
 
 /**
@@ -149,6 +180,6 @@ async function generarClave(): Promise<string> {
   // Sin dato de vencimiento, una hora es una apuesta conservadora: si la key
   // durase más, lo único que pasa es que se regenera de más una vez por hora.
   const vence = Date.now() + 60 * 60 * 1000;
-  cacheEnMemoria = { clave: posible.trim(), vence };
-  return cacheEnMemoria.clave;
+  guardarCache({ clave: posible.trim(), vence });
+  return posible.trim();
 }

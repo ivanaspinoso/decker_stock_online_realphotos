@@ -28,11 +28,12 @@ import {
 } from '@/lib/api';
 import {
   esCifra,
-  resumenTecnico,
   formatearAnio,
   formatearKm,
-  formatearPrecio,
+  formatearPrecioDeUnidad,
+  resumenTecnico,
   tieneKilometraje,
+  tienePrecio,
 } from '@/lib/format';
 import { linkConsultaUnidad, linkWhatsapp } from '@/lib/whatsapp';
 import type { Sucursal, Unidad } from '@/lib/types';
@@ -237,9 +238,9 @@ export default async function FichaUnidad({ params }: Props) {
              * abajo es esa consulta. Un "—" o un precio en cero serían peores
              * que no mostrar nada: uno parece un error y el otro, una ganga.
              */}
-            {unidad.precio !== null ? (
+            {tienePrecio(unidad) ? (
               <p className="dato mt-5 text-4xl font-medium leading-none text-negro">
-                {formatearPrecio(unidad.precio)}
+                {formatearPrecioDeUnidad(unidad)}
               </p>
             ) : (
               <p className="mt-5 text-md font-medium text-gris-500">
@@ -464,7 +465,7 @@ export default async function FichaUnidad({ params }: Props) {
             etiqueta="Financiación"
             titulo="Simulá esta unidad"
             descripcion={
-              unidad.precio !== null
+              tienePrecio(unidad)
                 ? 'Arranca con el precio publicado y la entrega sugerida. Cambiá lo que necesites y mandale la simulación al asesor de la sucursal.'
                 : 'Esta unidad no tiene precio publicado: cargá el valor que te pase el asesor y simulá la operación.'
             }

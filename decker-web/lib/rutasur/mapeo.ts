@@ -178,7 +178,12 @@ function mapearUnidad(crudo: VehiculoApi, precios: PreciosPorUnidad): Unidad {
     );
   }
 
-  const precio = precios.get(crudo.vehicle_id);
+  // `id` y no `crudo.vehicle_id`: el de arriba ya pasó por `Number()`, y las
+  // claves del mapa de precios también. Buscar con el crudo falla en silencio
+  // si la API manda el id como texto en un endpoint y como número en el otro
+  // —y devuelve `undefined` sin avisar, que fue exactamente lo que pasó: 2.155
+  // precios cargados y cero unidades con precio en el catálogo.
+  const precio = precios.get(id);
 
   return {
     slug: armarSlug(marca, modelo, id),
