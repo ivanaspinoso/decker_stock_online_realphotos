@@ -71,15 +71,19 @@ export async function asegurarClave(): Promise<string> {
 /**
  * Invalida la key guardada para que el próximo pedido saque una nueva.
  *
- * ACÁ ENTRA EL 403. Cuando un endpoint protegido contesta 403, el cliente tira
- * un `ErrorDeApi` de causa `configuracion`; quien lo atrape llama a esto y
- * reintenta UNA vez. No está cableado todavía porque sin credenciales reales no
- * hay forma de probar que el reintento funcione, y un reintento no probado
- * contra una API que bloquea por volumen es peor que no tenerlo.
+ * ES LO QUE PIDE LA CHECKLIST DE LA DOCUMENTACIÓN: "manejar expiración y
+ * suspensión del token". Una key puede vencer sola, o alguien puede suspenderla
+ * desde `POST /key/suspend`. En los dos casos el endpoint protegido contesta
+ * 403 y la key que tenemos en memoria queda muerta: sin esto seguiríamos
+ * mandándola en cada pedido hasta que el proceso se reinicie, acumulando 403
+ * contra un server que bloquea por volumen.
  *
- * Lo que sí está garantizado hoy: un 403 no pasa en silencio. Llega como
- * `configuracion` —que no se reintenta— y queda en el log del servidor
- * nombrando la key.
+ * Lo llama `traerPrecios` al recibir un 403, y reintenta UNA sola vez. Una sola
+ * porque si la key nueva también da 403, el problema no es el token —es que las
+ * credenciales ya no sirven— y seguir pidiendo sólo acelera el bloqueo.
+ *
+ * No hace nada cuando la key viene de `RUTASUR_API_KEY`: esa no se genera al
+ * vuelo, se cambia en el entorno. El reintento la volvería a leer idéntica.
  */
 export function olvidarClave(): void {
   cacheEnMemoria = null;
@@ -88,10 +92,15 @@ export function olvidarClave(): void {
 /**
  * `PUT /key` con usuario y contraseña. Devuelve la key y la cachea.
  *
- * El nombre del campo de la respuesta es una SUPOSICIÓN: no pudimos probar este
- * endpoint porque no tenemos credenciales. Por eso se aceptan varios nombres
- * posibles y, si no aparece ninguno, falla nombrando las claves que sí llegaron
- * —así el primero que lo pruebe ve en el log exactamente qué contestó la API—.
+ * La respuesta está documentada y es:
+ *
+ *   HTTP 201 {"status":1,"token":"api-key-generada","user":{"user_id":123}}
+ *
+ * O sea que el campo es `token`. Igual se siguen aceptando `key`, `api_key` y
+ * `data` como alternativas: el endpoint nunca se pudo ejecutar de verdad —no
+ * tenemos credenciales— así que lo documentado todavía no está confirmado
+ * contra la API. Si no aparece ninguno, falla nombrando las claves que sí
+ * llegaron, para que el primero que lo pruebe vea en el log qué contestó.
  */
 async function generarClave(): Promise<string> {
   const datos = credenciales();
@@ -103,13 +112,13 @@ async function generarClave(): Promise<string> {
     );
   }
 
-  // POR CABECERA Y POR CUERPO, LAS DOS.
+  // LAS CREDENCIALES VAN POR CABECERA Y EL CUERPO VA VACÍO.
   //
-  // La documentación de Eduardo dice cabeceras (`user:` y `pass:`). Probado
-  // contra la API real, los dos transportes llegan igual: con credenciales
-  // inexistentes contesta lo mismo de las dos formas. Se mandan ambas porque no
-  // hay manera de saber cuál lee de verdad hasta tener credenciales válidas, y
-  // mandar de más no cuesta nada.
+  // La documentación es explícita: "PUT /key no lleva payload JSON. Las
+  // credenciales se envían como encabezados". Acá se mandaba también un cuerpo
+  // con `user`/`password`, de cuando no sabíamos cuál de los dos transportes
+  // leía; ya no hace falta y mandar la contraseña dos veces es una copia de más
+  // de un secreto, que es exactamente lo que no conviene multiplicar.
   //
   // OJO CON EL 500. Con un usuario que no existe, `PUT /key` contesta
   // `500 {"error":"Could not save the key. User inexistent."}`, no un 401. Si
@@ -118,7 +127,6 @@ async function generarClave(): Promise<string> {
   const cuerpo = await pedir('/key', {
     metodo: 'PUT',
     cabecerasExtra: { user: datos.usuario, pass: datos.clave },
-    cuerpo: { user: datos.usuario, password: datos.clave, pass: datos.clave },
     revalidar: 0,
   });
 
@@ -126,7 +134,7 @@ async function generarClave(): Promise<string> {
     string,
     unknown
   >;
-  const posible = [objeto.key, objeto.api_key, objeto.token, objeto.data].find(
+  const posible = [objeto.token, objeto.key, objeto.api_key, objeto.data].find(
     (valor): valor is string => typeof valor === 'string' && valor.trim() !== '',
   );
 

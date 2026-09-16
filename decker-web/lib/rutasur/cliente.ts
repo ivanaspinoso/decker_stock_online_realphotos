@@ -43,7 +43,15 @@ export interface OpcionesDePedido {
   cuerpo?: unknown;
   /** Query params. Los `undefined` y las cadenas vacías se descartan. */
   query?: Record<string, string | number | undefined>;
-  /** Manda `X-API-KEY`. Falla de entrada si no está configurada. */
+  /**
+   * Manda `X-API-KEY` leyéndola de `RUTASUR_API_KEY`. Falla si no está.
+   *
+   * OJO CON EL ALCANCE: esto lee la variable de entorno y nada más. NO genera
+   * la key a partir de usuario y contraseña. Quien puede tener que generarla
+   * llama a `asegurarClave()` y pasa el resultado por `cabecerasExtra` —ver
+   * `lib/rutasur/precios.ts`—; no se hace desde acá porque `clave.ts` usa este
+   * mismo cliente para su `PUT /key` y quedarían importándose en círculo.
+   */
   requiereClave?: boolean;
   /**
    * Cabeceras extra. Lo usa sólo `PUT /key`, que recibe las credenciales por

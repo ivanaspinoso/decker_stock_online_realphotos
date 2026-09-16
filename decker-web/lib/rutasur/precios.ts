@@ -1,4 +1,6 @@
+import { asegurarClave, olvidarClave } from '@/lib/rutasur/clave';
 import { pedir } from '@/lib/rutasur/cliente';
+import { ErrorDeApi } from '@/lib/rutasur/errores';
 import { hayClave, SEGUNDOS_DE_REVALIDACION } from '@/lib/rutasur/config';
 
 /**
@@ -65,17 +67,59 @@ export async function traerPrecios(): Promise<PreciosPorUnidad> {
   if (!hayClave()) return new Map();
 
   try {
-    const crudo = await pedir('/precios', {
-      requiereClave: true,
-      revalidar: SEGUNDOS_DE_REVALIDACION,
-    });
-    return mapearPrecios(crudo);
+    return mapearPrecios(await pedirPrecios());
   } catch (error) {
-    // Un 403 acá significa que la key venció o la suspendieron. El catálogo
-    // sigue saliendo con "Consultar", que es el estado que ya sabe mostrar.
+    /**
+     * UN 403 SE REINTENTA UNA VEZ, CON KEY NUEVA. Cualquier otra cosa, no.
+     *
+     * 403 en esta API significa "key ausente, inválida, suspendida o sin nivel
+     * suficiente". Si la key la generamos nosotros con `PUT /key`, puede haber
+     * vencido o alguien la suspendió: tirarla y pedir otra es exactamente lo
+     * que corresponde, y es lo que pide la checklist de la documentación.
+     *
+     * Una sola vez. Si la key nueva también da 403, el problema no es el token
+     * —son las credenciales, o el nivel de acceso— y seguir pidiendo sólo
+     * acelera el bloqueo por IP.
+     */
+    if (error instanceof ErrorDeApi && error.estadoHttp === 403) {
+      olvidarClave();
+      try {
+        return mapearPrecios(await pedirPrecios());
+      } catch (segundo) {
+        console.error(
+          '[rutasur] `/precios` sigue dando 403 con una key nueva. Revisar las ' +
+            'credenciales y el nivel de acceso de la clave:',
+          segundo,
+        );
+        return new Map();
+      }
+    }
+
     console.error('[rutasur] No se pudieron traer los precios:', error);
     return new Map();
   }
+}
+
+/**
+ * El pedido en sí, con la key resuelta acá y no por el cliente HTTP.
+ *
+ * `pedir({ requiereClave: true })` sólo sabe leer `RUTASUR_API_KEY` del
+ * entorno: si lo único que tenemos es usuario y contraseña, falla diciendo que
+ * falta la key en vez de ir a buscarla. Quien sabe conseguirla es
+ * `asegurarClave()` —lee el entorno, la caché en memoria, o llama a
+ * `PUT /key`—.
+ *
+ * Y no se puede meter esa llamada adentro del cliente HTTP porque `clave.ts`
+ * necesita al cliente para hacer su propio `PUT /key`: quedarían importándose
+ * en círculo. Resolverla acá, en quien la necesita, deja las dependencias en
+ * una sola dirección.
+ */
+async function pedirPrecios(): Promise<unknown> {
+  const clave = await asegurarClave();
+  return pedir('/precios', {
+    cabecerasExtra: { 'X-API-KEY': clave },
+    revalidar: SEGUNDOS_DE_REVALIDACION,
+  });
 }
 
 /**
