@@ -200,13 +200,52 @@ export async function pedir(ruta: string, opciones: OpcionesDePedido = {}): Prom
           : esFormData
             ? (cuerpo as FormData)
             : JSON.stringify(cuerpo),
-      // En Next 16 `fetch` NO cachea por defecto.
+      /**
+       * En Next 16 `fetch` NO cachea por defecto, así que hay que pedirlo.
+       *
+       * Y `no-store` va SÓLO en los GET. Puesto en un POST o un PUT no sirve
+       * de nada —Next no cachea esos métodos— pero sí tiene un efecto: durante
+       * el build, cualquier `fetch` con `no-store` obliga a la ruta a ser
+       * dinámica, y Next lo avisa tirando un `DynamicServerError`.
+       *
+       * Eso rompió el deploy. El `PUT /key` de los precios llevaba `no-store`,
+       * la home no se pudo prerenderizar, y el error terminó en el log
+       * disfrazado de problema de red. Lo que corresponde es no ponérselo: un
+       * PUT nunca se iba a cachear igual.
+       */
       ...(revalidar > 0
         ? { next: { revalidate: revalidar } }
-        : { cache: 'no-store' as const }),
+        : metodo === 'GET'
+          ? { cache: 'no-store' as const }
+          : {}),
       signal: AbortSignal.timeout(MS_DE_ESPERA),
     });
   } catch (error) {
+    /**
+     * LO PRIMERO: DEVOLVER LOS ERRORES QUE NO SON NUESTROS, INTACTOS.
+     *
+     * Cuando Next intenta prerenderizar una ruta y se topa con un `fetch` sin
+     * caché, tira un `DynamicServerError` A PROPÓSITO: es la señal interna con
+     * la que decide que esa ruta va a ser dinámica. No es una falla, es parte
+     * de cómo funciona el build.
+     *
+     * Atraparlo y envolverlo en un `ErrorDeApi('red')` fue un error caro, y así
+     * se vio en el log del deploy:
+     *
+     *     No se pudo llegar a la API (.../key): Dynamic server usage:
+     *     Route / couldn't be rendered statically because it used
+     *     revalidate: 0 fetch .../key
+     *
+     * Next no recibía su señal, y encima esto marcaba la API como caída y
+     * abría el respiro de treinta segundos —así que las agencias y el catálogo,
+     * que sí andaban, fallaban detrás con "está en respiro"—. Una cascada
+     * entera a partir de algo que no era una falla.
+     *
+     * Se detecta por `digest`, que es como Next marca los suyos, y por el
+     * nombre para las versiones que no lo traen.
+     */
+    if (esErrorDeNext(error)) throw error;
+
     // `AbortSignal.timeout` corta con un DOMException llamado TimeoutError; el
     // resto de las fallas de red llegan como TypeError. Se separan porque al
     // mirar el log no es lo mismo "tarda demasiado" que "no resuelve el DNS".
@@ -384,4 +423,26 @@ function describir(valor: unknown): string {
   const claves = Object.keys(valor);
   if (claves.length === 0) return 'un objeto vacío';
   return `un objeto con las claves: ${claves.slice(0, 8).join(', ')}`;
+}
+
+/**
+ * Si el error lo tiró Next y no la red.
+ *
+ * Next marca los suyos con un `digest` —`DYNAMIC_SERVER_USAGE` cuando una ruta
+ * no se puede prerenderizar, `NEXT_REDIRECT` y `NEXT_NOT_FOUND` cuando alguien
+ * llamó a `redirect()` o `notFound()` dentro de un render—. Todos tienen que
+ * llegar intactos al framework: envolverlos rompe el mecanismo que los usa.
+ */
+function esErrorDeNext(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const digest = (error as { digest?: unknown }).digest;
+  if (typeof digest === 'string') {
+    return (
+      digest === 'DYNAMIC_SERVER_USAGE' ||
+      digest.startsWith('NEXT_REDIRECT') ||
+      digest === 'NEXT_NOT_FOUND'
+    );
+  }
+  // Las versiones viejas no traen `digest`: queda el nombre de la clase.
+  return (error as { name?: unknown }).name === 'DynamicServerError';
 }
