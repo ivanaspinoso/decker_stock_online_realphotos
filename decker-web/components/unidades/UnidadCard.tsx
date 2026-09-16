@@ -16,6 +16,7 @@ import {
   formatearAnio,
   formatearKm,
   formatearPrecioDeUnidad,
+  monedaDeUnidad,
   resumenTecnico,
   tieneKilometraje,
   tienePrecio,
@@ -181,8 +182,18 @@ export default function UnidadCard({
          * sin precio no se lea como una con precio bajo.
          */}
         {tienePrecio(unidad) ? (
-          <p className="dato mt-2 text-xl font-medium text-negro">
-            {formatearPrecioDeUnidad(unidad)}
+          /* LA MONEDA, CON TODAS LAS LETRAS.
+             El catálogo mezcla las dos —los camiones en dólares, los remolques
+             en pesos— y los símbolos se parecen demasiado: acá el peso y el
+             dólar se escriben los dos con `$` según quién escriba. Quien
+             recorre la grilla rápido puede leer "$ 38.000.000" como dólares y
+             descartar una batea que sí puede pagar. La palabra al lado lo
+             cierra; va chica y en gris para no competir con el número. */
+          <p className="mt-2 flex items-baseline gap-1.5">
+            <span className="dato text-xl font-medium text-negro">
+              {formatearPrecioDeUnidad(unidad)}
+            </span>
+            <span className="text-xs text-gris-500">{monedaDeUnidad(unidad)}</span>
           </p>
         ) : (
           <p className="mt-2 text-base font-medium text-gris-500">Consultar precio</p>

@@ -72,6 +72,33 @@ export function formatearPrecioDeUnidad(unidad: {
   return formatearPrecio(unidad.precio);
 }
 
+/**
+ * La moneda de una unidad, escrita con todas las letras.
+ *
+ * POR QUÉ NO ALCANZA CON EL SÍMBOLO
+ *
+ * El catálogo mezcla las dos: 151 unidades en dólares y 61 en pesos, una al
+ * lado de la otra en la misma grilla. Los símbolos son parecidos —`US$` y `$`—
+ * y en Argentina el peso y el dólar se escriben los dos con `$` según quién lo
+ * escriba. Alguien que recorre la lista rápido puede leer `$ 38.000.000` como
+ * dólares y descartar una batea que está a su alcance, o leer `US$ 90.000` como
+ * pesos y entrar a una ficha que no puede pagar.
+ *
+ * Errarle acá cuesta un factor de mil quinientos. La palabra al lado del número
+ * lo cierra sin que haya que pensarlo.
+ *
+ * Devuelve `null` cuando no hay precio: ahí no hay moneda que aclarar, la
+ * pantalla dice "Consultar" y con eso alcanza.
+ */
+export function monedaDeUnidad(unidad: {
+  precio: number | null;
+  precioUsd: number | null;
+}): 'dólares' | 'pesos' | null {
+  if (unidad.precioUsd !== null) return 'dólares';
+  if (unidad.precio !== null) return 'pesos';
+  return null;
+}
+
 /** Si la unidad tiene un precio publicado, en cualquiera de las dos monedas. */
 export function tienePrecio(unidad: { precio: number | null; precioUsd: number | null }): boolean {
   return unidad.precio !== null || unidad.precioUsd !== null;

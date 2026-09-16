@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { leerRecientes, suscribirARecientes } from '@/lib/recientes';
 import {
   formatearPrecioDeUnidad,
+  monedaDeUnidad,
   tienePrecio,
 } from '@/lib/format';
 import type { ResumenComparacion } from '@/lib/comparador';
@@ -115,8 +116,9 @@ export default function VistosRecientemente({
                     pena volver a entrar. Sin precio publicado se dice qué falta,
                     en gris, para que no se lea como una unidad más barata. */}
                 {tienePrecio(unidad) ? (
-                  <p className="dato mt-1 text-sm font-medium text-negro">
-                    {formatearPrecioDeUnidad(unidad)}
+                  <p className="flex items-baseline gap-1">
+                    <span className="dato mt-1 text-sm font-medium text-negro">{formatearPrecioDeUnidad(unidad)}</span>
+                    <span className="text-[11px] text-gris-500">{monedaDeUnidad(unidad)}</span>
                   </p>
                 ) : (
                   <p className="mt-1 text-sm text-gris-500">Consultar precio</p>

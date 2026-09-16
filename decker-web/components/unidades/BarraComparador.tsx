@@ -17,6 +17,7 @@ import {
   formatearAnio,
   formatearKm,
   formatearPrecioDeUnidad,
+  monedaDeUnidad,
   tieneKilometraje,
 } from '@/lib/format';
 import type { Sucursal } from '@/lib/types';
@@ -94,7 +95,12 @@ export default function BarraComparador({
    */
   const filas: { etiqueta: string; valor: (u: ResumenComparacion) => string; cifra?: boolean }[] =
     [
-      { etiqueta: 'Precio', valor: (u) => formatearPrecioDeUnidad(u), cifra: true },
+      { etiqueta: 'Precio', valor: (u) => {
+          // Comparar dos unidades es justo donde no se puede confundir la
+          // moneda: al lado hay un camión en dólares y una batea en pesos.
+          const moneda = monedaDeUnidad(u);
+          return moneda ? `${formatearPrecioDeUnidad(u)} ${moneda}` : formatearPrecioDeUnidad(u);
+        }, cifra: true },
       /* El estado BAJÓ del encabezado a una fila.
          Arriba era una píldora `whitespace-nowrap`: en una columna de 103px
          "Usado seleccionado" se salía de su celda y desalineaba el encabezado

@@ -8,6 +8,7 @@ import {
   formatearAnio,
   formatearKm,
   formatearPrecioDeUnidad,
+  monedaDeUnidad,
   tieneKilometraje,
   tienePrecio,
 } from '@/lib/format';
@@ -154,6 +155,13 @@ export default function UnidadTabla({ unidades }: { unidades: Unidad[] }) {
                   }`}
                 >
                   {formatearPrecioDeUnidad(unidad)}
+                  {/* En una columna de precios mezclados, la moneda es lo
+                      primero que hay que poder comparar de arriba abajo. */}
+                  {monedaDeUnidad(unidad) && (
+                    <span className="ml-1.5 text-xs font-normal text-gris-500">
+                      {monedaDeUnidad(unidad)}
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-4 text-sm text-gris-600">
                   {nombreDeSucursal(unidad.sucursalId)}

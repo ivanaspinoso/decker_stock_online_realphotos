@@ -31,6 +31,7 @@ import {
   formatearAnio,
   formatearKm,
   formatearPrecioDeUnidad,
+  monedaDeUnidad,
   resumenTecnico,
   tieneKilometraje,
   tienePrecio,
@@ -239,8 +240,14 @@ export default async function FichaUnidad({ params }: Props) {
              * que no mostrar nada: uno parece un error y el otro, una ganga.
              */}
             {tienePrecio(unidad) ? (
-              <p className="dato mt-5 text-4xl font-medium leading-none text-negro">
-                {formatearPrecioDeUnidad(unidad)}
+              /* La moneda al lado del importe: el catálogo tiene camiones en
+                 dólares y remolques en pesos, y el símbolo solo no alcanza
+                 para distinguirlos de un vistazo. */
+              <p className="mt-5 flex items-baseline gap-2">
+                <span className="dato text-4xl font-medium leading-none text-negro">
+                  {formatearPrecioDeUnidad(unidad)}
+                </span>
+                <span className="text-sm text-gris-500">{monedaDeUnidad(unidad)}</span>
               </p>
             ) : (
               <p className="mt-5 text-md font-medium text-gris-500">

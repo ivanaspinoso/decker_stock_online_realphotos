@@ -154,20 +154,35 @@ export default function CatalogoCliente({
 
     const query = params.toString();
     const destino = query ? `?${query}` : window.location.pathname;
-    const actual = window.location.search || window.location.pathname;
 
-    // Sin cambio, no se toca el historial: el efecto se vuelve a ejecutar por
-    // motivos que no son una elección de la persona, y cada uno apilaría un
-    // paso atrás idéntico al anterior.
-    if (destino === actual) return;
+    /**
+     * EL FLAG SE LIMPIA ACÁ ARRIBA, PASE LO QUE PASE DESPUÉS.
+     *
+     * Marca que estos filtros los puso el botón "atrás" y no la persona, así
+     * que no hay que empujar una entrada nueva —el navegador ya movió el
+     * historial—. El error era limpiarlo sólo en esa rama: cuando el efecto
+     * salía antes por cualquier otro motivo, el flag quedaba encendido y se
+     * comía el SIGUIENTE cambio real. Ahí el historial se desincronizaba y
+     * tocar atrás dos veces llevaba para adelante.
+     */
+    const vieneDeAtras = volviendo.current;
+    volviendo.current = false;
 
-    // Y si el cambio vino de tocar "atrás", tampoco: el navegador ya movió el
-    // historial, empujar otra entrada lo dejaría atrapado —cada atrás volvería
-    // al mismo lugar—. Ver el `popstate` de abajo.
-    if (volviendo.current) {
-      volviendo.current = false;
-      return;
-    }
+    /**
+     * La comparación va sobre los parámetros, no sobre el texto.
+     *
+     * `URLSearchParams.toString()` escribe los espacios como `+` y el navegador
+     * los deja como `%20`: `?estado=0+km` y `?estado=0%20km` son la misma
+     * consulta escrita distinto. Comparando el texto crudo nunca coincidían, y
+     * al abrir un link con filtros se apilaba una entrada de historial idéntica
+     * a la que ya estaba —el primer "atrás" no hacía nada, porque volvía a la
+     * misma URL—.
+     */
+    const mismos = (a: string, b: string) =>
+      new URLSearchParams(a).toString() === new URLSearchParams(b).toString();
+
+    if (mismos(query, window.location.search)) return;
+    if (vieneDeAtras) return;
 
     /**
      * `pushState` Y NO `replaceState`, para que "atrás" deshaga el filtro.
