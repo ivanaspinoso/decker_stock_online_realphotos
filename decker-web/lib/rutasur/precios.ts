@@ -1,49 +1,42 @@
 import { asegurarClave, olvidarClave } from '@/lib/rutasur/clave';
 import { pedir } from '@/lib/rutasur/cliente';
-import { ErrorDeApi } from '@/lib/rutasur/errores';
 import { hayClave, SEGUNDOS_DE_REVALIDACION } from '@/lib/rutasur/config';
+import { ErrorDeApi } from '@/lib/rutasur/errores';
 
 /**
  * Los precios de las unidades. SÓLO SERVIDOR.
  *
- * POR QUÉ EL CATÁLOGO DICE "CONSULTAR" EN LAS 240 UNIDADES
+ * `/precios` NO ES LO QUE PARECE, y descubrirlo costó una vuelta entera.
  *
- * Porque el precio NO ESTÁ en ningún endpoint público. Verificado campo por
- * campo: `/vehiculos`, `/vehiculos/{id}` y `/agencias/{id}/vehiculos` devuelven
- * los mismos 48 campos y ninguno es un precio —ni `vehicle_price`, ni `valor`,
- * ni nada parecido—.
+ * La documentación lo lista como "Listas de precios" y era literal: devuelve
+ * los DOCUMENTOS de lista de precios que publica Decker, no el precio de cada
+ * camión. Las filas traen esto:
  *
- * El precio vive en `GET /precios`, que es protegido: sin `X-API-KEY` contesta
- * `403 {"message":"Token Inválido"}`. Lo mismo `/vendedores/vehiculos` y
- * `/seller/vehiculos`.
+ *   price_id · price_name · price_url · price_alta · price_activa
  *
- * O sea: no es que el mapeo se olvide de leerlo. No hay nada que leer hasta que
- * tengamos credenciales.
+ * Un nombre, un enlace a un archivo, una fecha y si está activa. Ni un importe,
+ * ni una referencia a `vehicle_id`. Por ahí no hay forma de saber cuánto sale
+ * un Volvo FM 380.
  *
- * QUÉ FALTA, EXACTAMENTE
+ * DÓNDE ESTARÍAN DE VERDAD
  *
- * Una de estas dos, de parte de Eduardo:
+ * En `/vendedores/vehiculos`, que la documentación describe como "Vehículos con
+ * acceso autenticado". Es el mismo listado de unidades pero detrás de la key, y
+ * lo único que justifica que exista una versión autenticada del catálogo es que
+ * traiga algo que la pública no. El precio es el candidato obvio: la pública
+ * devuelve 48 campos y ninguno es un importe.
  *
- *   RUTASUR_API_KEY=<token ya generado>
+ * Es una deducción, no un hecho: todavía no se pudo ejecutar. Por eso el mapeo
+ * busca el importe entre varios nombres posibles y, si no encuentra ninguno,
+ * DEJA LAS CLAVES DE LA PRIMERA FILA EN EL LOG. Esa línea fue la que cerró la
+ * incógnita de `/precios` y es la que va a cerrar ésta.
  *
- * o, si prefiere que la generemos nosotros:
+ * QUÉ PASA MIENTRAS TANTO
  *
- *   RUTASUR_API_USER=<usuario>
- *   RUTASUR_API_PASSWORD=<contraseña>
- *
- * Con cualquiera de las dos, `lib/rutasur/clave.ts` resuelve el token y esta
- * función empieza a devolver precios sin tocar nada más.
- *
- * LO ÚNICO QUE QUEDA A CONFIRMAR ES LA FORMA DE LA RESPUESTA
- *
- * La documentación dice "listas de precios" y no muestra un ejemplo, así que no
- * se puede saber de antemano si viene un array plano, un objeto indexado por id
- * o una lista por categoría. Adivinarlo sería escribir tres mapeos y que ande
- * ninguno.
- *
- * Por eso `mapearPrecios` cubre las dos formas más probables y, la primera vez
- * que la respuesta no encaje, deja las claves en el log. Con esa línea el mapeo
- * se termina en un minuto.
+ * Nada se rompe. Sin precios el catálogo muestra "Consultar" —lo que viene
+ * haciendo desde el primer día— y esconde solo el filtro y el orden por precio.
+ * El día que el mapeo acierte, aparecen y los controles vuelven, sin tocar un
+ * componente.
  */
 if (typeof window !== 'undefined') {
   throw new Error(
@@ -58,37 +51,37 @@ export type PreciosPorUnidad = Map<number, { pesos: number | null; dolares: numb
 /**
  * Trae los precios, o un mapa vacío si todavía no hay con qué pedirlos.
  *
- * NO TIRA CUANDO FALTA LA KEY, y esa es la decisión importante: hoy no la
- * tenemos, y hacer que el catálogo entero explote por un dato que el sitio ya
- * sabe mostrar como "Consultar" sería cambiar una carencia conocida por una
- * caída. Cuando la key esté, esto se enciende solo.
+ * NO TIRA NUNCA. Ni cuando falta la key, ni cuando la API contesta cualquier
+ * cosa. El precio es un dato de más: el catálogo ya sabe vivir sin él y hacer
+ * que las 240 unidades desaparezcan porque un endpoint secundario falló sería
+ * cambiar una carencia conocida por una caída.
  */
 export async function traerPrecios(): Promise<PreciosPorUnidad> {
   if (!hayClave()) return new Map();
 
   try {
-    return mapearPrecios(await pedirPrecios());
+    return mapearPrecios(await pedirVehiculosConPrecio());
   } catch (error) {
     /**
      * UN 403 SE REINTENTA UNA VEZ, CON KEY NUEVA. Cualquier otra cosa, no.
      *
-     * 403 en esta API significa "key ausente, inválida, suspendida o sin nivel
+     * 403 acá significa "key ausente, inválida, suspendida o sin nivel
      * suficiente". Si la key la generamos nosotros con `PUT /key`, puede haber
      * vencido o alguien la suspendió: tirarla y pedir otra es exactamente lo
      * que corresponde, y es lo que pide la checklist de la documentación.
      *
-     * Una sola vez. Si la key nueva también da 403, el problema no es el token
-     * —son las credenciales, o el nivel de acceso— y seguir pidiendo sólo
-     * acelera el bloqueo por IP.
+     * Una sola vez. Si la nueva también da 403, el problema no es el token
+     * —son las credenciales, o el nivel de acceso de la clave— y seguir
+     * pidiendo sólo acelera el bloqueo por IP.
      */
     if (error instanceof ErrorDeApi && error.estadoHttp === 403) {
       olvidarClave();
       try {
-        return mapearPrecios(await pedirPrecios());
+        return mapearPrecios(await pedirVehiculosConPrecio());
       } catch (segundo) {
         console.error(
-          '[rutasur] `/precios` sigue dando 403 con una key nueva. Revisar las ' +
-            'credenciales y el nivel de acceso de la clave:',
+          '[rutasur] El listado autenticado sigue dando 403 con una key nueva. ' +
+            'Revisar las credenciales y el nivel de acceso de la clave:',
           segundo,
         );
         return new Map();
@@ -101,40 +94,56 @@ export async function traerPrecios(): Promise<PreciosPorUnidad> {
 }
 
 /**
- * El pedido en sí, con la key resuelta acá y no por el cliente HTTP.
+ * El listado de unidades detrás de la key, que es donde deberían estar los
+ * precios.
  *
- * `pedir({ requiereClave: true })` sólo sabe leer `RUTASUR_API_KEY` del
- * entorno: si lo único que tenemos es usuario y contraseña, falla diciendo que
- * falta la key en vez de ir a buscarla. Quien sabe conseguirla es
- * `asegurarClave()` —lee el entorno, la caché en memoria, o llama a
- * `PUT /key`—.
- *
- * Y no se puede meter esa llamada adentro del cliente HTTP porque `clave.ts`
- * necesita al cliente para hacer su propio `PUT /key`: quedarían importándose
- * en círculo. Resolverla acá, en quien la necesita, deja las dependencias en
- * una sola dirección.
+ * La key se resuelve acá y no con el `requiereClave` del cliente HTTP, porque
+ * aquél sólo sabe leer `RUTASUR_API_KEY` del entorno: si lo único que tenemos
+ * es usuario y contraseña, falla en vez de ir a buscarla. Y la llamada no puede
+ * vivir adentro del cliente porque `clave.ts` lo usa para su propio `PUT /key`:
+ * quedarían importándose en círculo.
  */
-async function pedirPrecios(): Promise<unknown> {
+async function pedirVehiculosConPrecio(): Promise<unknown> {
   const clave = await asegurarClave();
-  return pedir('/precios', {
+  return pedir('/vendedores/vehiculos', {
     cabecerasExtra: { 'X-API-KEY': clave },
     revalidar: SEGUNDOS_DE_REVALIDACION,
   });
 }
 
 /**
- * Pasa la respuesta de `/precios` a un mapa por `vehicle_id`.
+ * Los nombres con los que puede venir el importe. Ninguno está documentado.
  *
- * Cubre las dos formas que puede tener una "lista de precios" en esta API,
- * porque las dos aparecen en otros endpoints suyos:
+ * Se prueban en orden y gana el primero que traiga un número. Los `vehicle_*`
+ * van primero porque es el prefijo que usa toda esta API para los campos del
+ * vehículo —`vehicle_km`, `vehicle_year`, `vehicle_power`— así que si el precio
+ * existe, es lo más probable que se llame así.
+ */
+const CAMPOS_DE_PRECIO_USD = ['vehicle_price_usd', 'price_usd', 'precio_usd', 'usd'] as const;
+const CAMPOS_DE_PRECIO_ARS = [
+  'vehicle_price',
+  'vehicle_precio',
+  'price',
+  'precio',
+  'price_ars',
+  'ars',
+] as const;
+
+/**
+ * Pasa el listado autenticado a un mapa de precios por `vehicle_id`.
  *
- *   [{ vehicle_id: 3455, price: 85000, currency: "USD" }, …]
- *   { data: [ … lo mismo … ] }
+ * EL CASO IMPORTANTE ES CUANDO NO ENCUENTRA NADA, y por eso este mapeo tiene
+ * casi más log que lógica. Los nombres de los campos no están documentados: la
+ * única forma de saberlos es ver una respuesta real, y la única forma de ver
+ * una respuesta real cuando la API te bloquea por IP es que quede escrita en el
+ * log del deploy.
  *
- * Los nombres de los campos se buscan entre varios alias por el mismo motivo
- * por el que existe este comentario: no están documentados. Lo que NO se hace
- * es inventar un precio —si no se encuentra un número, la unidad queda en
- * `null` y el sitio muestra "Consultar", que es la verdad—.
+ * Así se resolvió `/precios` —el log dijo `price_id, price_name, price_url…` y
+ * con eso quedó claro que no eran precios de unidades— y así se va a resolver
+ * éste.
+ *
+ * Lo que NO hace es inventar un número. Si no encuentra un importe, la unidad
+ * queda sin precio y el sitio muestra "Consultar", que es la verdad.
  */
 export function mapearPrecios(crudo: unknown): PreciosPorUnidad {
   const mapa: PreciosPorUnidad = new Map();
@@ -142,12 +151,12 @@ export function mapearPrecios(crudo: unknown): PreciosPorUnidad {
   const lista = Array.isArray(crudo)
     ? crudo
     : Array.isArray((crudo as { data?: unknown })?.data)
-      ? ((crudo as { data: unknown[] }).data)
+      ? (crudo as { data: unknown[] }).data
       : null;
 
   if (!lista) {
     console.error(
-      '[rutasur] `/precios` devolvió algo que no es una lista. Claves recibidas:',
+      '[rutasur] El listado autenticado no es una lista. Claves recibidas:',
       crudo && typeof crudo === 'object' ? Object.keys(crudo) : typeof crudo,
     );
     return mapa;
@@ -160,12 +169,14 @@ export function mapearPrecios(crudo: unknown): PreciosPorUnidad {
     const id = numero(f.vehicle_id ?? f.vehiculo_id ?? f.id);
     if (id === null) continue;
 
-    const dolares = numero(f.price_usd ?? f.precio_usd ?? f.usd);
-    const pesos = numero(f.price ?? f.precio ?? f.price_ars ?? f.ars);
+    const dolares = primerNumero(f, CAMPOS_DE_PRECIO_USD);
+    const pesos = primerNumero(f, CAMPOS_DE_PRECIO_ARS);
+    if (dolares === null && pesos === null) continue;
 
-    // La moneda puede venir declarada en vez de separada en dos campos.
+    // Un solo importe con la moneda declarada aparte: cuenta como dólares si lo
+    // dice, y si no, como pesos.
     const moneda = String(f.currency ?? f.moneda ?? '').toUpperCase();
-    if (moneda === 'USD' && dolares === null && pesos !== null) {
+    if (moneda === 'USD' && dolares === null) {
       mapa.set(id, { pesos: null, dolares: pesos });
       continue;
     }
@@ -175,16 +186,33 @@ export function mapearPrecios(crudo: unknown): PreciosPorUnidad {
 
   if (mapa.size === 0 && lista.length > 0) {
     console.error(
-      '[rutasur] `/precios` trajo filas pero no se reconoció ningún campo. ' +
-        'Claves de la primera fila:',
+      `[rutasur] El listado autenticado trajo ${lista.length} filas pero ninguna ` +
+        'con precio reconocible. Claves de la primera fila:',
       Object.keys(lista[0] as object),
     );
+  } else if (mapa.size > 0) {
+    console.info(`[rutasur] ${mapa.size} precios cargados sobre ${lista.length} unidades.`);
   }
 
   return mapa;
 }
 
-/** Un número usable, o `null`. Descarta cadenas vacías, textos y `0`. */
+/** El primer campo de la lista que traiga un número usable. */
+function primerNumero(fila: Record<string, unknown>, campos: readonly string[]): number | null {
+  for (const campo of campos) {
+    const valor = numero(fila[campo]);
+    if (valor !== null) return valor;
+  }
+  return null;
+}
+
+/**
+ * Un número usable, o `null`.
+ *
+ * Descarta el cero además de lo vacío y lo que no es número: en esta API un `0`
+ * significa "sin cargar", igual que `vehicle_year: 0` en las unidades que no
+ * publican el año. Un camión que sale cero pesos sería peor que uno sin precio.
+ */
 function numero(valor: unknown): number | null {
   if (typeof valor === 'number') return Number.isFinite(valor) && valor > 0 ? valor : null;
   if (typeof valor !== 'string' || valor.trim() === '') return null;
