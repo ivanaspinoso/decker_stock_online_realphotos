@@ -76,6 +76,17 @@ export function apiKey(): string | undefined {
   return process.env.RUTASUR_API_KEY?.trim() || undefined;
 }
 
+/**
+ * Si hay con qué autenticarse: una key ya generada o credenciales para pedirla.
+ *
+ * Lo usa `traerPrecios` para no salir a pedir un endpoint protegido cuando
+ * todavía no tenemos nada. Sin esto, cada carga del catálogo dispararía un 403
+ * garantizado contra un server que bloquea por IP cuando se le pide de más.
+ */
+export function hayClave(): boolean {
+  return Boolean(apiKey()) || credenciales() !== null;
+}
+
 /** Credenciales para `PUT /key`. Sólo si hay que generar la key al vuelo. */
 export function credenciales(): { usuario: string; clave: string } | null {
   const usuario = process.env.RUTASUR_API_USER?.trim();

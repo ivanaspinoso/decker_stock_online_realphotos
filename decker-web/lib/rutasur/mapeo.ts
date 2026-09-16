@@ -1,4 +1,5 @@
 import { ErrorDeApi } from '@/lib/rutasur/errores';
+import type { PreciosPorUnidad } from '@/lib/rutasur/precios';
 import type { AgenciaApi, ImagenApi, VehiculoApi } from '@/lib/rutasur/tipos';
 import type {
   EstadoUnidad,
@@ -130,7 +131,7 @@ function esPublicable(crudo: VehiculoApi): boolean {
  * la interfaz muestra "Consultar". Ahí un `null` es información, no un dato que
  * falta.
  */
-function mapearUnidad(crudo: VehiculoApi): Unidad {
+function mapearUnidad(crudo: VehiculoApi, precios: PreciosPorUnidad): Unidad {
   const id = Number(crudo.vehicle_id);
   if (!Number.isFinite(id) || id <= 0) {
     throw new ErrorDeApi(
@@ -177,6 +178,8 @@ function mapearUnidad(crudo: VehiculoApi): Unidad {
     );
   }
 
+  const precio = precios.get(crudo.vehicle_id);
+
   return {
     slug: armarSlug(marca, modelo, id),
     nombre: armarNombre(marca, modelo),
@@ -192,20 +195,21 @@ function mapearUnidad(crudo: VehiculoApi): Unidad {
     km: parsearKm(crudo.vehicle_km),
 
     /**
-     * SIN PRECIO, a propósito y no por olvido.
+     * EL PRECIO NO VIENE CON EL VEHÍCULO. Llega aparte.
      *
-     * La API no tiene campo de precio en `/vehiculos` ni en `/vehiculos/{id}`.
-     * El precio vive en `/precios`, que es protegido y contesta 403 sin API key,
-     * y esa key todavía no la tenemos.
+     * Verificado campo por campo: `/vehiculos`, `/vehiculos/{id}` y
+     * `/agencias/{id}/vehiculos` devuelven los mismos 48 campos y ninguno es un
+     * precio. Vive en `GET /precios`, que es protegido —403 sin `X-API-KEY`— y
+     * llega hasta acá en el mapa `precios`.
      *
-     * `null` es exactamente lo que la interfaz necesita: `formatearPrecio(null)`
-     * ya muestra "Consultar", y el catálogo esconde solo el filtro y el orden
-     * por precio mientras ninguna unidad tenga uno (ver `getOpcionesCatalogo`).
-     * El día que se enchufe `/precios`, se completa este campo y los controles
-     * vuelven a aparecer sin tocar ningún componente.
+     * Mientras no haya key ese mapa viene vacío y queda `null`, que es lo que
+     * la interfaz necesita: `formatearPrecio(null)` muestra "Consultar", y el
+     * catálogo esconde solo el filtro y el orden por precio mientras ninguna
+     * unidad tenga uno (ver `getOpcionesCatalogo`). Cuando la key esté, los
+     * precios aparecen y los controles vuelven, sin tocar un componente.
      */
-    precio: null,
-    precioUsd: null,
+    precio: precio?.pesos ?? null,
+    precioUsd: precio?.dolares ?? null,
 
     sucursalId: sucursalDe(crudo.company_id),
 
@@ -241,7 +245,10 @@ function mapearUnidad(crudo: VehiculoApi): Unidad {
  * RELATIVA dentro del listado, no una propiedad de la unidad suelta, y no se
  * puede resolver mapeando de a una.
  */
-export function mapearListado(crudos: VehiculoApi[]): Unidad[] {
+export function mapearListado(
+  crudos: VehiculoApi[],
+  precios: PreciosPorUnidad = new Map(),
+): Unidad[] {
   const publicables = crudos.filter(esPublicable);
 
   // La fecha de alta no sobrevive al mapeo —no es un campo de `Unidad`— así que
@@ -254,7 +261,7 @@ export function mapearListado(crudos: VehiculoApi[]): Unidad[] {
   );
 
   return publicables.map((crudo) => ({
-    ...mapearUnidad(crudo),
+    ...mapearUnidad(crudo, precios),
     destacada: masNuevas.has(crudo.vehicle_id),
   }));
 }

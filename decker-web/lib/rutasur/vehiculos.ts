@@ -5,6 +5,7 @@ import {
   TOPE_DE_LISTADO,
 } from '@/lib/rutasur/config';
 import { mapearGaleria, mapearListado } from '@/lib/rutasur/mapeo';
+import { traerPrecios } from '@/lib/rutasur/precios';
 import type { ImagenApi, VehiculoApi } from '@/lib/rutasur/tipos';
 import type { Unidad } from '@/lib/types';
 
@@ -77,7 +78,24 @@ export interface FiltrosDeApi {
  * catálogo de camiones (ver `CATEGORIAS_PUBLICADAS` en `mapeo.ts`).
  */
 export async function traerCatalogo(filtros: FiltrosDeApi = {}): Promise<Unidad[]> {
-  return mapearListado(await traerCrudos(RUTAS.listado, filtros));
+  /**
+   * El stock y los precios se piden EN PARALELO, y los precios pueden faltar.
+   *
+   * El precio no viene con el vehículo: vive en `/precios`, que es un endpoint
+   * protegido y aparte (ver `lib/rutasur/precios.ts`). Son dos llamadas y no
+   * hay motivo para encadenarlas.
+   *
+   * Mientras no haya API key, `traerPrecios` devuelve un mapa vacío sin salir a
+   * la red, las unidades quedan con `precio: null` y el sitio muestra
+   * "Consultar" como hasta ahora. El día que la key esté cargada, los precios
+   * aparecen solos: no hay ningún componente que tocar.
+   */
+  const [crudos, precios] = await Promise.all([
+    traerCrudos(RUTAS.listado, filtros),
+    traerPrecios(),
+  ]);
+
+  return mapearListado(crudos, precios);
 }
 
 /**

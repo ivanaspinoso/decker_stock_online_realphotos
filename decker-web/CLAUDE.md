@@ -145,6 +145,43 @@ categoría fina igual se conserva en `Unidad.categoria` y se muestra en la ficha
 
 ## Las tres cosas que la API no tiene
 
+### No hay precio EN LO PÚBLICO
+
+Y no es que el mapeo se lo olvide. Verificado campo por campo: `/vehiculos`,
+`/vehiculos/{id}` y `/agencias/{id}/vehiculos` devuelven **los mismos 48 campos
+y ninguno es un precio** —ni `vehicle_price`, ni `valor`, ni nada parecido—.
+
+El precio vive en `GET /precios`, que es protegido:
+
+```
+GET /precios              → 403 {"message":"Token Inválido"}
+GET /vendedores/vehiculos → 403
+GET /seller/vehiculos     → 403
+```
+
+**Qué falta para encenderlo:** una de estas dos, de parte de Eduardo.
+
+```
+RUTASUR_API_KEY=<token ya generado>
+```
+
+o, si prefiere que la generemos nosotros:
+
+```
+RUTASUR_API_USER=<usuario>
+RUTASUR_API_PASSWORD=<contraseña>
+```
+
+Las dos están vacías hoy. Con cualquiera de ellas, `lib/rutasur/precios.ts`
+empieza a traer precios y no hay ningún componente que tocar: el catálogo ya
+esconde solo el filtro y el orden por precio mientras nadie tenga uno, y los
+vuelve a mostrar cuando aparezcan.
+
+**Lo único que queda por confirmar** es la forma de la respuesta de `/precios`:
+la documentación dice "listas de precios" y no muestra un ejemplo.
+`mapearPrecios` cubre las dos formas más probables y, si no encaja, deja las
+claves recibidas en el log. Con esa línea el mapeo se termina en un minuto.
+
 ### No hay precio
 
 **No existe el campo**, ni en `/vehiculos` ni en `/vehiculos/{id}`. El precio
