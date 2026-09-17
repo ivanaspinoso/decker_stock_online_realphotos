@@ -4,7 +4,12 @@ import { useId, useMemo, useState } from 'react';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
 import NumeroAnimado from '@/components/ui/NumeroAnimado';
 import { calcularFinanciacion, calcularLeasing, cotizacionConMargen } from '@/lib/financiacion';
-import { formatearNumero, formatearPrecio, formatearUsd } from '@/lib/format';
+import {
+  formatearNumero,
+  formatearPorcentaje,
+  formatearPrecio,
+  formatearUsd,
+} from '@/lib/format';
 import { linkConsultaFinanciacion, linkConsultaLeasing } from '@/lib/whatsapp';
 import type { ModalidadFinanciacion, ParametrosFinanciacion, Unidad } from '@/lib/types';
 
@@ -405,18 +410,44 @@ export default function CalculadoraFinanciacion({
               </div>
 
               {selectorPlazo}
+
+              {/* LA TASA SE VE PERO NO SE TOCA.
+                  Fue un campo editable y estaba mal —el visitante podía bajarla
+                  a 0—, pero esconderla del todo tampoco servía: es la condición
+                  de la operación y quien está por consultar tiene derecho a
+                  leerla antes de escribirle a un asesor. Va como texto, con el
+                  nombre que le da Decker. */}
+              <p className="mt-6 max-w-sm text-sm leading-relaxed text-gris-400">
+                Tasa directa{' '}
+                <span className="dato text-white">
+                  {formatearNumero(tasaAnual)}%
+                </span>{' '}
+                anual +{' '}
+                <span className="dato text-white">
+                  {formatearNumero(interesMensualAdicional)}%
+                </span>{' '}
+                mensual.
+              </p>
             </>
           ) : (
             <>
               {selectorPlazo}
 
-              {/* La advertencia se queda aunque el campo se haya ido: que la
-                  cuota no sea fija es lo primero que hay que saber del leasing,
-                  y sin el input que lo insinuaba hace más falta, no menos. El
-                  cuánto lo dice el resultado, con las dos puntas. */}
+              {/* Mismo criterio que en la estándar: las condiciones del leasing
+                  se leen, no se editan. Que la cuota NO sea fija es lo primero
+                  que hay que saber de esta modalidad, así que el aumento va con
+                  su número y no con un "sube todos los meses" que no dice
+                  cuánto. El resultado lo confirma con las dos puntas. */}
               <p className="mt-6 max-w-sm text-sm leading-relaxed text-gris-400">
-                Las cuotas no son fijas: arrancan en un valor y suben todos los
-                meses.
+                Tasa directa{' '}
+                <span className="dato text-white">
+                  {formatearNumero(tasaAnualLeasing)}%
+                </span>{' '}
+                anual. Las cuotas no son fijas: arrancan en un valor y suben{' '}
+                <span className="dato text-white">
+                  {formatearPorcentaje(aumentoMensualLeasing)}%
+                </span>{' '}
+                todos los meses.
               </p>
 
               <p className="mt-3 max-w-sm text-sm leading-relaxed text-gris-400">
@@ -523,8 +554,11 @@ export default function CalculadoraFinanciacion({
                     cuota" sería afirmar algo que la fórmula no dice. Se muestra
                     la punta de arriba al lado de la de abajo. */}
                 <p className="mt-3 text-sm text-gris-400">
-                  <span className="dato">{resultadoLeasing.plazo}</span> cuotas, subiendo mes
-                  a mes: la última sale{' '}
+                  <span className="dato">{resultadoLeasing.plazo}</span> cuotas · subiendo{' '}
+                  <span className="dato">
+                    {formatearPorcentaje(resultadoLeasing.aumentoMensual)}%
+                  </span>{' '}
+                  por mes, la última sale{' '}
                   <span className="dato text-white">
                     {formatearPrecio(Math.round(resultadoLeasing.ultimaCuota))}
                   </span>

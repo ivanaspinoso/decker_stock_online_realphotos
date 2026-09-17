@@ -115,7 +115,10 @@ export function linkConsultaFinanciacion(
       : `Entrega inicial: ${formatearPrecio(Math.round(resultado.anticipoPesos))}`,
     `Monto a financiar: ${formatearPrecio(Math.round(resultado.montoAFinanciar))}`,
     `Plazo: ${resultado.plazo} cuotas`,
-    `Tasa: ${formatearNumero(resultado.tasaAnual)}% anual + ${formatearNumero(
+    // "Tasa directa" es como la nombra Decker, así que es como tiene que
+    // llegarle al asesor: si el mensaje dice otra cosa que la planilla, el
+    // asesor rehace la cuenta para chequear y la simulación deja de servir.
+    `Tasa directa: ${formatearNumero(resultado.tasaAnual)}% anual + ${formatearNumero(
       resultado.interesMensualAdicional,
     )}% mensual`,
     `Cuota estimada: ${formatearPrecio(Math.round(resultado.cuotaMensual))}`,

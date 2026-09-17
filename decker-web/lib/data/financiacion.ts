@@ -40,6 +40,9 @@ export const PARAMETROS_FINANCIACION: ParametrosFinanciacion = {
   // que está cotizando, y un visitante podía bajarla a 0 y sacar una captura de
   // una cuota que nadie le iba a dar. Cuando Decker pida un cambio, se edita
   // este archivo y sale en el próximo deploy.
+  //
+  // Decker la nombra "tasa directa 18% anual". El nombre va en el mensaje al
+  // asesor; acá el número es el que entra en la cuenta.
   tasaAnual: 18,
   interesMensualAdicional: 1,
 
