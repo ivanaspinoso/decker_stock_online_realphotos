@@ -47,8 +47,20 @@ import type { FiltrosCatalogo, Unidad } from '@/lib/types';
  * van a cobrar, no una conversión nuestra. Convertir es sólo para poder
  * ordenar.
  *
- * La cotización sale del mismo lugar que la de la calculadora, así que hay un
- * solo número que mantener cuando el dólar se mueve.
+ * ACÁ LA COTIZACIÓN ES LA DE RESPALDO, NO LA DEL DÍA, y es a propósito. Esta
+ * función también corre en el navegador —`CatalogoCliente` filtra y ordena del
+ * lado del cliente— así que no puede esperar a una llamada de red; el dólar en
+ * vivo de `lib/dolar.ts` es de servidor y baja por props, que no llegan hasta
+ * acá.
+ *
+ * No importa, porque esto es una CLAVE DE ORDEN y no un precio que se muestre.
+ * Lo único que decide es qué unidad va antes que cuál, y para eso alcanza con
+ * que todas las unidades en dólares se conviertan con el MISMO número. Que ese
+ * número esté unos pesos abajo del de hoy no cambia ningún orden: cambiaría
+ * sólo si se moviera tanto como para cruzar un precio en pesos con uno en
+ * dólares, y para eso el dólar tendría que moverse de a cientos.
+ *
+ * Donde sí importa el número exacto —la calculadora— se usa el de la API.
  */
 export function precioComparable(unidad: {
   precio: number | null;

@@ -12,19 +12,24 @@ import type { ParametrosFinanciacion } from '@/lib/types';
 export const PARAMETROS_FINANCIACION: ParametrosFinanciacion = {
   // Conversión USD → ARS. Aplica a las dos modalidades.
   //
-  //   cotizacion = dolarOficialVenta + margenDolarPesos = 1.530 + 5 = 1.535
+  //   cotizacion = dolarOficialVenta + margenDolarPesos
   //
-  // El margen es un MONTO FIJO en pesos por dólar, no un porcentaje.
+  // El margen es un MONTO FIJO en pesos por dólar, no un porcentaje. Sobre un
+  // oficial de 1.530 la cotización es 1.535, no 1.606. Es el único de los dos
+  // números que se sigue editando a mano: es una decisión comercial de Decker,
+  // no un dato de mercado.
   //
-  // Antes acá había un 1.540 con el margen en 0: el cambio "ya armado" que
-  // pasaba el equipo comercial, metido como si fuera el oficial. Por eso el
-  // sitio calculaba a 1.540 y no a 1.535, y por eso cambiar la fórmula sola no
-  // alcanzaba — el problema era el dato, no la cuenta. Los dos campos van
-  // separados justamente para que esto no se repita: arriba el oficial que se
-  // puede verificar contra el banco, abajo el margen de Decker.
+  // EL DÓLAR DE ACÁ YA NO ES EL QUE SE USA. Lo pisa `getParametrosFinanciacion`
+  // con el oficial venta de Banco Nación en vivo — ver `lib/dolar.ts`. Este
+  // número quedó como ÚLTIMA LÍNEA DE RESPALDO, para el caso de que DolarAPI no
+  // conteste y el proceso todavía no haya visto ningún valor bueno.
   //
-  // Se actualiza a mano: no hay API de cotización todavía. Cuando el dólar se
-  // mueve, se cambia el oficial acá y nada más.
+  // Para corregir el respaldo sin un deploy está la variable de entorno
+  // `DOLAR_OFICIAL_VENTA_RESPALDO`, que le gana a este número.
+  //
+  // Vale la pena mantenerlo más o menos al día igual: además de ser el
+  // respaldo, es la referencia contra la que `lib/dolar.ts` decide si el valor
+  // que contestó la API es creíble.
   dolarOficialVenta: 1_530,
   margenDolarPesos: 5,
 

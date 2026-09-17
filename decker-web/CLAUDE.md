@@ -753,7 +753,8 @@ rm -rf .next && npm run build
 | Qué | Dónde | Por qué |
 | --- | --- | --- |
 | Favoritos, comparador, vistos recientemente | `localStorage` | Son del navegador de cada uno. No hay cuentas. |
-| Parámetros de financiación (dólar, margen, tasas, plazos) | `lib/data/financiacion.ts` | El dólar oficial se actualiza **a mano**: no hay API de cotización. |
+| Parámetros de financiación (margen, tasas, plazos, IVA) | `lib/data/financiacion.ts` | Decisiones comerciales de Decker. Se editan a mano. |
+| Cotización del dólar oficial | `lib/dolar.ts` | **Automática**: Banco Nación vía DolarAPI, revalida cada hora. El número del archivo de arriba quedó como respaldo. |
 | Direcciones y coordenadas de las agencias | `lib/data/sucursales.ts` | La API manda lat/long vacíos. |
 
 ## Pendiente

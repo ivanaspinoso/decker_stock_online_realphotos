@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { UNIDADES } from '@/lib/data/unidades';
 import { SUCURSALES, WHATSAPP_GENERAL } from '@/lib/data/sucursales';
 import { PARAMETROS_FINANCIACION } from '@/lib/data/financiacion';
+import { getDolarOficialVenta } from '@/lib/dolar';
 import { usaDatosMock } from '@/lib/rutasur/config';
 import { idDeSlug } from '@/lib/rutasur/mapeo';
 import { traerCatalogo, traerGaleria } from '@/lib/rutasur/vehiculos';
@@ -318,8 +319,23 @@ export async function getSucursalPorId(id: IdSucursal | null): Promise<Sucursal 
   return sucursales.find((sucursal) => sucursal.id === id) ?? null;
 }
 
+/**
+ * Los parámetros de la calculadora, con el dólar del día puesto.
+ *
+ * Todo lo demás —tasa, plazos, margen, IVA— sigue saliendo del archivo de
+ * configuración: son decisiones comerciales de Decker y se editan a mano. El
+ * único campo que se pisa es `dolarOficialVenta`, que es el que cambia todos
+ * los días y que nadie se acordaba de actualizar.
+ *
+ * El margen de Decker se suma DESPUÉS y no se toca: `cotizacionConMargen` hace
+ * `oficial + margen` igual que antes, sólo que ahora el oficial es el de hoy.
+ *
+ * Si DolarAPI no contesta, `getDolarOficialVenta` devuelve un respaldo y lo
+ * deja avisado en el log: acá nunca llega un `undefined` ni un 0.
+ */
 export async function getParametrosFinanciacion(): Promise<ParametrosFinanciacion> {
-  return PARAMETROS_FINANCIACION;
+  const { venta } = await getDolarOficialVenta();
+  return { ...PARAMETROS_FINANCIACION, dolarOficialVenta: venta };
 }
 
 /**
