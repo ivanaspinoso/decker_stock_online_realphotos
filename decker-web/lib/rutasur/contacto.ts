@@ -220,6 +220,16 @@ export interface ConsultaGeneral {
 /**
  * Contacto general del sitio.
  *
+ * HOY NO LA LLAMA NADIE, y no es un descuido: el sitio no tiene formulario de
+ * contacto general. El botón "Consultar" del encabezado abre WhatsApp directo,
+ * sin pedir datos, que es una decisión de producto —pedir nombre y mail antes
+ * de dejar escribir baja la conversión del botón—.
+ *
+ * Queda escrita y probada contra la API real para el día que se agregue ese
+ * formulario: verificado el 16/09/2026, devuelve `{"ok":true}` y el lead queda
+ * registrado. Enchufarla es crear `app/api/contacto/general/route.ts` a imagen
+ * de las otras dos y llamarla desde el formulario nuevo.
+ *
  * `contact_unidad` es el único campo opcional de esta API y es un ENTERO —el id
  * del vehículo—, al revés de `/vehiculos/contacto`, donde la unidad va por
  * nombre. No es un descuido de la documentación: son dos formularios distintos
