@@ -12,16 +12,21 @@ import type { ParametrosFinanciacion } from '@/lib/types';
 export const PARAMETROS_FINANCIACION: ParametrosFinanciacion = {
   // Conversión USD → ARS. Aplica a las dos modalidades.
   //
-  // 1.540 es el cambio que usa hoy el equipo comercial, con su margen YA
-  // incluido: por eso el margen queda en 0 y no en 5. Los dos campos siguen
-  // separados porque la cuenta es la misma —`oficial × (1 + margen/100)`— y el
-  // día que vuelvan a partir del oficial se carga el oficial arriba y el 5
-  // abajo, sin tocar ninguna fórmula.
+  //   cotizacion = dolarOficialVenta + margenDolarPesos = 1.530 + 5 = 1.535
   //
-  // Se actualiza a mano: no hay API de cotización todavía. Cuando el equipo
-  // comercial cambie el número, se cambia acá y nada más.
-  dolarOficialVenta: 1_540,
-  margenDolarPorcentaje: 0,
+  // El margen es un MONTO FIJO en pesos por dólar, no un porcentaje.
+  //
+  // Antes acá había un 1.540 con el margen en 0: el cambio "ya armado" que
+  // pasaba el equipo comercial, metido como si fuera el oficial. Por eso el
+  // sitio calculaba a 1.540 y no a 1.535, y por eso cambiar la fórmula sola no
+  // alcanzaba — el problema era el dato, no la cuenta. Los dos campos van
+  // separados justamente para que esto no se repita: arriba el oficial que se
+  // puede verificar contra el banco, abajo el margen de Decker.
+  //
+  // Se actualiza a mano: no hay API de cotización todavía. Cuando el dólar se
+  // mueve, se cambia el oficial acá y nada más.
+  dolarOficialVenta: 1_530,
+  margenDolarPesos: 5,
 
   // Modalidad 1 — Financiación estándar.
   tasaAnualPorDefecto: 18,

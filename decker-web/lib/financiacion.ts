@@ -3,7 +3,13 @@ import type { ResultadoFinanciacion, ResultadoLeasing } from '@/lib/types';
 /**
  * Cotización con la que la calculadora pasa de dólares a pesos.
  *
- *   cotizacion = dolarOficialVenta · (1 + margen/100)
+ *   cotizacion = dolarOficialVenta + margenPesos
+ *
+ * El margen es un MONTO FIJO en pesos por dólar, no un porcentaje: con el
+ * oficial en 1.530 y un margen de 5, la cotización es 1.535. Antes esto era
+ * `oficial · (1 + margen/100)`, que sobre la misma base daba 1.606 —setenta
+ * pesos por dólar de más, o casi cuatro millones sobre una unidad de 60.000
+ * dólares—. Es una suma, no un recargo.
  *
  * Las unidades se cargan en USD y toda la simulación se muestra en pesos, así
  * que ésta es la única puerta entre las dos monedas: ningún otro cálculo de
@@ -16,11 +22,11 @@ import type { ResultadoFinanciacion, ResultadoLeasing } from '@/lib/types';
  */
 export function cotizacionConMargen(
   dolarOficialVenta: number,
-  margenPorcentaje: number,
+  margenPesos: number,
 ): number {
   if (!Number.isFinite(dolarOficialVenta) || dolarOficialVenta <= 0) return 0;
-  const margen = Number.isFinite(margenPorcentaje) ? margenPorcentaje : 0;
-  return dolarOficialVenta * (1 + margen / 100);
+  const margen = Number.isFinite(margenPesos) && margenPesos > 0 ? margenPesos : 0;
+  return dolarOficialVenta + margen;
 }
 
 /**
@@ -62,18 +68,33 @@ export function tasaMensualEfectiva(
  *
  * Valor y entrega entran en dólares porque así se carga el stock; la conversión
  * ocurre una sola vez, arriba de todo, y de ahí para abajo todo es pesos.
+ *
+ * La entrega puede ser efectivo o un usado en parte de pago. Para la cuenta es
+ * el mismo número —se resta del valor y listo—, así que entra por el mismo
+ * parámetro; `entregaEsUsado` viaja al resultado sólo para que la pantalla y el
+ * WhatsApp puedan nombrarlo bien y aclarar que el usado está sujeto a tasación.
  */
 export function calcularFinanciacion(params: {
   valorUsd: number;
+  /** Entrega en dólares: efectivo, o el valor estimado del usado. */
   anticipoUsd: number;
+  /** `true` si ese importe es un usado en parte de pago. */
+  entregaEsUsado?: boolean;
   plazo: number;
   tasaAnual: number;
   interesMensualAdicional: number;
   /** Pesos por dólar, YA con el margen aplicado. */
   cotizacion: number;
 }): ResultadoFinanciacion | null {
-  const { valorUsd, anticipoUsd, plazo, tasaAnual, interesMensualAdicional, cotizacion } =
-    params;
+  const {
+    valorUsd,
+    anticipoUsd,
+    entregaEsUsado = false,
+    plazo,
+    tasaAnual,
+    interesMensualAdicional,
+    cotizacion,
+  } = params;
 
   if (!Number.isFinite(valorUsd) || valorUsd <= 0) return null;
   if (!Number.isFinite(plazo) || plazo <= 0) return null;
@@ -94,6 +115,7 @@ export function calcularFinanciacion(params: {
     valorPesos,
     cotizacionAplicada: cotizacion,
     anticipoPesos,
+    entregaEsUsado,
     plazo,
     tasaAnual,
     interesMensualAdicional,

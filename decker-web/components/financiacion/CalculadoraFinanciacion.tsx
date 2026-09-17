@@ -40,16 +40,15 @@ import type { ModalidadFinanciacion, ParametrosFinanciacion, Unidad } from '@/li
  * - Los montos se escriben con separador de miles. Un `<input type="number">`
  *   no lo permite, así que son `type="text"` con `inputMode="numeric"`: se
  *   guarda sólo el dígito y se muestra formateado.
- * - Plazo y anticipo salen de botones y no de un `<select>`: son pocas
- *   opciones, se comparan de un vistazo y se tocan en un gesto.
- * - Los grupos de opciones —anticipo, plazo, modalidad— comparten tratamiento:
+ * - El plazo sale de botones y no de un `<select>`: son pocas opciones, se
+ *   comparan de un vistazo y se tocan en un gesto. La entrega, en cambio, se
+ *   tipea: los atajos de 30/40/50% invitaban a elegir un porcentaje redondo en
+ *   vez del importe que la persona realmente tiene.
+ * - Los grupos de opciones —plazo, modalidad— comparten tratamiento:
  *   activo en blanco pleno, inactivo en negro-800. El amarillo acá tiene otro
  *   trabajo —es la señalética de 0 km y la cifra de la cuota—, y gastarlo en un
  *   chip le sacaba peso al número que importa.
  */
-
-/** Atajos de entrega inicial, en porcentaje del valor de la unidad. */
-const ATAJOS_ANTICIPO = [30, 40, 50];
 
 const MODALIDADES: { id: ModalidadFinanciacion; rotulo: string }[] = [
   { id: 'estandar', rotulo: 'Financiación estándar' },
@@ -103,6 +102,18 @@ export default function CalculadoraFinanciacion({
       ? String(Math.round((precioUsdUnidad * parametros.anticipoSugeridoPorcentaje) / 100))
       : '',
   );
+  /**
+   * La entrega puede ser efectivo o un usado en parte de pago. Es un checkbox y
+   * no dos opciones "Sí / No": la pregunta ya está en el rótulo, y un par de
+   * botones para contestarla obligaría a leer tres textos donde alcanza con
+   * uno. Destildado —el caso más común— el formulario queda igual que antes.
+   *
+   * El importe vive en un solo estado: se tilde o no, es el mismo número
+   * restándose del mismo lugar. Guardarlo en dos campos separados dejaría al
+   * visitante con un valor escrito que no ve y que igual entra en la cuenta.
+   */
+  const [entregaEsUsado, setEntregaEsUsado] = useState(false);
+
   const [plazo, setPlazo] = useState<number>(parametros.plazoPorDefecto);
   const [tasa, setTasa] = useState<string>(String(parametros.tasaAnualPorDefecto));
   const [interesMensual, setInteresMensual] = useState<string>(
@@ -124,8 +135,8 @@ export default function CalculadoraFinanciacion({
    */
   const cotizacion = useMemo(
     () =>
-      cotizacionConMargen(parametros.dolarOficialVenta, parametros.margenDolarPorcentaje),
-    [parametros.dolarOficialVenta, parametros.margenDolarPorcentaje],
+      cotizacionConMargen(parametros.dolarOficialVenta, parametros.margenDolarPesos),
+    [parametros.dolarOficialVenta, parametros.margenDolarPesos],
   );
 
   const resultadoEstandar = useMemo(
@@ -133,12 +144,13 @@ export default function CalculadoraFinanciacion({
       calcularFinanciacion({
         valorUsd: valorNum,
         anticipoUsd: anticipoNum,
+        entregaEsUsado,
         plazo,
         tasaAnual: Number(tasa),
         interesMensualAdicional: Number(interesMensual),
         cotizacion,
       }),
-    [valorNum, anticipoNum, plazo, tasa, interesMensual, cotizacion],
+    [valorNum, anticipoNum, entregaEsUsado, plazo, tasa, interesMensual, cotizacion],
   );
 
   const resultadoLeasing = useMemo(
@@ -308,10 +320,27 @@ export default function CalculadoraFinanciacion({
 
           {esEstandar ? (
             <>
-              <div className="mt-6">
+              {/* La pregunta va ARRIBA del campo, no al lado: decide qué
+                  importe se está por escribir, así que tiene que leerse antes
+                  de que la persona empiece a tipear. */}
+              <label className="mt-6 flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  // h-5 y no h-4: 16px es un blanco chico para el pulgar. El
+                  // `<label>` que lo envuelve ya hace clickeable todo el texto.
+                  className="h-5 w-5 rounded-sm accent-rojo"
+                  checked={entregaEsUsado}
+                  onChange={(evento) => setEntregaEsUsado(evento.target.checked)}
+                />
+                <span className="text-sm text-gris-300">Entrega de usado</span>
+              </label>
+
+              <div className="mt-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <label htmlFor={`${id}-anticipo`} className="campo-label text-gris-400">
-                    Entrega inicial (USD)
+                    {entregaEsUsado
+                      ? 'Valor estimado del usado (USD)'
+                      : 'Entrega inicial (USD)'}
                   </label>
                   {/* La mono se queda con la cifra; "del valor" es texto y va en
                       la normal. */}
@@ -343,34 +372,17 @@ export default function CalculadoraFinanciacion({
                   />
                 </div>
 
-                {/* Atajos: la entrega casi siempre se piensa en porcentaje, no
-                    en importe. Se desactivan hasta que haya un valor. */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {ATAJOS_ANTICIPO.map((porcentaje) => {
-                    const activo = porcentajeAnticipo === porcentaje;
-                    return (
-                      <button
-                        key={porcentaje}
-                        type="button"
-                        disabled={valorNum <= 0}
-                        aria-pressed={activo}
-                        onClick={() =>
-                          setAnticipo(String(Math.round((valorNum * porcentaje) / 100)))
-                        }
-                        className={`centrado-optico dato inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido disabled:pointer-events-none disabled:opacity-40 ${
-                          activo
-                            ? 'bg-white text-negro'
-                            : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
-                        }`}
-                      >
-                        {porcentaje}%
-                      </button>
-                    );
-                  })}
-                </div>
-
+                {/* Con el usado tildado, el importe es una ESTIMACIÓN del
+                    visitante: la aclaración va acá y no en la leyenda del pie,
+                    porque es de este campo y se lee mientras se lo completa.
+                    Mismo criterio que el resto del disclaimer legal. */}
                 <p id={`${id}-anticipo-ayuda`} className="mt-3 text-sm text-gris-400">
-                  {valorNum > 0 ? (
+                  {entregaEsUsado ? (
+                    <>
+                      Valor estimado: la toma del usado queda sujeta a tasación del equipo
+                      comercial.
+                    </>
+                  ) : valorNum > 0 ? (
                     <>
                       Entrega mínima sugerida ({parametros.anticipoMinimoPorcentaje}%):{' '}
                       <span className="dato text-white">
@@ -387,7 +399,9 @@ export default function CalculadoraFinanciacion({
 
                 {anticipoExcedido && (
                   <p className="mt-2 text-sm font-medium text-amarillo" role="status">
-                    La entrega supera el valor de la unidad: no queda saldo a financiar.
+                    {entregaEsUsado
+                      ? 'El usado supera el valor de la unidad: no queda saldo a financiar.'
+                      : 'La entrega supera el valor de la unidad: no queda saldo a financiar.'}
                   </p>
                 )}
                 {!anticipoExcedido && anticipoInsuficiente && (
@@ -562,7 +576,12 @@ export default function CalculadoraFinanciacion({
                 <dl className="mt-8 space-y-3 border-t border-negro-800 pt-6">
                   {[
                     { t: 'Valor en pesos', v: resultadoEstandar.valorPesos },
-                    { t: 'Entrega inicial', v: resultadoEstandar.anticipoPesos },
+                    {
+                      t: resultadoEstandar.entregaEsUsado
+                        ? 'Entrega de usado'
+                        : 'Entrega inicial',
+                      v: resultadoEstandar.anticipoPesos,
+                    },
                     { t: 'Monto a financiar', v: resultadoEstandar.montoAFinanciar },
                     { t: 'Total a pagar', v: resultadoEstandar.totalAPagar },
                     { t: 'Costo financiero', v: resultadoEstandar.costoFinanciero },

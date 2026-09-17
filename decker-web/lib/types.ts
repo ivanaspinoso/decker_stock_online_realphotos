@@ -203,9 +203,14 @@ export interface ParametrosFinanciacion {
   dolarOficialVenta: number;
   /**
    * Margen que Decker le suma al dólar oficial para armar la cotización de la
-   * simulación, en porcentaje. Decisión comercial, no constante financiera.
+   * simulación, EN PESOS POR DÓLAR. Decisión comercial, no constante
+   * financiera.
+   *
+   * Es un monto fijo, no un porcentaje: con el oficial en 1.530 y un margen de
+   * 5, la cotización es 1.535 — no 1.606. El nombre dice `Pesos` justamente
+   * para que no se vuelva a leer como un `%`.
    */
-  margenDolarPorcentaje: number;
+  margenDolarPesos: number;
 
   /** Financiación estándar: tasa NOMINAL anual orientativa, en porcentaje. */
   tasaAnualPorDefecto: number;
@@ -267,8 +272,16 @@ export interface ResultadoFinanciacion {
   valorPesos: number;
   /** Pesos por dólar usados: oficial venta más margen. */
   cotizacionAplicada: number;
-  /** Entrega inicial convertida a pesos. */
+  /** Entrega convertida a pesos, sea en efectivo o el usado que se entrega. */
   anticipoPesos: number;
+  /**
+   * `true` si la entrega es un usado en parte de pago en vez de efectivo.
+   *
+   * No cambia ninguna cuenta —se resta igual— pero sí lo que hay que decir: un
+   * usado vale lo que tasa el equipo comercial, no lo que estimó el visitante,
+   * y tanto la pantalla como el WhatsApp tienen que nombrarlo así.
+   */
+  entregaEsUsado: boolean;
   /** Valor en pesos menos la entrega. Nunca negativo. */
   montoAFinanciar: number;
   cuotaMensual: number;

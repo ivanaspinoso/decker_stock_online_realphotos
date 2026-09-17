@@ -100,7 +100,13 @@ export function linkConsultaFinanciacion(
     // cuenta con otro dólar, tiene a la vista de dónde salió la diferencia.
     `Valor de la unidad: ${formatearUsd(resultado.valorUsd)}`,
     `Cotización aplicada: ${formatearPrecio(Math.round(resultado.cotizacionAplicada))} por dólar`,
-    `Entrega inicial: ${formatearPrecio(Math.round(resultado.anticipoPesos))}`,
+    // El asesor tiene que saber si ese importe es plata o un usado sin tasar:
+    // cambia a quién deriva la operación antes de contestar.
+    resultado.entregaEsUsado
+      ? `Entrega de usado (valor estimado, a tasar): ${formatearPrecio(
+          Math.round(resultado.anticipoPesos),
+        )}`
+      : `Entrega inicial: ${formatearPrecio(Math.round(resultado.anticipoPesos))}`,
     `Monto a financiar: ${formatearPrecio(Math.round(resultado.montoAFinanciar))}`,
     `Plazo: ${resultado.plazo} cuotas`,
     `Tasa: ${formatearNumero(resultado.tasaAnual)}% anual + ${formatearNumero(

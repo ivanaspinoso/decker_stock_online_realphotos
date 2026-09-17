@@ -59,7 +59,7 @@ export function precioComparable(unidad: {
       unidad.precioUsd *
       cotizacionConMargen(
         PARAMETROS_FINANCIACION.dolarOficialVenta,
-        PARAMETROS_FINANCIACION.margenDolarPorcentaje,
+        PARAMETROS_FINANCIACION.margenDolarPesos,
       )
     );
   }
