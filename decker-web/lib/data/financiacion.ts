@@ -34,8 +34,14 @@ export const PARAMETROS_FINANCIACION: ParametrosFinanciacion = {
   margenDolarPesos: 5,
 
   // Modalidad 1 — Financiación estándar.
-  tasaAnualPorDefecto: 18,
-  interesMensualAdicionalPorDefecto: 1,
+  //
+  // ACÁ SE CAMBIAN LAS TASAS, y es el único lugar. Fueron campos editables en
+  // la calculadora hasta que se sacaron: la tasa la pacta Decker, no la persona
+  // que está cotizando, y un visitante podía bajarla a 0 y sacar una captura de
+  // una cuota que nadie le iba a dar. Cuando Decker pida un cambio, se edita
+  // este archivo y sale en el próximo deploy.
+  tasaAnual: 18,
+  interesMensualAdicional: 1,
 
   plazosDisponibles: [12, 24, 36, 48],
   plazoPorDefecto: 36,
@@ -43,9 +49,10 @@ export const PARAMETROS_FINANCIACION: ParametrosFinanciacion = {
   anticipoMinimoPorcentaje: 30,
   anticipoSugeridoPorcentaje: 40,
 
-  // Modalidad 2 — Leasing.
-  tasaAnualLeasingPorDefecto: 20,
-  aumentoMensualLeasingPorDefecto: 1.25,
+  // Modalidad 2 — Leasing. Los de la planilla confirmada por Decker, y
+  // tampoco los toca el visitante.
+  tasaAnualLeasing: 20,
+  aumentoMensualLeasing: 1.25,
 
   // Los dos IVA de la operación, que son distintos y se aplican al revés uno
   // del otro: el del bien se SACA dividiendo al principio, el del alquiler se

@@ -1,5 +1,11 @@
 import { SUCURSALES, WHATSAPP_GENERAL } from '@/lib/data/sucursales';
-import { formatearKm, formatearNumero, formatearPrecio, formatearUsd } from '@/lib/format';
+import {
+  formatearKm,
+  formatearNumero,
+  formatearPorcentaje,
+  formatearPrecio,
+  formatearUsd,
+} from '@/lib/format';
 import type {
   IdSucursal,
   ResultadoFinanciacion,
@@ -129,7 +135,10 @@ export function linkConsultaLeasing(resultado: ResultadoLeasing, unidad?: Unidad
     `Cotización aplicada: ${formatearPrecio(Math.round(resultado.cotizacionAplicada))} por dólar`,
     `Plazo: ${resultado.plazo} cuotas`,
     `Tasa anual: ${formatearNumero(resultado.tasaAnual)}%`,
-    `Aumento de la cuota: ${formatearNumero(resultado.aumentoMensual)}% mensual`,
+    // `formatearPorcentaje` y no `formatearNumero`: el segundo redondea a entero
+    // y el aumento es 1,25%. El asesor recibía "1% mensual" y rehacía la cuenta
+    // con una tasa que no era la del sitio.
+    `Aumento de la cuota: ${formatearPorcentaje(resultado.aumentoMensual)}% mensual`,
     `Primera cuota: ${formatearPrecio(Math.round(resultado.primeraCuota))}`,
     `Última cuota: ${formatearPrecio(Math.round(resultado.ultimaCuota))}`,
     `Canon inicial (${resultado.cuotasDeCanon} ${

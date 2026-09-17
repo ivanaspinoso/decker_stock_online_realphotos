@@ -212,13 +212,21 @@ export interface ParametrosFinanciacion {
    */
   margenDolarPesos: number;
 
-  /** Financiación estándar: tasa NOMINAL anual orientativa, en porcentaje. */
-  tasaAnualPorDefecto: number;
+  /**
+   * Financiación estándar: tasa NOMINAL anual, en porcentaje.
+   *
+   * NO LA TOCA EL VISITANTE. Se llamaba `tasaAnualPorDefecto` cuando era el
+   * valor inicial de un campo editable en la calculadora; hoy no hay tal campo
+   * —la tasa la pacta Decker— así que tampoco hay un "por defecto" del que
+   * apartarse. Se edita en `lib/data/financiacion.ts`.
+   */
+  tasaAnual: number;
   /**
    * Financiación estándar: puntos de interés que se suman por mes por encima
-   * de la tasa anual, en porcentaje. Ver `tasaMensualEfectiva`.
+   * de la tasa anual, en porcentaje. Ver `tasaMensualEfectiva`. Tampoco la toca
+   * el visitante.
    */
-  interesMensualAdicionalPorDefecto: number;
+  interesMensualAdicional: number;
 
   /** Plazos ofrecidos, en cantidad de cuotas mensuales. Los usan las dos modalidades. */
   plazosDisponibles: number[];
@@ -229,10 +237,10 @@ export interface ParametrosFinanciacion {
   /** Financiación estándar: anticipo sugerido al abrir la calculadora, en porcentaje. */
   anticipoSugeridoPorcentaje: number;
 
-  /** Leasing: tasa NOMINAL anual, en porcentaje. Editable en la calculadora. */
-  tasaAnualLeasingPorDefecto: number;
-  /** Leasing: cuánto sube la cuota cada mes, en porcentaje. Editable. */
-  aumentoMensualLeasingPorDefecto: number;
+  /** Leasing: tasa NOMINAL anual, en porcentaje. No la toca el visitante. */
+  tasaAnualLeasing: number;
+  /** Leasing: cuánto sube la cuota cada mes, en porcentaje. Tampoco. */
+  aumentoMensualLeasing: number;
   /**
    * Leasing: IVA del BIEN, en porcentaje. Se le SACA al valor de lista para
    * llegar al neto —dividiendo, no restando—. No confundir con el de abajo:

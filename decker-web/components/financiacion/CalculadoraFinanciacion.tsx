@@ -4,12 +4,7 @@ import { useId, useMemo, useState } from 'react';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
 import NumeroAnimado from '@/components/ui/NumeroAnimado';
 import { calcularFinanciacion, calcularLeasing, cotizacionConMargen } from '@/lib/financiacion';
-import {
-  formatearNumero,
-  formatearPorcentaje,
-  formatearPrecio,
-  formatearUsd,
-} from '@/lib/format';
+import { formatearNumero, formatearPrecio, formatearUsd } from '@/lib/format';
 import { linkConsultaFinanciacion, linkConsultaLeasing } from '@/lib/whatsapp';
 import type { ModalidadFinanciacion, ParametrosFinanciacion, Unidad } from '@/lib/types';
 
@@ -115,16 +110,20 @@ export default function CalculadoraFinanciacion({
   const [entregaEsUsado, setEntregaEsUsado] = useState(false);
 
   const [plazo, setPlazo] = useState<number>(parametros.plazoPorDefecto);
-  const [tasa, setTasa] = useState<string>(String(parametros.tasaAnualPorDefecto));
-  const [interesMensual, setInteresMensual] = useState<string>(
-    String(parametros.interesMensualAdicionalPorDefecto),
-  );
-  const [tasaLeasing, setTasaLeasing] = useState<string>(
-    String(parametros.tasaAnualLeasingPorDefecto),
-  );
-  const [aumentoMensual, setAumentoMensual] = useState<string>(
-    String(parametros.aumentoMensualLeasingPorDefecto),
-  );
+
+  /**
+   * LAS TASAS NO SON ESTADO, y eso es el punto.
+   *
+   * Fueron campos editables hasta acá, y estaba mal: la tasa la pacta Decker,
+   * no la persona que está cotizando. Un visitante podía bajarla a 0 y sacar
+   * una captura de una cuota que nadie le iba a dar.
+   *
+   * Ahora salen de `parametros`, que viene de `lib/data/financiacion.ts` —un
+   * archivo, un lugar, sin panel ni build especial—. Cuando Decker pida un
+   * cambio de tasa se edita ahí y sale en el próximo deploy.
+   */
+  const { tasaAnual, interesMensualAdicional, tasaAnualLeasing, aumentoMensualLeasing } =
+    parametros;
 
   const valorNum = Number(valor);
   const anticipoNum = Number(anticipo);
@@ -146,11 +145,19 @@ export default function CalculadoraFinanciacion({
         anticipoUsd: anticipoNum,
         entregaEsUsado,
         plazo,
-        tasaAnual: Number(tasa),
-        interesMensualAdicional: Number(interesMensual),
+        tasaAnual,
+        interesMensualAdicional,
         cotizacion,
       }),
-    [valorNum, anticipoNum, entregaEsUsado, plazo, tasa, interesMensual, cotizacion],
+    [
+      valorNum,
+      anticipoNum,
+      entregaEsUsado,
+      plazo,
+      tasaAnual,
+      interesMensualAdicional,
+      cotizacion,
+    ],
   );
 
   const resultadoLeasing = useMemo(
@@ -158,8 +165,8 @@ export default function CalculadoraFinanciacion({
       calcularLeasing({
         valorUsd: valorNum,
         plazo,
-        tasaAnual: Number(tasaLeasing),
-        aumentoMensual: Number(aumentoMensual),
+        tasaAnual: tasaAnualLeasing,
+        aumentoMensual: aumentoMensualLeasing,
         pagoFinalPorcentaje: parametros.pagoFinalLeasingPorcentaje,
         ivaBienPorcentaje: parametros.ivaBienPorcentaje,
         ivaAlquilerPorcentaje: parametros.ivaAlquilerPorcentaje,
@@ -172,8 +179,8 @@ export default function CalculadoraFinanciacion({
     [
       valorNum,
       plazo,
-      tasaLeasing,
-      aumentoMensual,
+      tasaAnualLeasing,
+      aumentoMensualLeasing,
       parametros.pagoFinalLeasingPorcentaje,
       parametros.ivaBienPorcentaje,
       parametros.ivaAlquilerPorcentaje,
@@ -187,10 +194,6 @@ export default function CalculadoraFinanciacion({
     valorNum > 0 ? (valorNum * parametros.anticipoMinimoPorcentaje) / 100 : 0;
   const anticipoInsuficiente = valorNum > 0 && anticipoNum < anticipoMinimo;
   const anticipoExcedido = valorNum > 0 && anticipoNum > valorNum;
-
-  /** Porcentaje del valor que representa la entrega cargada. */
-  const porcentajeAnticipo =
-    valorNum > 0 && anticipoNum > 0 ? Math.round((anticipoNum / valorNum) * 100) : null;
 
   const esEstandar = modalidad === 'estandar';
 
@@ -310,7 +313,7 @@ export default function CalculadoraFinanciacion({
         className="grid lg:grid-cols-[1.05fr_0.95fr]"
       >
         <form
-          className="p-6 sm:p-8 lg:p-10"
+          className="flex flex-col p-6 sm:p-8 lg:p-10"
           onSubmit={(evento) => evento.preventDefault()}
           aria-label={
             esEstandar ? 'Simulador de financiación estándar' : 'Simulador de leasing'
@@ -336,20 +339,9 @@ export default function CalculadoraFinanciacion({
               </label>
 
               <div className="mt-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <label htmlFor={`${id}-anticipo`} className="campo-label text-gris-400">
-                    {entregaEsUsado
-                      ? 'Valor estimado del usado (USD)'
-                      : 'Entrega inicial (USD)'}
-                  </label>
-                  {/* La mono se queda con la cifra; "del valor" es texto y va en
-                      la normal. */}
-                  {porcentajeAnticipo !== null && (
-                    <span className="text-xs text-gris-400">
-                      <span className="dato">{porcentajeAnticipo}%</span> del valor
-                    </span>
-                  )}
-                </div>
+                <label htmlFor={`${id}-anticipo`} className="campo-label text-gris-400">
+                  {entregaEsUsado ? 'Entrega estimada (USD)' : 'Entrega inicial (USD)'}
+                </label>
 
                 <div className="relative">
                   <span
@@ -379,7 +371,7 @@ export default function CalculadoraFinanciacion({
                 <p id={`${id}-anticipo-ayuda`} className="mt-3 text-sm text-gris-400">
                   {entregaEsUsado ? (
                     <>
-                      Valor estimado: la toma del usado queda sujeta a tasación del equipo
+                      La entrega estimada del usado queda sujeta a tasación real del equipo
                       comercial.
                     </>
                   ) : valorNum > 0 ? (
@@ -413,106 +405,21 @@ export default function CalculadoraFinanciacion({
               </div>
 
               {selectorPlazo}
-
-              {/* Los dos porcentajes de la tasa van juntos y en la misma fila:
-                  se leen como una sola condición ("18% anual más 1% mensual"),
-                  que es como se pacta. */}
-              <div className="mt-6 flex flex-wrap gap-4">
-                <div className="min-w-[150px] flex-1">
-                  <label htmlFor={`${id}-tasa`} className="campo-label text-gris-400">
-                    Tasa anual (%)
-                  </label>
-                  <input
-                    id={`${id}-tasa`}
-                    className="campo campo-oscuro dato h-11"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    max={200}
-                    step={0.5}
-                    value={tasa}
-                    onFocus={seleccionarTodo}
-                    onChange={(evento) => setTasa(evento.target.value)}
-                  />
-                </div>
-                <div className="min-w-[150px] flex-1">
-                  <label htmlFor={`${id}-interes`} className="campo-label text-gris-400">
-                    Interés mensual adicional (%)
-                  </label>
-                  <input
-                    id={`${id}-interes`}
-                    className="campo campo-oscuro dato h-11"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    max={50}
-                    step={0.1}
-                    value={interesMensual}
-                    onFocus={seleccionarTodo}
-                    onChange={(evento) => setInteresMensual(evento.target.value)}
-                  />
-                </div>
-              </div>
-
-              {resultadoEstandar && (
-                <p className="mt-3 text-sm text-gris-400">
-                  Tasa efectiva mensual del cálculo:{' '}
-                  <span className="dato text-white">
-                    {formatearNumero(Math.round(resultadoEstandar.tasaMensual * 100) / 100)}%
-                  </span>
-                </p>
-              )}
             </>
           ) : (
             <>
               {selectorPlazo}
 
-              {/* Dos campos cortos, uno al lado del otro. `max-w-lg` y no
-                  `max-w-md`: con 448px repartidos en dos, el rótulo más largo
-                  se partía en dos líneas y desalineaba los campos entre sí. */}
-              <div className="mt-6 grid gap-4 sm:max-w-lg sm:grid-cols-2">
-                <div>
-                  <label htmlFor={`${id}-tasa-leasing`} className="campo-label text-gris-400">
-                    Tasa anual (%)
-                  </label>
-                  <input
-                    id={`${id}-tasa-leasing`}
-                    className="campo campo-oscuro dato h-11"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    max={200}
-                    step={0.5}
-                    value={tasaLeasing}
-                    onFocus={seleccionarTodo}
-                    onChange={(evento) => setTasaLeasing(evento.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor={`${id}-aumento`} className="campo-label text-gris-400">
-                    Aumento mensual (%)
-                  </label>
-                  <input
-                    id={`${id}-aumento`}
-                    className="campo campo-oscuro dato h-11"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    max={100}
-                    step={0.25}
-                    value={aumentoMensual}
-                    onFocus={seleccionarTodo}
-                    onChange={(evento) => setAumentoMensual(evento.target.value)}
-                    aria-describedby={`${id}-aumento-ayuda`}
-                  />
-                </div>
-                <p id={`${id}-aumento-ayuda`} className="text-sm text-gris-400 sm:col-span-2">
-                  Las cuotas no son fijas: arrancan en un valor y suben ese
-                  porcentaje todos los meses.
-                </p>
-              </div>
-
+              {/* La advertencia se queda aunque el campo se haya ido: que la
+                  cuota no sea fija es lo primero que hay que saber del leasing,
+                  y sin el input que lo insinuaba hace más falta, no menos. El
+                  cuánto lo dice el resultado, con las dos puntas. */}
               <p className="mt-6 max-w-sm text-sm leading-relaxed text-gris-400">
+                Las cuotas no son fijas: arrancan en un valor y suben todos los
+                meses.
+              </p>
+
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-gris-400">
                 En leasing pagás las cuotas —cheque o dólares— durante el plazo que elijas y
                 al final ejercés la compra con un pago del{' '}
                 <span className="dato text-white">
@@ -559,17 +466,6 @@ export default function CalculadoraFinanciacion({
                       duracion={400}
                       desdeViewport
                     />
-                  </p>
-                  <p className="mt-3 text-sm text-gris-400">
-                    <span className="dato">{resultadoEstandar.plazo}</span> cuotas · tasa{' '}
-                    <span className="dato">
-                      {formatearNumero(resultadoEstandar.tasaAnual)}%
-                    </span>{' '}
-                    anual +{' '}
-                    <span className="dato">
-                      {formatearNumero(resultadoEstandar.interesMensualAdicional)}%
-                    </span>{' '}
-                    mensual
                   </p>
                 </div>
 
@@ -627,11 +523,8 @@ export default function CalculadoraFinanciacion({
                     cuota" sería afirmar algo que la fórmula no dice. Se muestra
                     la punta de arriba al lado de la de abajo. */}
                 <p className="mt-3 text-sm text-gris-400">
-                  <span className="dato">{resultadoLeasing.plazo}</span> cuotas · subiendo{' '}
-                  <span className="dato">
-                    {formatearPorcentaje(resultadoLeasing.aumentoMensual)}%
-                  </span>{' '}
-                  por mes, la última sale{' '}
+                  <span className="dato">{resultadoLeasing.plazo}</span> cuotas, subiendo mes
+                  a mes: la última sale{' '}
                   <span className="dato text-white">
                     {formatearPrecio(Math.round(resultadoLeasing.ultimaCuota))}
                   </span>
@@ -704,12 +597,26 @@ export default function CalculadoraFinanciacion({
             </>
           )}
 
-          {/* Es el texto legal de la simulación: tiene que poder leerse, no ser
-              una marca de agua. Acompaña a las dos modalidades por igual. */}
-          <p className="mt-auto pt-8 text-xs leading-relaxed text-gris-400">
-            {parametros.leyenda}
-          </p>
         </div>
+
+        {/* EL TEXTO LEGAL ES UNA FRANJA AL PIE Y NO UNA COLUMNA, y las dos
+            cosas importan.
+
+            Estaba adentro del panel de resultado. Cuando se sacaron los campos
+            de tasa, el formulario quedó bastante más corto que el resultado y
+            la columna izquierda terminaba en un bloque de negro vacío. Mudarlo
+            al pie del formulario tapaba ese hueco, pero en celular —donde las
+            columnas se apilan— dejaba el descargo ANTES de los números que
+            descarga, que es justo al revés de como se lee.
+
+            Cruzando las dos columnas queda último en los dos lados: al pie de
+            la tarjeta en escritorio, después del resultado en celular. Y le da
+            al formulario un cierre, que era el problema original.
+
+            Tiene que poder leerse, no ser una marca de agua. */}
+        <p className="border-t border-negro-800 p-6 text-xs leading-relaxed text-gris-400 sm:px-8 lg:col-span-2 lg:px-10">
+          {parametros.leyenda}
+        </p>
       </div>
     </div>
   );
