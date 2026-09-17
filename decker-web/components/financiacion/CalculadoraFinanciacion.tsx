@@ -114,6 +114,17 @@ export default function CalculadoraFinanciacion({
    */
   const [entregaEsUsado, setEntregaEsUsado] = useState(false);
 
+  /**
+   * Si la unidad del leasing es 0 km. SÓLO se pregunta cuando no venimos de una
+   * ficha: ahí la unidad ya dice lo que es y preguntarlo sería dejar que el
+   * visitante contradiga el catálogo.
+   *
+   * Arranca en `false` —usada— porque es 227 de las 239 del stock y porque es
+   * el canon más chico de los dos: si alguien no toca nada, la pantalla no le
+   * promete un desembolso inicial menor al real.
+   */
+  const [esCeroKmElegido, setEsCeroKmElegido] = useState(false);
+
   const [plazo, setPlazo] = useState<number>(parametros.plazoPorDefecto);
 
   /**
@@ -132,6 +143,9 @@ export default function CalculadoraFinanciacion({
 
   const valorNum = Number(valor);
   const anticipoNum = Number(anticipo);
+
+  /** Manda la ficha si la hay; si no, lo que haya elegido el visitante. */
+  const esCeroKm = unidad ? unidad.estado === '0 km' : esCeroKmElegido;
 
   /**
    * Cotización de la simulación: dólar oficial venta más el margen de Decker.
@@ -176,10 +190,14 @@ export default function CalculadoraFinanciacion({
         ivaBienPorcentaje: parametros.ivaBienPorcentaje,
         ivaAlquilerPorcentaje: parametros.ivaAlquilerPorcentaje,
         cotizacion,
-        // El canon inicial son 3 cuotas para 0 km y 1 para usada. Sin unidad no
-        // hay estado que mirar: se asume usada, que es el caso más frecuente
-        // del stock y el más conservador de los dos.
-        esCeroKm: unidad?.estado === '0 km',
+        // El canon inicial son 3 cuotas para 0 km y 1 para usada.
+        //
+        // Desde una ficha lo dice la unidad. Desde la home no hay unidad que
+        // mirar, y ANTES se asumía usada siempre: quien simulaba una 0 km veía
+        // un canon de una cuota en vez de tres —con una unidad de US$ 70.000,
+        // $ 3,6 millones en pantalla contra $ 11 millones reales— y se enteraba
+        // de los otros dos al firmar. Por eso ahí ahora se pregunta.
+        esCeroKm,
       }),
     [
       valorNum,
@@ -190,7 +208,7 @@ export default function CalculadoraFinanciacion({
       parametros.ivaBienPorcentaje,
       parametros.ivaAlquilerPorcentaje,
       cotizacion,
-      unidad?.estado,
+      esCeroKm,
     ],
   );
 
@@ -431,6 +449,52 @@ export default function CalculadoraFinanciacion({
             </>
           ) : (
             <>
+              {/* SÓLO SIN FICHA. Desde una unidad, su estado ya lo dice y
+                  preguntarlo dejaría que el visitante contradiga el catálogo.
+
+                  Va ARRIBA del plazo porque decide el canon inicial, que es el
+                  primer desembolso: es la pregunta más cara de la pantalla y
+                  tiene que leerse antes que nada.
+
+                  Dos botones y no un checkbox: son dos estados con nombre
+                  propio —"0 km" y "Usada"—, no una condición que se activa. Un
+                  "☐ Es 0 km" obligaría a leer la ausencia de la tilde como
+                  "usada", que es justo lo que un par de botones dice solo.
+                  Mismo tratamiento que plazo y modalidad. */}
+              {!unidad && (
+                <fieldset className="mt-6">
+                  <legend className="campo-label text-gris-400">Tipo de unidad</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { rotulo: 'Usada', ceroKm: false },
+                      { rotulo: '0 km', ceroKm: true },
+                    ].map((opcion) => {
+                      const activo = esCeroKmElegido === opcion.ceroKm;
+                      return (
+                        <button
+                          key={opcion.rotulo}
+                          type="button"
+                          aria-pressed={activo}
+                          onClick={() => setEsCeroKmElegido(opcion.ceroKm)}
+                          className={`centrado-optico inline-flex h-11 items-center rounded-sm px-4 text-sm font-medium transition-colors duration-rapido ${
+                            activo
+                              ? 'bg-white text-negro'
+                              : 'bg-negro-800 text-gris-300 hover:bg-negro-700 hover:text-white'
+                          }`}
+                        >
+                          {opcion.rotulo}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-gris-400">
+                    Cambia el canon inicial: una 0 km arranca abonando{' '}
+                    <span className="dato text-white">3</span> cuotas, una usada{' '}
+                    <span className="dato text-white">1</span>.
+                  </p>
+                </fieldset>
+              )}
+
               {selectorPlazo}
 
               {/* Mismo criterio que en la estándar: las condiciones del leasing
