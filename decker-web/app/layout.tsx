@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Overpass } from 'next/font/google';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import AnotarOrigen from '@/components/layout/AnotarOrigen';
 import AvisoDeLead from '@/components/ui/AvisoDeLead';
 import BarraComparador from '@/components/unidades/BarraComparador';
 import { getResumenDeUnidades, getSucursales } from '@/lib/api';
@@ -188,6 +189,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             quedó registrada llega DESPUÉS de que el visitante se fue a
             WhatsApp, y tiene que estar donde vuelva, sea la página que sea. */}
         <AvisoDeLead />
+        <AnotarOrigen />
       </body>
     </html>
   );

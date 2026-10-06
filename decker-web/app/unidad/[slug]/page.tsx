@@ -9,7 +9,7 @@ import GaleriaUnidad from '@/components/unidades/GaleriaUnidad';
 import Migas from '@/components/ui/Migas';
 import RegistrarVisita from '@/components/unidades/RegistrarVisita';
 import UnidadGrilla from '@/components/unidades/UnidadGrilla';
-import CalculadoraFinanciacion from '@/components/financiacion/CalculadoraFinanciacion';
+import PuertaFinanciacion from '@/components/financiacion/PuertaFinanciacion';
 import EstadoBadge from '@/components/ui/EstadoBadge';
 import EncabezadoSeccion from '@/components/ui/EncabezadoSeccion';
 import {
@@ -473,11 +473,11 @@ export default async function FichaUnidad({ params }: Props) {
             titulo="Simulá esta unidad"
             descripcion={
               tienePrecio(unidad)
-                ? 'Arranca con el precio publicado y la entrega sugerida. Cambiá lo que necesites y mandale la simulación al asesor de la sucursal.'
+                ? 'Arranca con el precio publicado y la entrega sugerida. Dejá tus datos, cambiá lo que necesites y mandale el plan al asesor de la sucursal.'
                 : 'Esta unidad no tiene precio publicado: cargá el valor que te pase el asesor y simulá la operación.'
             }
           />
-          <CalculadoraFinanciacion parametros={parametros} unidad={unidad} />
+          <PuertaFinanciacion parametros={parametros} unidad={unidad} />
         </div>
       </section>
 

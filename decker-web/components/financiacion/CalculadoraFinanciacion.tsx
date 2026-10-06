@@ -10,6 +10,8 @@ import {
   formatearPrecio,
   formatearUsd,
 } from '@/lib/format';
+import type { LeadFinanciacion } from '@/lib/lead-financiacion';
+import { registrarPlanElegido } from '@/lib/leads';
 import { linkConsultaFinanciacion, linkConsultaLeasing } from '@/lib/whatsapp';
 import type { ModalidadFinanciacion, ParametrosFinanciacion, Unidad } from '@/lib/types';
 
@@ -66,11 +68,19 @@ const seleccionarTodo = (evento: React.FocusEvent<HTMLInputElement>) =>
 export default function CalculadoraFinanciacion({
   parametros,
   unidad,
+  lead,
 }: {
   parametros: ParametrosFinanciacion;
   unidad?: Unidad;
+  /**
+   * Quién está simulando, si ya dejó sus datos (ver `PuertaFinanciacion`).
+   * Firma el WhatsApp con su nombre y "Quiero este plan" anota la simulación
+   * en su fila del Sheet.
+   */
+  lead?: LeadFinanciacion;
 }) {
   const id = useId();
+  const nombreLead = lead ? `${lead.nombre} ${lead.apellido}`.trim() : undefined;
 
   const [modalidad, setModalidad] = useState<ModalidadFinanciacion>('estandar');
 
@@ -587,13 +597,25 @@ export default function CalculadoraFinanciacion({
                 </dl>
 
                 <a
-                  href={linkConsultaFinanciacion(resultadoEstandar, unidad)}
+                  href={linkConsultaFinanciacion(resultadoEstandar, unidad, nombreLead)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => {
+                    if (!lead) return;
+                    registrarPlanElegido({
+                      id: lead.id,
+                      modalidad: 'estandar',
+                      unidad: unidad?.nombre,
+                      valorUsd: resultadoEstandar.valorUsd,
+                      entregaPesos: resultadoEstandar.anticipoPesos,
+                      plazo: resultadoEstandar.plazo,
+                      cuotaPesos: resultadoEstandar.cuotaMensual,
+                    });
+                  }}
                   className="centrado-optico mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
                 >
                   <IconoWhatsapp className="h-4 w-4" />
-                  Consultar con un asesor
+                  Quiero este plan
                 </a>
               </>
             )
@@ -684,13 +706,24 @@ export default function CalculadoraFinanciacion({
               </dl>
 
               <a
-                href={linkConsultaLeasing(resultadoLeasing, unidad)}
+                href={linkConsultaLeasing(resultadoLeasing, unidad, nombreLead)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  if (!lead) return;
+                  registrarPlanElegido({
+                    id: lead.id,
+                    modalidad: 'leasing',
+                    unidad: unidad?.nombre,
+                    valorUsd: resultadoLeasing.valorUsd,
+                    plazo: resultadoLeasing.plazo,
+                    cuotaPesos: resultadoLeasing.primeraCuota,
+                  });
+                }}
                 className="centrado-optico mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-rojo text-sm font-medium text-white transition-colors duration-rapido hover:bg-rojo-700"
               >
                 <IconoWhatsapp className="h-4 w-4" />
-                Consultar con un asesor
+                Quiero este plan
               </a>
             </>
           )}

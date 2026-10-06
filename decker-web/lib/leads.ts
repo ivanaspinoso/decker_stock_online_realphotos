@@ -89,6 +89,54 @@ export function registrarOfertaDeUsado(formulario: FormData): void {
   disparar('/api/contacto/vender', formulario);
 }
 
+/**
+ * Datos que abren la calculadora. Va al Google Sheet.
+ *
+ * No hay WhatsApp en este paso, pero se manda igual sin esperar: la calculadora
+ * se abre en el acto, y si el registro falla la persona no tiene nada que hacer
+ * con ese error. La ruta no devuelve `mensaje`, así que tampoco hay aviso: queda
+ * en el log del servidor.
+ */
+export function registrarLeadFinanciacion(datos: {
+  id: string;
+  nombre: string;
+  apellido: string;
+  celular: string;
+  email: string;
+  aceptaWhatsapp: boolean;
+  unidad?: { slug: string; nombre: string };
+  pagina: string;
+  origen: unknown;
+  /** Campo trampa: invisible para personas, lo llenan los bots. */
+  web?: string;
+}): void {
+  disparar(
+    '/api/contacto/financiacion',
+    JSON.stringify({ tipo: 'lead', ...datos }),
+    'application/json',
+  );
+}
+
+/**
+ * "Quiero este plan": anota la simulación en la MISMA fila del lead. Sale en
+ * el mismo gesto que abre WhatsApp, así que acá el no-await sí es obligatorio.
+ */
+export function registrarPlanElegido(datos: {
+  id: string;
+  modalidad: 'estandar' | 'leasing';
+  unidad?: string;
+  valorUsd: number;
+  entregaPesos?: number;
+  plazo: number;
+  cuotaPesos: number;
+}): void {
+  disparar(
+    '/api/contacto/financiacion',
+    JSON.stringify({ tipo: 'plan', ...datos }),
+    'application/json',
+  );
+}
+
 function disparar(ruta: string, cuerpo: BodyInit, contentType?: string): void {
   try {
     fetch(ruta, {

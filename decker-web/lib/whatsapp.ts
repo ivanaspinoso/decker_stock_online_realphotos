@@ -77,9 +77,9 @@ export function linkConsultaUnidad(unidad: Unidad): string {
  * Encabezado común de las dos modalidades: quién escribe y por qué unidad.
  * El asesor tiene que poder contestar sin volver a preguntar la sucursal.
  */
-function encabezadoSimulacion(titulo: string, unidad?: Unidad): string[] {
+function encabezadoSimulacion(titulo: string, unidad?: Unidad, nombre?: string): string[] {
   return [
-    `Hola Decker, ${titulo}:`,
+    `Hola Decker${nombre ? `, soy ${nombre}` : ''}. ${titulo}:`,
     ``,
     ...(unidad
       ? [
@@ -97,10 +97,11 @@ function encabezadoSimulacion(titulo: string, unidad?: Unidad): string[] {
 export function linkConsultaFinanciacion(
   resultado: ResultadoFinanciacion,
   unidad?: Unidad,
+  nombre?: string,
 ): string {
   const numero = unidad ? whatsappDeSucursal(unidad.sucursalId) : WHATSAPP_GENERAL;
   const lineas = [
-    ...encabezadoSimulacion('simulé una financiación y quiero avanzar', unidad),
+    ...encabezadoSimulacion('Simulé una financiación y quiero este plan', unidad, nombre),
     `Modalidad: financiación estándar`,
     // Van el valor en dólares Y la cotización usada: si el asesor rehace la
     // cuenta con otro dólar, tiene a la vista de dónde salió la diferencia.
@@ -129,10 +130,14 @@ export function linkConsultaFinanciacion(
 }
 
 /** Consulta de leasing. Manda las dos cifras separadas: cuotas y pago final. */
-export function linkConsultaLeasing(resultado: ResultadoLeasing, unidad?: Unidad): string {
+export function linkConsultaLeasing(
+  resultado: ResultadoLeasing,
+  unidad?: Unidad,
+  nombre?: string,
+): string {
   const numero = unidad ? whatsappDeSucursal(unidad.sucursalId) : WHATSAPP_GENERAL;
   const lineas = [
-    ...encabezadoSimulacion('simulé un leasing y quiero avanzar', unidad),
+    ...encabezadoSimulacion('Simulé un leasing y quiero este plan', unidad, nombre),
     `Modalidad: leasing`,
     `Valor de la unidad: ${formatearUsd(resultado.valorUsd)}`,
     `Cotización aplicada: ${formatearPrecio(Math.round(resultado.cotizacionAplicada))} por dólar`,

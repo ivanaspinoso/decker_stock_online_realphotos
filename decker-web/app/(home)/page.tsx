@@ -5,7 +5,7 @@ import ContinuarBusqueda from '@/components/home/ContinuarBusqueda';
 import CtaDecker from '@/components/home/CtaDecker';
 import Catalogo from '@/components/home/Catalogo';
 import VistosRecientemente from '@/components/unidades/VistosRecientemente';
-import CalculadoraFinanciacion from '@/components/financiacion/CalculadoraFinanciacion';
+import PuertaFinanciacion from '@/components/financiacion/PuertaFinanciacion';
 import FormCotizarUsado from '@/components/formularios/FormCotizarUsado';
 import EncabezadoSeccion from '@/components/ui/EncabezadoSeccion';
 import {
@@ -93,7 +93,7 @@ export default async function Home({ searchParams }: Props) {
             titulo="Simulá tu operación"
             descripcion="Una herramienta simple para iniciar la consulta comercial y avanzar con un asesor Decker."
           />
-          <CalculadoraFinanciacion parametros={parametros} />
+          <PuertaFinanciacion parametros={parametros} />
         </div>
       </section>
 

@@ -341,6 +341,37 @@ reintentos automáticos en ningún flujo de lead: reintentar es la forma más
 rápida de que el envío siguiente tampoco entre. Un 429 se muestra con
 `mensajeParaElUsuario` y se deja quieto.
 
+## La calculadora pide los datos antes (leads a Google Sheets)
+
+Como en Kavak: la calculadora no se muestra hasta que la persona deja
+**celular → email → nombre y apellido**, un dato por paso. Es
+`components/financiacion/PuertaFinanciacion.tsx`, que envuelve a la
+calculadora en la home y en la ficha.
+
+```
+navegador → POST /api/contacto/financiacion   (tipo: lead)
+              → Google Sheet (Apps Script)     lib/sheets.ts
+              → Ruta Sur /contactos/contacto   (se suma, igual que los otros)
+"Quiero este plan" → POST (tipo: plan) + WhatsApp en el mismo gesto
+              → completa la MISMA fila del Sheet, buscada por `id`
+```
+
+- **Se pide una vez**: queda en `localStorage` (`decker:lead-financiacion`) y
+  las demás fichas abren la calculadora directo.
+- **Sin verificación por SMS, a propósito**: es captación, no un crédito. Se
+  valida el formato (celular argentino de 10 dígitos, acepta 0, 15 y +54 9).
+- **Origen**: `utm_*` y referrer se anotan en la primera página de la visita
+  (`AnotarOrigen` en el layout) y viajan con el lead.
+- **Casilla de WhatsApp destildada**: es el permiso que pide Meta para mandar
+  mensajes automáticos. Hoy no se manda nada automático; si Decker da de alta
+  la API de WhatsApp Business, se conecta desde la misma ruta.
+- **Instalar el Sheet**: instrucciones arriba de todo en
+  `scripts/sheets-leads.gs`. Necesita `SHEETS_WEBHOOK_URL` y
+  `SHEETS_WEBHOOK_SECRET`. Sin ellas el sitio anda y el lead queda en el log.
+- **El script escribe por POSICIÓN de columna**: renombrar encabezados no rompe
+  nada; borrar o insertar columnas en el medio, o renombrar la pestaña
+  `Leads`, sí. Columnas nuevas, siempre al final.
+
 ## La API key nunca llega al navegador
 
 `RUTASUR_API_KEY` **no lleva el prefijo `NEXT_PUBLIC_`**, y no es un descuido.
@@ -763,5 +794,7 @@ rm -rf .next && npm run build
   tener precios.
 - **Panel de carga/edición.** En veremos, esperando a Eduardo. Los endpoints de
   escritura no están documentados.
+- **Envío automático de WhatsApp a los leads.** Espera que Decker dé de alta la
+  API de WhatsApp Business en Meta (cuenta verificada, número y plantilla).
 - **Los nombres de campo de los tres POST de contacto.** Se confirman con el
   primer 422 real.
