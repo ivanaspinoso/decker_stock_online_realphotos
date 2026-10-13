@@ -6,6 +6,7 @@ import AnotarOrigen from '@/components/layout/AnotarOrigen';
 import AvisoDeLead from '@/components/ui/AvisoDeLead';
 import BarraComparador from '@/components/unidades/BarraComparador';
 import { getResumenDeUnidades, getSucursales } from '@/lib/api';
+import { OPEN_GRAPH_BASE, URL_SITIO } from '@/lib/sitio';
 import './globals.css';
 
 /**
@@ -79,38 +80,13 @@ export const metadata: Metadata = {
   description:
     'Camiones 0 km y usados seleccionados, semis, bateas y utilitarios en las ' +
     'cinco agencias Decker. Mirá el stock, simulá financiación y entregá tu usado.',
-  metadataBase: new URL('https://deckercamiones.com.ar'),
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    siteName: 'Decker Camiones',
-    url: '/',
-    /**
-     * Imagen de la tarjeta al compartir. WhatsApp es EL canal de este sitio,
-     * así que esto se ve más que cualquier otra cosa que no sea la home.
-     *
-     * Es una imagen propia y no la foto del banner. La del banner medía
-     * 1920x1440 —proporción 4:3— y las tarjetas de WhatsApp, Facebook y
-     * LinkedIn recortan a 1,91:1: se comían el tercio de arriba y el de abajo
-     * sin control. Además pesaba 826 KB, que es lo que tiene que bajar el
-     * servidor del otro lado antes de dibujar la miniatura.
-     *
-     * `og.jpg` es esa misma foto del patio ya recortada a 1200x630 —la medida
-     * que piden—, oscurecida y con el logo encima, y pesa 71 KB. La marca se
-     * lee en la miniatura, que es todo lo que se le pide.
-     */
-    images: [
-      {
-        url: '/marca/og.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Decker Camiones — patio de unidades',
-      },
-    ],
-  },
+  metadataBase: new URL(URL_SITIO),
+  // SIN `alternates.canonical` acá, a propósito: lo heredaban todas las páginas
+  // y las fichas quedaban declaradas como copias de la home. Cada página pone
+  // el suyo con `urlPropia()` de `lib/sitio.ts`.
+  // Imagen, nombre del sitio e idioma: ver `OPEN_GRAPH_BASE`. El `og:url` lo
+  // pone cada página.
+  openGraph: OPEN_GRAPH_BASE,
 
   /**
    * Twitter/X usa sus propias etiquetas y, sin ellas, algunos clientes que las

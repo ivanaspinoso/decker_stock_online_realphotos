@@ -391,7 +391,20 @@ export default function PanelFiltros({
   resultados: number;
 }) {
   return (
-    <aside aria-label="Filtros del catálogo" className="hidden lg:sticky lg:top-24 lg:block">
+    /**
+     * `self-start` ES LO QUE HACE ANDAR EL `sticky`. Sin eso, como hijo del
+     * grid, el panel se estira a la altura entera de la fila —la de las 24
+     * tarjetas— y un elemento tan alto como su contenedor no tiene lugar donde
+     * pegarse: los filtros se quedaban arriba y al bajar la columna izquierda
+     * quedaba vacía.
+     *
+     * El alto tope con scroll propio es para pantallas bajas: un panel más alto
+     * que la ventana, pegado arriba, escondería para siempre los últimos campos.
+     */
+    <aside
+      aria-label="Filtros del catálogo"
+      className="hidden lg:sticky lg:top-24 lg:block lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:rounded-lg lg:[scrollbar-width:thin]"
+    >
       <div className="rounded-lg bg-white p-5 shadow-nivel-1">
         <div className="flex items-baseline justify-between">
           <h2 className="titulo-tarjeta">Filtros</h2>

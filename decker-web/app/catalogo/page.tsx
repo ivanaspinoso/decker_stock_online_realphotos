@@ -4,6 +4,7 @@ import herostockImage from '@/public/marca/herostock.webp';
 import CatalogoCliente from '@/components/catalogo/CatalogoCliente';
 import { UNIDADES_POR_PAGINA } from '@/lib/filtros';
 import VistosRecientemente from '@/components/unidades/VistosRecientemente';
+import { urlPropia } from '@/lib/sitio';
 import { getCatalogoCompleto, getOpcionesCatalogo, getResumenDeUnidades, getSucursales } from '@/lib/api';
 import type {
   EstadoUnidad,
@@ -25,6 +26,9 @@ export const metadata: Metadata = {
   description:
     'Camiones 0 km y usados seleccionados, semis, bateas y utilitarios en las ' +
     'cinco agencias Decker. Filtrá por tipo, marca, año, sucursal y estado.',
+  // Canonical a `/catalogo` también desde las páginas filtradas o paginadas:
+  // son el mismo stock ordenado o cortado de otra forma (ver `robots.ts`).
+  ...urlPropia('/catalogo'),
 };
 
 interface Props {

@@ -18,6 +18,10 @@ import {
   getSucursales,
 } from '@/lib/api';
 import { armarCategoriasBusqueda } from '@/lib/exploracion';
+import { urlPropia } from '@/lib/sitio';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = urlPropia('/');
 
 interface Props {
   // Desde Next 15 `searchParams` es una Promise: la página empieza a renderizar

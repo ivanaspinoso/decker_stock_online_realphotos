@@ -359,23 +359,46 @@ export function mapearGaleria(crudas: ImagenApi[], miniatura: string): string[] 
 }
 
 /**
- * Deja la URL de una foto lista para `next/image`.
+ * Deja la URL de una foto lista para el sitio.
+ *
+ * LAS FOTOS DEL HOST DE RUTA SUR SE REESCRIBEN A NUESTRO PROXY:
+ * `https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/x.jpeg` → `/fotos/thumb/x.jpeg`.
+ * Ese server es inestable y el proxy (`app/fotos/[carpeta]/[archivo]/route.ts`)
+ * baja cada foto una vez y la sirve cacheada desde Vercel. El nombre de archivo
+ * se conserva, así que `nombreDeArchivo()` sigue uniendo miniatura y galería.
  *
  * LAS URLs DE ESTA API TRAEN ESPACIOS SIN ESCAPAR: los archivos se subieron con
  * el nombre que les puso WhatsApp ("...WhatsApp Image 2025-06-05 at 15.10.09.jpeg")
- * y el backend los devuelve tal cual. Sin codificar, el optimizador de imágenes
- * de Next las rechaza como URL inválida y la tarjeta queda sin foto.
+ * y el backend los devuelve tal cual. Se codifica el nombre; si ya viene
+ * codificado —hoy ninguno lo está, pero podría cambiar— se decodifica antes para
+ * no escapar los `%` dos veces.
  *
- * `encodeURI` y no `encodeURIComponent`: hay que escapar los espacios dejando
- * en paz los `:` y las `/` de la URL. Si ya viene codificada —hoy ninguna lo
- * está, pero podría cambiar— se deja como está para no escapar los `%`.
+ * Una URL de otro host o de otra carpeta queda como está (codificada con
+ * `encodeURI`), sin pasar por el proxy.
  */
 function urlDeFoto(url: unknown): string {
   if (typeof url !== 'string') return '';
   const limpia = url.trim();
   if (!limpia) return '';
   if (!/^https?:\/\//i.test(limpia)) return '';
+
+  const deRutaSur =
+    /^https?:\/\/admin\.usados\.rutasurtrucks\.com\.ar\/uploads\/(thumb|croped)\/([^/]+)$/i.exec(limpia);
+  if (deRutaSur) {
+    const [, carpeta, archivo] = deRutaSur;
+    return `/fotos/${carpeta.toLowerCase()}/${encodeURIComponent(decodificarSiHaceFalta(archivo))}`;
+  }
+
   return limpia.includes('%') ? limpia : encodeURI(limpia);
+}
+
+function decodificarSiHaceFalta(texto: string): string {
+  if (!texto.includes('%')) return texto;
+  try {
+    return decodeURIComponent(texto);
+  } catch {
+    return texto;
+  }
 }
 
 function nombreDeArchivo(url: string): string {
@@ -404,11 +427,31 @@ export function mapearWhatsappDeAgencias(agencias: AgenciaApi[]): Map<IdSucursal
   for (const agencia of agencias) {
     const id = SUCURSALES_POR_COMPANY[agencia.company_id];
     if (!id) continue;
-    const numero = (agencia.company_whasapp ?? '').replace(/\D/g, '');
-    if (numero.length >= 10) porSucursal.set(id, numero);
+    const numero = whatsappArgentino(agencia.company_whasapp ?? '');
+    if (numero) porSucursal.set(id, numero);
   }
 
   return porSucursal;
+}
+
+/**
+ * Un número de WhatsApp argentino en el formato que entiende `wa.me`:
+ * `549` + característica + número, sin el 0 ni el 15.
+ *
+ * EL 9 ES OBLIGATORIO y la API lo omite: Bahía Blanca llega como
+ * `542262411046`. Sin el 9, `wa.me` busca un teléfono FIJO con ese número y el
+ * chat no abre. Se agrega acá en vez de pedirle al backend que lo corrija,
+ * porque el próximo número que carguen a mano puede venir igual.
+ *
+ * Devuelve `null` si no parece un número completo (menos de 10 dígitos
+ * nacionales), como el `"0"` de los campos sin cargar.
+ */
+export function whatsappArgentino(crudo: string): string | null {
+  let digitos = crudo.replace(/\D/g, '');
+  if (digitos.startsWith('549')) digitos = digitos.slice(3);
+  else if (digitos.startsWith('54')) digitos = digitos.slice(2);
+  digitos = digitos.replace(/^0/, '');
+  return digitos.length === 10 ? `549${digitos}` : null;
 }
 
 /** `company_id` → sucursal del sitio, o `null` si no es una de las cinco. */

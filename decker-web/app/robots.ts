@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { URL_SITIO } from '@/lib/sitio';
 
 /**
  * Sin este archivo Next no publica ningún robots.txt y cada buscador decide por
@@ -8,7 +9,7 @@ import type { MetadataRoute } from 'next';
  * genera cientos de combinaciones que devuelven el mismo stock ordenado de otra
  * forma. Se indexa `/catalogo` una vez y las variantes quedan afuera.
  */
-const SITIO = 'https://deckercamiones.com.ar';
+const SITIO = URL_SITIO;
 
 export default function robots(): MetadataRoute.Robots {
   return {

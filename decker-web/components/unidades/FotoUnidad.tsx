@@ -2,7 +2,6 @@
 
 import Image, { type ImageProps } from 'next/image';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconoCamion } from '@/components/ui/Iconos';
 
 /**
  * Foto de una unidad con su estado de carga.
@@ -168,7 +167,7 @@ export default function FotoUnidad({
           fallado: el visitante no sabe si la foto está viniendo, si la unidad no
           tiene, o si algo se rompió, y en la duda asume lo peor.
           
-          Un ícono y tres palabras cambian eso. No arreglan la foto —eso depende
+          El logo de Decker y tres palabras cambian eso. No arreglan la foto —eso depende
           del server de Decker, ver "Las fotos" en CLAUDE.md— pero convierten una
           falla en un estado previsto, que es la diferencia entre "está roto" y
           "esta unidad no tiene foto ahora".
@@ -180,7 +179,16 @@ export default function FotoUnidad({
           aria-hidden="true"
           className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-gris-100 text-gris-400"
         >
-          <IconoCamion className="h-7 w-7" />
+          {/* El logo es blanco (va sobre el pie negro): `brightness-0` lo pasa a
+              negro y la opacidad lo baja a marca de agua sobre el gris. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/marca/LogoDeckerNegativo.png"
+            alt=""
+            width={131}
+            height={135}
+            className="h-[26%] max-h-14 min-h-6 w-auto opacity-25 brightness-0"
+          />
           <span className="text-[11px] font-medium tracking-wide">Foto no disponible</span>
         </div>
       )}

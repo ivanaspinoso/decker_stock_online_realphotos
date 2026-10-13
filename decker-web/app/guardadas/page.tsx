@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { urlPropia } from '@/lib/sitio';
 import GuardadasCliente from '@/components/unidades/GuardadasCliente';
 import { getCatalogoCompleto } from '@/lib/api';
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   description:
     'Las unidades que guardaste en este dispositivo. No hace falta cuenta: quedan en tu navegador.',
   robots: { index: false, follow: true },
+  ...urlPropia('/guardadas'),
 };
 
 /**

@@ -533,22 +533,33 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
 
 **Cómo queda:**
 
-- Las fotos del stock van **directo del navegador** a
-  `admin.usados.rutasurtrucks.com.ar`. Cada visitante las pide desde su IP, así
-  que el límite de volumen de ese server (cortaba después de ~100 fotos seguidas
-  desde una misma IP) ya no lo pega Vercel por todos.
+- Las fotos del stock pasan por **nuestro proxy**: `/fotos/thumb/<archivo>` y
+  `/fotos/croped/<archivo>` (`app/fotos/[carpeta]/[archivo]/route.ts`).
+  `urlDeFoto()` en `mapeo.ts` reescribe las URLs de la API a esa ruta. El proxy
+  baja cada foto UNA vez y la sirve con caché de un año: caché de datos de Next
+  (compartida entre regiones) + CDN de Vercel (`s-maxage`). No recodifica
+  nada, así que no gasta el cupo del optimizador.
+  - Ir directo del navegador al server de Ruta Sur se probó y no alcanzó: ese
+    server da 503 o cuelga, y una página del catálogo quedaba con 5 de 15 fotos.
+  - Sólo acepta esas dos carpetas y nombres de imagen: no es un proxy abierto.
+  - Corta a los 6 s y contesta 503 `no-store`; el reintento lo hace el
+    navegador (`FotoUnidad`). No reintentar también en el servidor: se
+    multiplican las esperas.
+  - Con la caché vacía (foto nunca pedida) el primer visitante igual depende de
+    ese server. La solución definitiva sigue siendo copiar las fotos a un
+    storage propio.
 - Las fotos propias (`public/marca/`) se usan en **WebP ya comprimido**
   (`camiones.webp` ~60 KB, `herostock.webp` ~200 KB, `banner.webp` ~340 KB).
   Una foto nueva hay que comprimirla antes de subirla: nadie la achica después.
   Con sharp, que ya viene con Next:
   `node -e "require('sharp')('in.jpg').webp({quality:72}).toFile('out.webp')"`.
-- `FotoUnidad.tsx` sigue reintentando dos veces (1,5 s y 5 s) una foto que no
-  llegó: el server de Ruta Sur igual puede cortar una conexión.
+- `FotoUnidad.tsx` reintenta dos veces (1,5 s y 5 s) una foto que no llegó, y
+  si igual falla muestra el logo de Decker con "Foto no disponible", no un
+  gris vacío.
 - `GaleriaUnidad` sigue escalonando las miniaturas de la ficha (primero la
   foto grande, después una cada 250 ms): ahora le ahorra ese pico al server
   desde la IP del visitante.
-- El script de precalentado se borró: no hay caché de imágenes que calentar.
-  La regla de "una foto, un `sizes`" tampoco aplica más: sin optimizador, la
+- El script de precalentado se borró. La regla de "una foto, un `sizes`" tampoco aplica más: sin optimizador, la
   URL es la misma para cualquier tamaño.
 - El carrusel de las tarjetas (`FotosDeTarjeta.tsx`, sacado porque las fotos de
   `croped/` daban 504 en el optimizador) se podría volver a probar.
@@ -557,7 +568,7 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
 otro CDN. La solución de fondo para las fotos del stock sigue siendo la misma:
 copiarlas una vez a un storage propio (Vercel Blob, S3, Cloudinary).
 
-**Si ves fotos grises:** `curl -I "https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/<archivo>"`.
+**Si ves el logo en vez de fotos:** `curl -I "https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/<archivo>"`.
 Si cuelga o da `000`, el server está bloqueado y no es el código: se recupera
 solo en unos minutos.
 

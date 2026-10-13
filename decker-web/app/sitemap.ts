@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { URL_SITIO } from '@/lib/sitio';
 import { getSlugsDeUnidades } from '@/lib/api';
 
 /**
@@ -9,7 +10,7 @@ import { getSlugsDeUnidades } from '@/lib/api';
  * el sitemap no se puede desincronizar del stock: si entra una unidad nueva,
  * aparece acá sola en el próximo build.
  */
-const SITIO = 'https://deckercamiones.com.ar';
+const SITIO = URL_SITIO;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const slugs = await getSlugsDeUnidades();

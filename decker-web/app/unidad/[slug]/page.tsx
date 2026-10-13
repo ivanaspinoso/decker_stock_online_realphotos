@@ -37,6 +37,7 @@ import {
   tienePrecio,
 } from '@/lib/format';
 import { linkConsultaUnidad, linkWhatsapp } from '@/lib/whatsapp';
+import { URL_SITIO, urlPropia } from '@/lib/sitio';
 import type { Sucursal, Unidad } from '@/lib/types';
 
 interface Props {
@@ -79,9 +80,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!unidad) notFound();
 
   const sucursal = await getSucursalPorId(unidad.sucursalId);
+  const propia = urlPropia(`/unidad/${slug}`);
 
   return {
     title: unidad.nombre,
+    alternates: propia.alternates,
     /* Con la descripción del aviso si existe —57 de 240 la tienen— y con la
        ficha técnica si no: lo que Google muestra debajo del título no puede
        quedar en blanco en tres de cada cuatro unidades. */
@@ -89,6 +92,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       unidad.descripcion || resumenTecnico(unidad.ficha)
     }`,
     openGraph: {
+      ...propia.openGraph,
       title: `${unidad.nombre} | Decker Camiones`,
       description: unidad.descripcion || resumenTecnico(unidad.ficha),
       /**
@@ -157,7 +161,7 @@ export default async function FichaUnidad({ params }: Props) {
           que "todo el stock". "Volvo" lo lleva a los camiones Volvo, que es
           el vecindario de lo que estaba mirando. */}
       <Migas
-        base="https://deckercamiones.com.ar"
+        base={URL_SITIO}
         niveles={[
           { texto: 'Inicio', href: '/' },
           { texto: 'Stock', href: '/catalogo' },
