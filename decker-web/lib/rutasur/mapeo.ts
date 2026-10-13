@@ -218,7 +218,7 @@ function mapearUnidad(crudo: VehiculoApi, precios: PreciosPorUnidad): Unidad {
 
     sucursalId: sucursalDe(crudo.company_id),
 
-    // Lo decide `marcarDestacadas()` sobre el listado completo, no la unidad
+    // Lo decide `mapearListado()` sobre el listado completo, no la unidad
     // suelta: es una posición relativa, no una propiedad de la unidad.
     destacada: false,
 
@@ -246,45 +246,61 @@ function mapearUnidad(crudo: VehiculoApi, precios: PreciosPorUnidad): Unidad {
  * marcadas.
  *
  * Es la puerta que usan el catálogo, la búsqueda y el stock por sucursal. Hace
- * las tres cosas juntas porque la tercera lo exige: "destacada" es una posición
- * RELATIVA dentro del listado, no una propiedad de la unidad suelta, y no se
- * puede resolver mapeando de a una.
+ * las tres cosas juntas porque la tercera lo exige: sin selección del CRM,
+ * "destacada" es una posición RELATIVA dentro del listado, no una propiedad de
+ * la unidad suelta, y no se puede resolver mapeando de a una.
+ *
+ * `idsDestacados` es lo que devolvió `GET /vehiculos?destacado=1`: las que
+ * alguien eligió a mano en el CRM (crm.rutasurtrucks.com.ar/unidades/destacadas).
+ * Manda esa selección. Sólo si no hay ninguna publicable entre ellas —nadie
+ * eligió nada todavía, o el pedido falló— se cae al criterio automático.
  */
 export function mapearListado(
   crudos: VehiculoApi[],
   precios: PreciosPorUnidad = new Map(),
+  idsDestacados: readonly number[] = [],
 ): Unidad[] {
   const publicables = crudos.filter(esPublicable);
+  const destacadas = elegirDestacadas(publicables, idsDestacados);
+
+  return publicables.map((crudo) => ({
+    ...mapearUnidad(crudo, precios),
+    destacada: destacadas.has(crudo.vehicle_id),
+  }));
+}
+
+function elegirDestacadas(
+  publicables: VehiculoApi[],
+  idsDestacados: readonly number[],
+): Set<number> {
+  // Se cruza con las publicables: el CRM puede tener marcada una unidad que el
+  // sitio no muestra (un neumático, una ya vendida), y esa no cuenta.
+  const publicadas = new Set(publicables.map((crudo) => crudo.vehicle_id));
+  const elegidas = new Set(idsDestacados.filter((id) => publicadas.has(id)));
+  if (elegidas.size > 0) return elegidas;
 
   // La fecha de alta no sobrevive al mapeo —no es un campo de `Unidad`— así que
-  // el orden se calcula acá, sobre el crudo, y se aplica después.
-  const masNuevas = new Set(
+  // el orden se calcula acá, sobre el crudo.
+  return new Set(
     [...publicables]
       .sort((a, b) => String(b.vehicle_entry).localeCompare(String(a.vehicle_entry)))
       .slice(0, CANTIDAD_DESTACADAS)
       .map((crudo) => crudo.vehicle_id),
   );
-
-  return publicables.map((crudo) => ({
-    ...mapearUnidad(crudo, precios),
-    destacada: masNuevas.has(crudo.vehicle_id),
-  }));
 }
 
 /**
- * Cuántas unidades se marcan como destacadas.
+ * Cuántas unidades se marcan como destacadas CUANDO EL CRM NO ELIGIÓ NINGUNA.
  *
- * POR QUÉ SE CALCULA Y NO SALE DE LA API: `vehicle_destacado` existe en la base
- * pero llega `null` en las 281 unidades —nadie lo carga desde el panel—. Sin un
- * criterio de acá, la home se queda sin nada que mostrar.
- *
- * El criterio es "lo último que entró": se mantiene solo, sin que nadie edite
- * una lista, y es lo que un visitante que ya conoce el stock quiere ver
- * primero. El día que Eduardo empiece a cargar `vehicle_destacado`, esto pasa a
- * leerlo y la home no se entera.
+ * La selección manual vive en el CRM y llega por `GET /vehiculos?destacado=1`
+ * (ver `traerIdsDestacados`). Mientras esa lista venga vacía —que es como
+ * arranca— la home no puede quedarse sin vidriera, así que se cae a "lo último
+ * que entró" por `vehicle_entry`: se mantiene solo y es lo que un visitante
+ * que ya conoce el stock quiere ver primero.
  *
  * Son 8 y la home muestra 6: el sobrante le da a la ordenación por relevancia
- * una banda de "recientes" un poco más ancha que la vidriera.
+ * una banda de "recientes" un poco más ancha que la vidriera. A la selección
+ * del CRM no se le aplica tope: se respeta entera.
  */
 export const CANTIDAD_DESTACADAS = 8;
 

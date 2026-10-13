@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import heroImage from '@/public/marca/camiones.png';
+import heroImage from '@/public/marca/camiones.webp';
 import Link from 'next/link';
 import BuscadorRapido from '@/components/home/BuscadorRapido';
 import NumeroAnimado from '@/components/ui/NumeroAnimado';
@@ -58,12 +58,12 @@ export default function Hero({
             abre a pantalla completa), `loop` lo encadena y `autoPlay` lo
             dispara.
 
-            La foto queda abajo, de piso, y NO como `poster`: el atributo toma
-            la ruta cruda de /public y bajaría el PNG entero —1,7 MB— salteando
-            el optimizado de next/image. Con el <Image> debajo, el navegador
-            baja la versión chica en formato moderno y muestra su blur mientras
-            llega; el video la tapa cuando tiene cuadros. Sigue siendo la
-            candidata a LCP de la home, así que conserva su `preload`.
+            La foto queda abajo, de piso, y NO como `poster`: con el <Image>
+            debajo se muestra su blur mientras llega y el video la tapa cuando
+            tiene cuadros. Es un WebP ya comprimido (~60 KB) porque el sitio no
+            usa el optimizador de imágenes de Vercel —ver `next.config.mjs`—.
+            Sigue siendo la candidata a LCP de la home, así que conserva su
+            `preload`.
 
             `aria-hidden` y sin controles: es fondo, no contenido. */}
         <Image

@@ -90,12 +90,46 @@ export async function traerCatalogo(filtros: FiltrosDeApi = {}): Promise<Unidad[
    * "Consultar" como hasta ahora. El día que la key esté cargada, los precios
    * aparecen solos: no hay ningún componente que tocar.
    */
-  const [crudos, precios] = await Promise.all([
+  const [crudos, precios, idsDestacados] = await Promise.all([
     traerCrudos(RUTAS.listado, filtros),
     traerPrecios(),
+    traerIdsDestacados(),
   ]);
 
-  return mapearListado(crudos, precios);
+  return mapearListado(crudos, precios, idsDestacados);
+}
+
+/**
+ * Las unidades que alguien eligió a mano como destacadas, desde
+ * `GET /vehiculos?destacado=1`. Se administran en el CRM, en
+ * crm.rutasurtrucks.com.ar/unidades/destacadas.
+ *
+ * Es un pedido más cada cinco minutos (mismo `revalidate` que el catálogo), no
+ * uno por unidad: la API devuelve los vehículos ya filtrados.
+ *
+ * NUNCA TIRA. Si falla, devuelve `[]` y la home se arma con las más nuevas
+ * (ver `CANTIDAD_DESTACADAS`): perder la vidriera elegida es un detalle,
+ * perder el catálogo entero por eso no.
+ *
+ * Y si la API ignorara el filtro —devolver todo el stock con un 200 es
+ * exactamente el tipo de cosa que ya hizo con `limit`—, todas las unidades
+ * saldrían destacadas. Por eso, si vuelven tantas como el tope de una página
+ * del listado, se descarta y se avisa en el log.
+ */
+async function traerIdsDestacados(): Promise<number[]> {
+  try {
+    const crudos = await traerCrudos(RUTAS.listado, { destacado: 1 });
+    if (crudos.length >= TAMANIO_DE_PAGINA) {
+      console.error(
+        `[rutasur] ?destacado=1 devolvió ${crudos.length} unidades: parece que la API ignoró el filtro. Se usan las más nuevas.`,
+      );
+      return [];
+    }
+    return crudos.map((crudo) => crudo.vehicle_id);
+  } catch (error) {
+    console.error('[rutasur] No se pudieron traer las destacadas del CRM:', error);
+    return [];
+  }
 }
 
 /**

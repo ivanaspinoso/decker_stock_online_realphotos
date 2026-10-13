@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import bannerImage from '@/public/marca/banner.jpg';
+import bannerImage from '@/public/marca/banner.webp';
 import { IconoWhatsapp } from '@/components/ui/Iconos';
 import { linkConsultaGeneral } from '@/lib/whatsapp';
 

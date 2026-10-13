@@ -116,8 +116,8 @@ Funciones a reimplementar: `getUnidadesDestacadas`, `getCatalogoCompleto`,
    `lib/filtros.ts` queda como fallback.
 5. **Revalidación.** `getSlugsDeUnidades` alimenta el `generateStaticParams` de la
    ficha. Con datos remotos, agregar `revalidate` o pasar la ruta a dinámica.
-6. **Fotos.** Con imágenes remotas hay que declarar el host en `next.config.mjs`
-   (`images.remotePatterns`).
+6. **Fotos.** El sitio corre con `images.unoptimized: true` (el optimizador de Vercel
+   cobra pasado el cupo y contesta 402). Ver `next.config.mjs`.
 
 ---
 

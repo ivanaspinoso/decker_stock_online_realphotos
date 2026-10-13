@@ -30,10 +30,11 @@ type Estado = 'inicial' | 'cargando' | 'lista' | 'fallo';
  * POR QUÉ HACE FALTA REINTENTAR
  *
  * El server de fotos de Decker corta las conexiones cuando se le piden muchas
- * imágenes al mismo tiempo, y una grilla de catálogo pide una docena de una. El
- * optimizador de Next se cansa de esperarlo y contesta 504; el navegador, ante
- * un 504, **no reintenta nunca**: esa foto queda rota hasta que alguien recargue
- * la página. Con dos reintentos espaciados, el 504 pasa de ser una foto muerta a
+ * imágenes al mismo tiempo, y una grilla de catálogo pide una docena de una.
+ * Las fotos van directo del navegador a ese server (el sitio no usa el
+ * optimizador de imágenes, ver `next.config.mjs`), y ante una conexión cortada
+ * el navegador **no reintenta nunca**: esa foto queda rota hasta que alguien
+ * recargue la página. Con dos reintentos espaciados, la foto muerta pasa a ser
  * una foto que tarda tres segundos.
  *
  * POR QUÉ ESPACIADOS Y NO INMEDIATOS
@@ -103,10 +104,9 @@ export default function FotoUnidad({
    *
    * El `key` con el número de intento es lo que hace que pase algo: React
    * desmonta el `<img>` y monta uno nuevo, y el navegador vuelve a pedir la
-   * misma URL. Si en vez de eso le agregáramos un parámetro al `src` para
-   * "romper la caché", cada reintento sería una VARIANTE NUEVA para el
-   * optimizador de Next —otra descarga del original desde el server de Decker—,
-   * que es exactamente la carga que estamos tratando de no generar.
+   * misma URL. No se le agrega un parámetro al `src` para "romper la caché":
+   * una URL distinta por intento son fotos que el navegador ya no puede
+   * reusar entre la tarjeta, la ficha y la próxima visita.
    */
   const reintentar = () => {
     if (intento >= REINTENTOS.length) {
@@ -139,8 +139,8 @@ export default function FotoUnidad({
          * UNA FOTO QUE NO LLEGA SE REINTENTA, Y RECIÉN DESPUÉS SE ESCONDE.
          *
          * Pasa de verdad y no es teórico: el server de fotos de Decker corta
-         * las conexiones cuando se le piden muchas al mismo tiempo, el
-         * optimizador de Next contesta 504 y el navegador **no reintenta solo**.
+         * las conexiones cuando se le piden muchas al mismo tiempo y el
+         * navegador **no reintenta solo**.
          * Sin esto, una tarjeta del catálogo queda sin foto hasta que alguien
          * recargue.
          *

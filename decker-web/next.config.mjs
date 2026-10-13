@@ -13,59 +13,33 @@ const nextConfig = {
 
   images: {
     /**
-     * Las fotos del stock viven en el servidor de la API, no en este repo.
+     * SIN OPTIMIZADOR DE IMÁGENES. Cada <Image> sirve el archivo tal cual.
      *
-     * Sin este permiso, `next/image` rechaza toda URL externa y el catálogo
-     * entero queda sin fotos. El host es el único que devuelve la API —tanto
-     * las miniaturas de `/uploads/thumb/` como las de `/uploads/croped/`— y se
-     * lista explícito, no con un comodín: un `hostname: '**'` convierte al
-     * optimizador de imágenes en un proxy abierto que cualquiera puede usar
-     * para servir archivos ajenos a costa nuestra.
+     * POR QUÉ: en Vercel el optimizador (`/_next/image`) tiene cupo mensual, y
+     * el plan del sitio lo agotó. Pasado el cupo, Vercel contesta
+     * `402 Payment Required` (`OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED`) a
+     * TODAS las imágenes —también a las del propio repo—, y encima con
+     * `Cache-Control: immutable` de un año: el navegador se guarda el error.
      *
-     * `rutasurtrucks.com.ar` va aparte porque de ahí salen los íconos de
-     * categoría (`type_image`).
+     * Lo que lo consumía eran las fotos del stock: ~245 unidades, cada una con
+     * su galería, por cada ancho que se pidiera. Y no ganaba nada: esas fotos ya
+     * vienen chicas del server de Ruta Sur (la miniatura de `/uploads/thumb/`
+     * pesa ~16 KB, la de `/uploads/croped/` ~60 KB).
+     *
+     * Las fotos propias del sitio (`public/marca/`) están guardadas ya
+     * comprimidas en WebP. Si se agrega una nueva, comprimirla antes de
+     * subirla: acá nadie la va a achicar.
+     *
+     * Efecto secundario bueno: ahora cada visitante baja las fotos del stock
+     * directo del server de Ruta Sur, desde su propia IP. Antes las pedía todas
+     * el servidor de Vercel desde unas pocas IPs, que es justo lo que hacía
+     * saltar el límite de volumen de ese server (ver CLAUDE.md, "Las fotos").
+     *
+     * Para volver a optimizar hace falta un plan con cupo (Vercel Pro) o un
+     * `loader` contra otro CDN. Sacar esta línea sin eso trae el 402 de vuelta.
      */
-    remotePatterns: [
-      { protocol: 'https', hostname: 'admin.usados.rutasurtrucks.com.ar', pathname: '/uploads/**' },
-      { protocol: 'https', hostname: 'rutasurtrucks.com.ar', pathname: '/categorias/**' },
-    ],
+    unoptimized: true,
 
-    /**
-     * Las fotos del sitio son PNG pesados (el hero solo son ~1,7 MB). Next las
-     * recodifica al vuelo: con AVIF primero y WebP de respaldo, el navegador se
-     * lleva la más chica que sepa leer en vez del PNG original.
-     *
-     * El orden importa: Next prueba en orden y sirve el primero que el
-     * navegador acepte.
-     */
-    formats: ['image/avif', 'image/webp'],
-
-    /**
-     * MENOS ANCHOS = MENOS PEDIDOS AL SERVER DE FOTOS.
-     *
-     * Next descarga el original una vez por cada combinación de ancho y calidad
-     * que algún navegador llegue a pedir. Con la lista que trae por defecto
-     * —ocho `deviceSizes` y ocho `imageSizes`— el mismo camión se puede bajar
-     * del server de Decker una docena de veces.
-     *
-     * Y ese server corta las conexiones cuando se le pide de más: medido, una
-     * sola carga del catálogo alcanza para que empiece a dejar fotos sin
-     * responder, y las que no llegan se ven rotas.
-     *
-     * Estos seis anchos cubren las pantallas reales sin dejar a nadie con una
-     * foto estirada: 640 y 828 para teléfonos, 1080 y 1280 para tablets y
-     * notebooks, 1920 y 2560 para monitores grandes y pantallas retina. Los
-     * `imageSizes` son para las miniaturas de la galería, que miden 180px.
-     */
-    deviceSizes: [640, 828, 1080, 1280, 1920, 2560],
-    imageSizes: [128, 256, 384],
-
-    /**
-     * Cachea la versión ya optimizada 30 días. El default son 60 segundos, que
-     * para un catálogo cuyas fotos no cambian significa recodificar la misma
-     * imagen una y otra vez.
-     */
-    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
 };
 

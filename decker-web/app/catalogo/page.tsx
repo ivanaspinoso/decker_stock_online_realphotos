@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import herostockImage from '@/public/marca/herostock.jpg';
+import herostockImage from '@/public/marca/herostock.webp';
 import CatalogoCliente from '@/components/catalogo/CatalogoCliente';
 import { UNIDADES_POR_PAGINA } from '@/lib/filtros';
 import VistosRecientemente from '@/components/unidades/VistosRecientemente';

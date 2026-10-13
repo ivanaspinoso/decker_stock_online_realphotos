@@ -193,11 +193,18 @@ un rango de precios sobre un stock sin precios deja la lista vacía apenas se
 toca. Cuando `/precios` se enchufe, `precioMin` deja de ser `null` y los
 controles vuelven sin tocar ningún componente.
 
-### No hay destacadas
+### Las destacadas se eligen en el CRM
 
-`vehicle_destacado` existe en la base pero llega `null` en las 281. La home
-muestra las **8 más nuevas por `vehicle_entry`**. El día que alguien cargue el
-campo desde el panel, `mapearListado()` pasa a leerlo.
+Se administran en https://crm.rutasurtrucks.com.ar/unidades/destacadas y llegan
+por `GET /vehiculos?destacado=1` (`traerIdsDestacados()` en
+`lib/rutasur/vehiculos.ts`): un pedido más cada cinco minutos, junto con el
+catálogo. Lo que el CRM elige manda; la home muestra las primeras 6 en el orden
+del catálogo.
+
+Si esa lista viene vacía —así arrancó, el 13/10/2026 devolvía `[]`—, o el pedido
+falla, la home cae a las **8 más nuevas por `vehicle_entry`**. Ojo: el campo
+`vehicle_destacado` del listado general sigue llegando `null` en todas; no
+sirve para saber cuáles son. La fuente es el endpoint filtrado.
 
 ### No hay financiación
 
@@ -448,8 +455,6 @@ Lo que sí limita el tráfico real ya está puesto y funciona:
 - Fotos cacheadas **un día** (`SEGUNDOS_DE_REVALIDACION_FOTOS`)
 - Paginación de 24 — la grilla pide 24 fotos, no 239
 - Escalonado de miniaturas en la galería — una cada 250 ms
-- Tandas con descanso en `precalentar-fotos`, que es lo único que le pega fuerte
-  al backend a propósito
 
 Si alguna vez hace falta limitar de verdad, el lugar es **fuera** del `fetch`
 —en un script o en un middleware que sepa que está saliendo a la red—, nunca
@@ -501,157 +506,60 @@ xapi.rutasurtrucks.com.ar          (API)    -> 167.250.5.68
 
 Verificado por DNS. **Quemar el rate limit probando los formularios tira las
 fotos del sitio abajo**, y al revés. Los dos síntomas —`http=000` en la API y
-504 en `/_next/image`— son el mismo bloqueo visto desde dos lados.
+fotos grises— son el mismo bloqueo visto desde dos lados.
 
 Consecuencias prácticas:
 
 - **No probar los endpoints de contacto mientras alguien está mirando el
-  sitio.** El bloqueo dura 25-50 minutos y en ese rato las fotos que no estén
-  ya en `.next/cache/images` salen en gris.
+  sitio.** El bloqueo dura 25-50 minutos y en ese rato las fotos pueden salir
+  en gris (cada visitante las baja directo de ese server).
 - Un 504 de imagen justo después de una tanda de pruebas **no es un bug de las
   tarjetas**: es el bloqueo. Antes de investigar el componente, mirar si la API
   contesta.
-- El precalentado y las pruebas de formularios **no se pueden correr a la vez**.
 
-## Las fotos: por qué dan 504 y qué lo evita
+## Las fotos: sin optimizador de imágenes
 
-**El síntoma:** `Failed to load resource: the server responded with a status of
-504 (Gateway Timeout)` y tarjetas del catálogo en gris.
+`next.config.mjs` tiene `images.unoptimized: true`. **No sacarlo.**
 
-**La cadena, de atrás para adelante:**
+**Qué pasó (octubre 2026):** el optimizador de Vercel (`/_next/image`) tiene
+cupo mensual en el plan del sitio y se agotó. Pasado el cupo, Vercel contesta
+`402 Payment Required` con `X-Vercel-Error: OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED`
+a TODAS las imágenes, también a las del repo (el hero del catálogo se cayó así),
+y con `Cache-Control: immutable` de un año: el navegador se guarda el error.
 
-1. Las fotos viven en `admin.usados.rutasurtrucks.com.ar`, no en este repo.
-2. La primera vez que se pide una, Next baja el original de ahí, lo recodifica y
-   lo guarda 30 días (`minimumCacheTTL`).
-3. Ese server tiene un límite **acumulado**: sirvió exactamente **100 fotos
-   seguidas** a razón de una cada 500 ms —sin ninguna concurrencia— y después
-   dejó de contestar más de un minuto. No es concurrencia: es volumen total.
-4. Cuando no contesta, nuestro optimizador espera y devuelve **504**.
-5. **El navegador no reintenta un 504 nunca.** Esa foto queda gris hasta que
-   alguien recargue la página.
+Lo que se comía el cupo eran las fotos del stock (~245 unidades × galería ×
+anchos), que no ganaban nada recodificadas: del server de Ruta Sur ya vienen
+chicas (miniatura ~16 KB, `croped` ~60 KB).
 
-**Las cuatro cosas que lo evitan, todas puestas:**
+**Cómo queda:**
 
-| Qué | Dónde | Por qué |
-| --- | --- | --- |
-| Reintento con espera creciente (1,5 s y 5 s) | `components/unidades/FotoUnidad.tsx` | Convierte un 504 —foto muerta— en una foto que tarda 3 s. Es lo único que arregla el síntoma en vivo |
-| 30 días de caché de lo optimizado | `next.config.mjs` → `minimumCacheTTL` | Cada foto se baja del server de Decker **una sola vez** |
-| Seis anchos en vez de dieciséis | `next.config.mjs` → `deviceSizes`/`imageSizes` | Con los valores por defecto, el mismo camión se bajaba hasta doce veces |
-| Precalentado post-deploy | `npm run precalentar-fotos` | Cubre el único caso que la caché no puede cubrir: la caché vacía |
+- Las fotos del stock van **directo del navegador** a
+  `admin.usados.rutasurtrucks.com.ar`. Cada visitante las pide desde su IP, así
+  que el límite de volumen de ese server (cortaba después de ~100 fotos seguidas
+  desde una misma IP) ya no lo pega Vercel por todos.
+- Las fotos propias (`public/marca/`) se usan en **WebP ya comprimido**
+  (`camiones.webp` ~60 KB, `herostock.webp` ~200 KB, `banner.webp` ~340 KB).
+  Una foto nueva hay que comprimirla antes de subirla: nadie la achica después.
+  Con sharp, que ya viene con Next:
+  `node -e "require('sharp')('in.jpg').webp({quality:72}).toFile('out.webp')"`.
+- `FotoUnidad.tsx` sigue reintentando dos veces (1,5 s y 5 s) una foto que no
+  llegó: el server de Ruta Sur igual puede cortar una conexión.
+- `GaleriaUnidad` sigue escalonando las miniaturas de la ficha (primero la
+  foto grande, después una cada 250 ms): ahora le ahorra ese pico al server
+  desde la IP del visitante.
+- El script de precalentado se borró: no hay caché de imágenes que calentar.
+  La regla de "una foto, un `sizes`" tampoco aplica más: sin optimizador, la
+  URL es la misma para cualquier tamaño.
+- El carrusel de las tarjetas (`FotosDeTarjeta.tsx`, sacado porque las fotos de
+  `croped/` daban 504 en el optimizador) se podría volver a probar.
 
-### El precalentado
+**Para volver a optimizar** hace falta cupo (Vercel Pro) o un `loader` contra
+otro CDN. La solución de fondo para las fotos del stock sigue siendo la misma:
+copiarlas una vez a un storage propio (Vercel Blob, S3, Cloudinary).
 
-Después de cada deploy la caché de imágenes arranca vacía, así que el peor caso
-—239 fotos sin recodificar— le toca justo al primer visitante. El script se
-adelanta y las pide él, de a una, con un descanso cada 80:
-
-```bash
-npm run precalentar-fotos                          # contra localhost:3000
-npm run precalentar-fotos -- https://el-sitio.com  # contra producción
-```
-
-Tarda varios minutos y está bien: corre sin nadie esperándolo. **No subir
-`TANDA` ni bajar `DESCANSO`** para apurarlo — son justo los valores que hacen
-que el server no se bloquee.
-
-### La ficha: por qué las miniaturas entran de a una
-
-El 504 que más se veía no era el del catálogo sino **el de la ficha**, con URLs
-de `/uploads/croped/` y `w=256`: las miniaturas de la galería.
-
-La cuenta: abrir una ficha pedía la foto grande **más todas las miniaturas al
-mismo tiempo**. Una unidad con diez fotos son once descargas simultáneas del
-original, y ese server se bloquea por volumen. Las últimas volvían 504, y como
-el navegador no reintenta un 504, quedaban grises hasta recargar.
-
-`GaleriaUnidad` ahora las **escalona**: primero la foto grande —lo único que el
-visitante está mirando— y recién cuando ésa llegó, las miniaturas de a una cada
-250 ms.
-
-Medido en una ficha real de 6 fotos, con el host vivo: los pedidos salen a los
-60, 165 ms (logo, foto grande, relacionadas) y después **881, 1132, 1396, 1647,
-1913** — uno cada 250 ms, ninguno superpuesto. Cero fotos rotas. Antes, las 6
-miniaturas salían juntas en los primeros 200 ms.
-
-Dos detalles que parecen de más y no lo son:
-
-- **El marco de la miniatura existe desde el principio**, con su esqueleto. Si
-  se montara junto con la imagen, la tira crecería de a saltos.
-- **Hay un tope de 2 segundos.** Esperar a la foto grande está bien mientras
-  llegue; si NO llega —el server bloqueado, que es el escenario para el que esto
-  existe— `onTermino` recién avisa tras agotar los reintentos, 6,5 segundos.
-  Medido: la primera miniatura tardaba 8,7 s. Con el tope, la galería empieza a
-  llenarse sola a los 2 s.
-
-### Una foto, UN tamaño: la regla del `sizes`
-
-Cada combinación de ancho distinta hace que Next **baje el original otra vez**
-del server de Decker. Dos componentes que muestran la misma foto con `sizes`
-distintos la descargan dos veces.
-
-Pasaba con la vista lista: tenía `sizes="64px"` propio, así que tocar "Lista"
-disparaba **24 descargas nuevas** de fotos que la grilla ya tenía optimizadas.
-Ahora comparte el `sizes` de la tarjeta y reusa la misma variante: medido, **0
-pedidos nuevos** al cambiar de vista.
-
-Se paga con unos kilobytes de más por fila —640px para mostrar 64— y se compra
-no tocar el server. Al lado de un 504, no es nada.
-
-**Antes de agregar un `sizes` nuevo**, mirar si alguno existente sirve. Hoy hay
-tres contra el host de Decker: la tarjeta (`33vw`, la que se precalienta), la
-foto grande de la ficha (`60vw`) y sus miniaturas (`180px`).
-
-### Precalentar también las galerías
-
-`GALERIAS=1 npm run precalentar-fotos` hace lo mismo con las fotos de cada
-ficha, no sólo con la miniatura del listado. Son ~1500 imágenes en vez de 243 y
-tarda unos 45 minutos, pero deja la ficha sin un solo 504 en su primera visita.
-
-Para un deploy tranquilo vale la pena. Para uno apurado alcanza con el
-precalentado normal: el escalonado ya evita que el visitante vea fotos rotas.
-
-### Deployar en Vercel NO lo arregla
-
-Es la pregunta obvia y la respuesta es no: el cuello de botella es el server de
-Decker, y desde Vercel sigue siendo el mismo server con el mismo límite. En un
-aspecto es peor — Vercel tiene varias regiones con cachés separadas, así que la
-primera carga de cada foto se repite por región.
-
-**La única forma de que las fotos anden SIEMPRE es que no dependan de ese
-server**: bajarlas una vez y servirlas desde el mismo lugar que el sitio (Vercel
-Blob, S3, Cloudinary). Son ~240 imágenes, una sola descarga por foto, y el 504
-desaparece como categoría de problema. Es una decisión de infraestructura
-pendiente, no algo que se arregle con código de este lado.
-
-Con lo que hay hoy las fotos cargan bien **casi siempre**: los reintentos y la
-caché tapan el hueco, pero una foto que nadie pidió nunca, justo durante un
-bloqueo, queda gris hasta la próxima visita.
-
-### Hubo un carrusel en las tarjetas y se sacó por esto
-
-`FotosDeTarjeta.tsx` dejaba pasar las fotos con las flechas o el dedo sin entrar
-a la ficha. La mecánica andaba —pedía las fotos recién al detectar interés y
-precargaba la siguiente—. Lo que no andaba era el resultado.
-
-Las fotos de galería viven en **`/uploads/croped/`**, una ruta que el
-precalentado no cubre. La primera vez que alguien pasaba de foto, el optimizador
-de Next tenía que bajarla del server de Decker en ese momento, y ese server
-contesta 504 apenas se le pide de más. El visitante tocaba la flecha y veía un
-rectángulo gris.
-
-**Un carrusel que a veces no muestra la foto es peor que no tener carrusel**: la
-tarjeta parece rota en vez de simple. Se puede volver a poner el día que las
-fotos no dependan de ese server —cuando el precalentado cubra `croped/` de
-punta a punta, o cuando las fotos estén en un CDN—.
-
-### Si igual ves fotos grises
-
-1. Probá una foto directo: `curl -I "https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/<archivo>"`.
-   Si da `000` o cuelga 21 segundos, el server está bloqueado y **no es el
-   código**: se recupera solo en unos minutos.
-2. Recargar la página basta: las que ya se cachearon salen de disco.
-3. Si pasa siempre y en todas, revisá que `remotePatterns` en `next.config.mjs`
-   siga cubriendo el host — sin eso `next/image` las rechaza a todas.
+**Si ves fotos grises:** `curl -I "https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/<archivo>"`.
+Si cuelga o da `000`, el server está bloqueado y no es el código: se recupera
+solo en unos minutos.
 
 ## Las tres reglas de renderizado que no hay que romper
 

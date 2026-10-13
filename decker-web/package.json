@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "precalentar-fotos": "node scripts/precalentar-fotos.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "^16.3.4",
