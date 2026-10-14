@@ -548,9 +548,22 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
     todas las fotos sin caché colgaban, desde Argentina llegaban en 0,2 s—.
     Antes contestaba 503 y la tarjeta quedaba en "Foto no disponible".
     No reintentar también en el servidor: se multiplican las esperas.
-  - Con la caché vacía (foto nunca pedida) el primer visitante igual depende de
-    ese server. La solución definitiva sigue siendo copiar las fotos a un
-    storage propio.
+  - **Lee primero de Vercel Blob** (store `decker-fotos`, ruta
+    `fotos/<carpeta>/<archivo>`); si no está, va a Ruta Sur; si tampoco, 307.
+    La URL del store se saca de `BLOB_READ_WRITE_TOKEN`: sin token (local sin
+    `vercel env pull`) el proxy salta Blob y va directo a Ruta Sur.
+  - **Las fotos se suben a Blob con `scripts/subir-fotos-a-blob.mjs`**, desde
+    una máquina a la que Ruta Sur le contesta (no desde Vercel: ese es el
+    problema). Sube sólo lo que falta. **Correrlo cuando entran unidades
+    nuevas**: una foto que no está en Blob depende de Ruta Sur como antes.
+    ```
+    node --env-file=.env.local scripts/subir-fotos-a-blob.mjs             # miniaturas
+    node --env-file=.env.local scripts/subir-fotos-a-blob.mjs --galerias  # + fichas
+    ```
+    Octubre 2026: subidas las 245 miniaturas. Las galerías (`croped/`), no.
+  - **Cupo de Blob en Hobby: 2.000 subidas/mes.** Pasarse no cobra, pero corta
+    el store 30 días. El script tiene `--tope` (1.500 por defecto) por corrida;
+    no sabe lo que se subió antes en el mes. Uso en vercel.com → Storage.
 - Las fotos propias (`public/marca/`) se usan en **WebP ya comprimido**
   (`camiones.webp` ~60 KB, `herostock.webp` ~200 KB, `banner.webp` ~340 KB).
   Una foto nueva hay que comprimirla antes de subirla: nadie la achica después.
@@ -568,10 +581,11 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
   `croped/` daban 504 en el optimizador) se podría volver a probar.
 
 **Para volver a optimizar** hace falta cupo (Vercel Pro) o un `loader` contra
-otro CDN. La solución de fondo para las fotos del stock sigue siendo la misma:
-copiarlas una vez a un storage propio (Vercel Blob, S3, Cloudinary).
+otro CDN.
 
-**Si ves el logo en vez de fotos:** `curl -I "https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/<archivo>"`.
+**Si ves el logo en vez de fotos:** primero, ¿la foto está en Blob? Correr el
+script con `--simular` dice cuántas faltan. Después:
+`curl -I "https://admin.usados.rutasurtrucks.com.ar/uploads/thumb/<archivo>"`.
 Si cuelga o da `000`, el server está bloqueado y no es el código: se recupera
 solo en unos minutos.
 

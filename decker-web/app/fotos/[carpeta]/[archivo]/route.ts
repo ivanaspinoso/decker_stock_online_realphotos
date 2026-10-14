@@ -24,15 +24,21 @@
  * cupo y daba 402: acá no se recodifica nada, se reenvía el JPEG tal cual. Las
  * fotos ya vienen chicas (~16 KB la miniatura, ~60 KB la de galería).
  *
- * Si el server no le contesta al proxy, el proxy redirige al navegador a la
- * foto original (307): el bloqueo suele ser a las IPs de Vercel, no a las del
- * visitante.
+ * DE DÓNDE SALE CADA FOTO, en orden:
+ *
+ * 1. Vercel Blob (`fotos/<carpeta>/<archivo>`), si está. Ahí las sube
+ *    `scripts/subir-fotos-a-blob.mjs`, corrido desde una máquina a la que Ruta
+ *    Sur sí le contesta. Es lo único que no depende de ese server.
+ * 2. El server de Ruta Sur.
+ * 3. Si ninguno la dio, 307 a la foto original: el bloqueo suele ser a las IPs
+ *    de Vercel, no a las del visitante.
  *
  * NO ES UN PROXY ABIERTO: sólo acepta las dos carpetas de fotos de ese único
  * host y nombres de archivo de imagen. Cualquier otra cosa da 404.
  */
 
 const ORIGEN = 'https://admin.usados.rutasurtrucks.com.ar/uploads';
+const BLOB = urlDelStore(process.env.BLOB_READ_WRITE_TOKEN);
 const CARPETAS = new Set(['thumb', 'croped']);
 const EXTENSIONES = /\.(jpe?g|png|webp|gif)$/i;
 
@@ -51,6 +57,9 @@ const SEGUNDOS_EN_CACHE = 60 * 60 * 24 * 365;
  */
 const TIMEOUT_MS = 4_000;
 
+/** Blob contesta en milisegundos, también con un 404: si tarda, algo anda mal. */
+const TIMEOUT_BLOB_MS = 2_000;
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ carpeta: string; archivo: string }> },
@@ -62,8 +71,11 @@ export async function GET(
     return new Response('No encontrada', { status: 404 });
   }
 
-  const url = `${ORIGEN}/${carpeta}/${encodeURIComponent(nombre)}`;
-  const respuesta = await pedirFoto(url);
+  const ruta = `${carpeta}/${encodeURIComponent(nombre)}`;
+  const url = `${ORIGEN}/${ruta}`;
+  const respuesta =
+    (BLOB ? await pedirFoto(`${BLOB}/fotos/${ruta}`, TIMEOUT_BLOB_MS) : null) ??
+    (await pedirFoto(url, TIMEOUT_MS));
 
   if (!respuesta) {
     // SI NO LA CONSEGUIMOS, QUE LA PIDA EL NAVEGADOR.
@@ -92,10 +104,13 @@ export async function GET(
   });
 }
 
-async function pedirFoto(url: string): Promise<{ cuerpo: ArrayBuffer; tipo: string } | null> {
+async function pedirFoto(
+  url: string,
+  timeoutMs: number,
+): Promise<{ cuerpo: ArrayBuffer; tipo: string } | null> {
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
       // Sólo se cachean las respuestas 200: un 503 no queda guardado.
       next: { revalidate: SEGUNDOS_EN_CACHE },
     });
@@ -114,4 +129,17 @@ function decodificar(segmento: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * La URL pública del store, sacada del token: `vercel_blob_rw_<storeId>_<secreto>`
+ * → `https://<storeid>.public.blob.vercel-storage.com`. Así no hay una segunda
+ * variable de entorno que mantener sincronizada con el token.
+ *
+ * Sin token (desarrollo sin `vercel env pull`) devuelve `null` y el proxy va
+ * directo a Ruta Sur, como antes de que existiera el store.
+ */
+function urlDelStore(token: string | undefined): string | null {
+  const storeId = token?.match(/^vercel_blob_rw_([a-z0-9]+)_/i)?.[1];
+  return storeId ? `https://${storeId.toLowerCase()}.public.blob.vercel-storage.com` : null;
 }

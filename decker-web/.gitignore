@@ -11,3 +11,6 @@ next-env.d.ts
 
 # Carpeta de scripts de testeo manual con navegador.
 /qa/
+
+.vercel
+.env*.local
