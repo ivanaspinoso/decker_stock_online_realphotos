@@ -28,11 +28,11 @@
  *
  * 1. Vercel Blob (`fotos/<carpeta>/<archivo>`), si está. Es lo único que no
  *    depende de ese server.
- * 2. El server de Ruta Sur. Si la da y no estaba en Blob, SE GUARDA EN BLOB
- *    (después de contestar, con `after`): una unidad nueva se completa sola la
- *    primera vez que alguien la mira. La otra vía es
- *    `scripts/subir-fotos-a-blob.mjs`, que corre todos los días desde una
- *    máquina a la que Ruta Sur sí le contesta —para cuando a Vercel no—.
+ * 2. El server de Ruta Sur. Si da una MINIATURA que no estaba en Blob, se
+ *    guarda en Blob (después de contestar, con `after`): la tarjeta de una
+ *    unidad nueva queda a salvo la primera vez que alguien la ve. Las galerías
+ *    las sube sólo `scripts/subir-fotos-a-blob.mjs` (todos los días, desde una
+ *    máquina a la que Ruta Sur sí le contesta), que lleva la cuenta del cupo.
  * 3. Si ninguno la dio, 307 a la foto original: el bloqueo suele ser a las IPs
  *    de Vercel, no a las del visitante.
  *
@@ -100,7 +100,12 @@ export async function GET(
 
   // Sólo si Blob dijo "no está" (404). Si Blob falló por otra cosa, la foto
   // puede estar igual, y subirla de nuevo gasta cupo de balde.
-  if (deBlob === 'falta' && typeof respuesta === 'object') {
+  //
+  // SÓLO MINIATURAS. Acá no hay cómo contar las subidas del mes, y pasarse del
+  // cupo de Blob lo corta 30 días para TODO el sitio. Miniaturas son una por
+  // unidad nueva: pocas por mes, el margen sobra. Galerías son ~10 por unidad
+  // y las sube el script, que sí cuenta.
+  if (carpeta === 'thumb' && deBlob === 'falta' && typeof respuesta === 'object') {
     after(() => guardarEnBlob(`fotos/${carpeta}/${nombre}`, respuesta));
   }
 
@@ -160,8 +165,7 @@ async function pedirFoto(url: string, timeoutMs: number): Promise<Foto | 'falta'
 
 /**
  * Cada subida gasta cupo de Blob (2.000 por mes en Hobby; pasarse corta el
- * store 30 días). Una unidad nueva son ~10 fotos y cada una se sube una sola
- * vez: después sale del CDN y ni siquiera llega acá. Si falla no pasa nada:
+ * store 30 días). Se sube una sola vez: después la foto sale de Blob o del CDN. Si falla no pasa nada:
  * la foto ya se le dio al visitante, y la próxima vez se vuelve a intentar.
  */
 async function guardarEnBlob(ruta: string, foto: Foto): Promise<void> {

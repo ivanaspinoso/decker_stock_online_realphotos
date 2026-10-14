@@ -556,9 +556,10 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
     le vuelve a preguntar y las fotos fuera de Blob van directo al 307. Sin
     eso, durante un bloqueo cada una de esas fotos tardaba 4 s.
   - **Las fotos llegan a Blob solas, por dos vías:**
-    1. **El proxy**: si Blob dio 404 y Ruta Sur dio la foto, la guarda en Blob
-       después de contestar (`after`). Una unidad nueva se completa la primera
-       vez que alguien la mira, si ese día Ruta Sur le contesta a Vercel.
+    1. **El proxy, sólo miniaturas**: si Blob dio 404 y Ruta Sur dio la
+       miniatura, la guarda en Blob después de contestar (`after`). Galerías
+       no: el proxy no puede contar el cupo, y ~10 fotos por ficha mirada lo
+       podrían pasar.
     2. **`scripts/subir-fotos-a-blob.mjs`, todos los días a las 9 y a las 18**
        (tarea de Windows "Decker - fotos a Blob" en la PC de Ivana; si estaba
        apagada, corre al prenderla). Corre desde una IP a la que Ruta Sur sí
@@ -574,8 +575,9 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
     bloqueado, y la 307 siempre.
   - **Cupo de Blob en Hobby: 2.000 subidas/mes.** Pasarse no cobra, pero corta
     el store 30 días (y todo vuelve a depender de Ruta Sur). El script cuenta
-    sus subidas del mes y para en 1.500 (`TOPE_DEL_MES`); el resto queda para
-    el proxy. Uso real en vercel.com → Storage → decker-fotos.
+    sus subidas del mes y para en 1.800 (`TOPE_DEL_MES`); el margen es para
+    las miniaturas del proxy y los `list`. Octubre 2026: 157 de 245 galerías
+    en Blob al llegar al tope; el resto entra solo en noviembre. Uso real en vercel.com → Storage → decker-fotos.
 - Las fotos propias (`public/marca/`) se usan en **WebP ya comprimido**
   (`camiones.webp` ~60 KB, `herostock.webp` ~200 KB, `banner.webp` ~340 KB).
   Una foto nueva hay que comprimirla antes de subirla: nadie la achica después.

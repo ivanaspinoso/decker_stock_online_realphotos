@@ -16,8 +16,9 @@
  * Este script baja las fotos desde ACÁ y las deja en Blob, de donde el proxy
  * las lee primero. Una foto en Blob ya no depende de Ruta Sur.
  *
- * El proxy también guarda en Blob cada foto que consigue. Este script cubre lo
- * que el proxy no puede: los días en que Ruta Sur no le contesta a Vercel.
+ * El proxy también guarda en Blob las MINIATURAS que consigue (no las
+ * galerías: no puede contar el cupo). Este script sube las galerías, y las
+ * miniaturas de los días en que Ruta Sur no le contesta a Vercel.
  *
  * QUÉ SUBE, en orden: las miniaturas que falten (son las del catálogo) y
  * después las galerías de las unidades que todavía no están completas. Una
@@ -28,8 +29,10 @@
  * EL CUPO DE BLOB (plan Hobby): 2.000 subidas por mes. Pasarse no cobra: CORTA
  * el store 30 días, y ahí el proxy vuelve a depender de Ruta Sur. El script
  * cuenta lo que sube en el mes (en el mismo `.cache/fotos-blob.json`) y no pasa
- * de `TOPE_DEL_MES`: el resto del cupo queda para lo que sube el proxy. Lo que
- * no entra queda para el mes siguiente.
+ * de `TOPE_DEL_MES`. Las 200 restantes son el margen para las miniaturas que
+ * sube el proxy (una por unidad nueva) y los `list` de cada corrida (uno por
+ * corrida, dos corridas por día ≈ 60). Lo que no entra queda para el mes
+ * siguiente.
  *
  * SIN RÁFAGAS. Las fotos y la API son el mismo server y bloquea por volumen
  * (ver CLAUDE.md, "Las fotos y la API son EL MISMO SERVIDOR"): un pedido por
@@ -46,8 +49,8 @@ const ORIGEN = /^https?:\/\/admin\.usados\.rutasurtrucks\.com\.ar\/uploads\/(thu
 const EXTENSIONES = /\.(jpe?g|png|webp|gif)$/i;
 const PAUSA_MS = 1_000;
 const FALLOS_SEGUIDOS_MAX = 3;
-/** De las 2.000 del mes; las otras 500 quedan para el proxy. */
-const TOPE_DEL_MES = 1_500;
+/** De las 2.000 del mes. Ver "EL CUPO DE BLOB" arriba antes de subirlo. */
+const TOPE_DEL_MES = 1_800;
 const ARCHIVO_DE_ESTADO = join(dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'fotos-blob.json');
 
 const argumentos = process.argv.slice(2);
