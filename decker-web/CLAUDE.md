@@ -542,9 +542,12 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
   - Ir directo del navegador al server de Ruta Sur se probó y no alcanzó: ese
     server da 503 o cuelga, y una página del catálogo quedaba con 5 de 15 fotos.
   - Sólo acepta esas dos carpetas y nombres de imagen: no es un proxy abierto.
-  - Corta a los 6 s y contesta 503 `no-store`; el reintento lo hace el
-    navegador (`FotoUnidad`). No reintentar también en el servidor: se
-    multiplican las esperas.
+  - Corta a los 4 s y, si no consiguió la foto, contesta **307 a la URL
+    original** (`no-store`): el navegador la pide directo. El server de Ruta Sur
+    bloquea por IP y las de Vercel caen primero —medido oct 2026: desde `iad1`
+    todas las fotos sin caché colgaban, desde Argentina llegaban en 0,2 s—.
+    Antes contestaba 503 y la tarjeta quedaba en "Foto no disponible".
+    No reintentar también en el servidor: se multiplican las esperas.
   - Con la caché vacía (foto nunca pedida) el primer visitante igual depende de
     ese server. La solución definitiva sigue siendo copiar las fotos a un
     storage propio.

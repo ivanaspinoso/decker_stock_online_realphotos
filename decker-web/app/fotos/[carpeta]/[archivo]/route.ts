@@ -24,6 +24,10 @@
  * cupo y daba 402: acá no se recodifica nada, se reenvía el JPEG tal cual. Las
  * fotos ya vienen chicas (~16 KB la miniatura, ~60 KB la de galería).
  *
+ * Si el server no le contesta al proxy, el proxy redirige al navegador a la
+ * foto original (307): el bloqueo suele ser a las IPs de Vercel, no a las del
+ * visitante.
+ *
  * NO ES UN PROXY ABIERTO: sólo acepta las dos carpetas de fotos de ese único
  * host y nombres de archivo de imagen. Cualquier otra cosa da 404.
  */
@@ -37,12 +41,15 @@ const SEGUNDOS_EN_CACHE = 60 * 60 * 24 * 365;
 
 /**
  * Lo que se espera al server antes de darlo por colgado. Cuelga 21 s si no.
+ * Pasado el corte el navegador va directo al server (ver el 307 de `GET`), así
+ * que es demora que el visitante paga entera: corto. Una foto sana llega en
+ * menos de un segundo.
  *
  * Sin reintento acá: lo hace `FotoUnidad` del lado del navegador (a 1,5 s y
  * 5 s). Reintentar en los dos lados multiplicaba las esperas —17 s por intento,
  * casi un minuto hasta mostrar el aviso de "foto no disponible"—.
  */
-const TIMEOUT_MS = 6_000;
+const TIMEOUT_MS = 4_000;
 
 export async function GET(
   _request: Request,
@@ -59,11 +66,21 @@ export async function GET(
   const respuesta = await pedirFoto(url);
 
   if (!respuesta) {
-    // `no-store`: un fallo no se cachea, ni en el CDN ni en el navegador. Así el
-    // reintento de `FotoUnidad` vuelve a intentar de verdad.
-    return new Response('Foto no disponible', {
-      status: 503,
-      headers: { 'Cache-Control': 'no-store' },
+    // SI NO LA CONSEGUIMOS, QUE LA PIDA EL NAVEGADOR.
+    //
+    // El server de Ruta Sur bloquea por IP, y las IPs de Vercel son pocas y
+    // compartidas: todas las fotos sin caché salen de ellas, así que son las
+    // primeras en quedar bloqueadas. Medido (oct 2026): desde Vercel `iad1`
+    // cada foto colgaba hasta el corte, mientras la misma foto pedida desde una
+    // IP de Argentina llegaba en 0,2 s. Con un 503 acá esas tarjetas quedaban
+    // con "Foto no disponible" aunque la foto estuviera a un pedido de distancia.
+    //
+    // `no-store`: la redirección no se cachea, ni en el CDN ni en el navegador.
+    // La próxima visita vuelve a pasar por el proxy y, si el server ya contesta,
+    // la foto queda guardada acá.
+    return new Response(null, {
+      status: 307,
+      headers: { Location: url, 'Cache-Control': 'no-store' },
     });
   }
 
