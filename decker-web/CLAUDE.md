@@ -552,6 +552,9 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
     `fotos/<carpeta>/<archivo>`); si no está, va a Ruta Sur; si tampoco, 307.
     La URL del store se saca de `BLOB_READ_WRITE_TOKEN`: sin token (local sin
     `vercel env pull`) el proxy salta Blob y va directo a Ruta Sur.
+  - **Cortacircuito**: si Ruta Sur no le contesta al proxy, por 5 minutos no se
+    le vuelve a preguntar y las fotos fuera de Blob van directo al 307. Sin
+    eso, durante un bloqueo cada una de esas fotos tardaba 4 s.
   - **Las fotos llegan a Blob solas, por dos vías:**
     1. **El proxy**: si Blob dio 404 y Ruta Sur dio la foto, la guarda en Blob
        después de contestar (`after`). Una unidad nueva se completa la primera

@@ -66,6 +66,22 @@ const TIMEOUT_MS = 4_000;
 /** Blob contesta en milisegundos, también con un 404: si tarda, algo anda mal. */
 const TIMEOUT_BLOB_MS = 2_000;
 
+/**
+ * CORTACIRCUITO: si Ruta Sur no contestó, durante este rato no se le vuelve a
+ * preguntar y las fotos que no están en Blob van directo al 307.
+ *
+ * Sin esto, un bloqueo a Vercel (dura 25-50 min) le cobraba `TIMEOUT_MS` a
+ * CADA foto fuera de Blob: una grilla con varias así se veía trabada, foto por
+ * foto, cuatro segundos cada una. Con esto paga la espera un solo pedido cada
+ * cinco minutos por instancia, y el resto sale al instante. Insistir además
+ * alarga el bloqueo.
+ *
+ * Vive en memoria de la instancia: una instancia nueva arranca confiando y
+ * paga una espera para enterarse. No hace falta compartirlo.
+ */
+const PAUSA_TRAS_FALLA_MS = 5 * 60_000;
+let rutaSurCaidaHasta = 0;
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ carpeta: string; archivo: string }> },
@@ -80,7 +96,7 @@ export async function GET(
   const ruta = `${carpeta}/${encodeURIComponent(nombre)}`;
   const url = `${ORIGEN}/${ruta}`;
   const deBlob = BLOB ? await pedirFoto(`${BLOB}/fotos/${ruta}`, TIMEOUT_BLOB_MS) : 'falla';
-  const respuesta = typeof deBlob === 'object' ? deBlob : await pedirFoto(url, TIMEOUT_MS);
+  const respuesta = typeof deBlob === 'object' ? deBlob : await pedirARutaSur(url);
 
   // Sólo si Blob dijo "no está" (404). Si Blob falló por otra cosa, la foto
   // puede estar igual, y subirla de nuevo gasta cupo de balde.
@@ -116,6 +132,14 @@ export async function GET(
 }
 
 type Foto = { cuerpo: ArrayBuffer; tipo: string };
+
+/** `pedirFoto` contra Ruta Sur, con el cortacircuito. Un 404 no lo dispara: el server contestó. */
+async function pedirARutaSur(url: string): Promise<Foto | 'falta' | 'falla'> {
+  if (Date.now() < rutaSurCaidaHasta) return 'falla';
+  const resultado = await pedirFoto(url, TIMEOUT_MS);
+  if (resultado === 'falla') rutaSurCaidaHasta = Date.now() + PAUSA_TRAS_FALLA_MS;
+  return resultado;
+}
 
 /** La foto, `'falta'` si el server contestó 404, o `'falla'` por cualquier otra cosa. */
 async function pedirFoto(url: string, timeoutMs: number): Promise<Foto | 'falta' | 'falla'> {
