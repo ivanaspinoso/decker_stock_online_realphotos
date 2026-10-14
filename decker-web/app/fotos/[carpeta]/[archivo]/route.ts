@@ -26,16 +26,22 @@
  *
  * DE DÓNDE SALE CADA FOTO, en orden:
  *
- * 1. Vercel Blob (`fotos/<carpeta>/<archivo>`), si está. Ahí las sube
- *    `scripts/subir-fotos-a-blob.mjs`, corrido desde una máquina a la que Ruta
- *    Sur sí le contesta. Es lo único que no depende de ese server.
- * 2. El server de Ruta Sur.
+ * 1. Vercel Blob (`fotos/<carpeta>/<archivo>`), si está. Es lo único que no
+ *    depende de ese server.
+ * 2. El server de Ruta Sur. Si la da y no estaba en Blob, SE GUARDA EN BLOB
+ *    (después de contestar, con `after`): una unidad nueva se completa sola la
+ *    primera vez que alguien la mira. La otra vía es
+ *    `scripts/subir-fotos-a-blob.mjs`, que corre todos los días desde una
+ *    máquina a la que Ruta Sur sí le contesta —para cuando a Vercel no—.
  * 3. Si ninguno la dio, 307 a la foto original: el bloqueo suele ser a las IPs
  *    de Vercel, no a las del visitante.
  *
  * NO ES UN PROXY ABIERTO: sólo acepta las dos carpetas de fotos de ese único
  * host y nombres de archivo de imagen. Cualquier otra cosa da 404.
  */
+
+import { put } from '@vercel/blob';
+import { after } from 'next/server';
 
 const ORIGEN = 'https://admin.usados.rutasurtrucks.com.ar/uploads';
 const BLOB = urlDelStore(process.env.BLOB_READ_WRITE_TOKEN);
@@ -73,11 +79,16 @@ export async function GET(
 
   const ruta = `${carpeta}/${encodeURIComponent(nombre)}`;
   const url = `${ORIGEN}/${ruta}`;
-  const respuesta =
-    (BLOB ? await pedirFoto(`${BLOB}/fotos/${ruta}`, TIMEOUT_BLOB_MS) : null) ??
-    (await pedirFoto(url, TIMEOUT_MS));
+  const deBlob = BLOB ? await pedirFoto(`${BLOB}/fotos/${ruta}`, TIMEOUT_BLOB_MS) : 'falla';
+  const respuesta = typeof deBlob === 'object' ? deBlob : await pedirFoto(url, TIMEOUT_MS);
 
-  if (!respuesta) {
+  // Sólo si Blob dijo "no está" (404). Si Blob falló por otra cosa, la foto
+  // puede estar igual, y subirla de nuevo gasta cupo de balde.
+  if (deBlob === 'falta' && typeof respuesta === 'object') {
+    after(() => guardarEnBlob(`fotos/${carpeta}/${nombre}`, respuesta));
+  }
+
+  if (typeof respuesta !== 'object') {
     // SI NO LA CONSEGUIMOS, QUE LA PIDA EL NAVEGADOR.
     //
     // El server de Ruta Sur bloquea por IP, y las IPs de Vercel son pocas y
@@ -104,10 +115,10 @@ export async function GET(
   });
 }
 
-async function pedirFoto(
-  url: string,
-  timeoutMs: number,
-): Promise<{ cuerpo: ArrayBuffer; tipo: string } | null> {
+type Foto = { cuerpo: ArrayBuffer; tipo: string };
+
+/** La foto, `'falta'` si el server contestó 404, o `'falla'` por cualquier otra cosa. */
+async function pedirFoto(url: string, timeoutMs: number): Promise<Foto | 'falta' | 'falla'> {
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(timeoutMs),
@@ -115,10 +126,31 @@ async function pedirFoto(
       next: { revalidate: SEGUNDOS_EN_CACHE },
     });
     const tipo = res.headers.get('content-type') ?? '';
-    if (!res.ok || !tipo.startsWith('image/')) return null;
+    if (res.status === 404) return 'falta';
+    if (!res.ok || !tipo.startsWith('image/')) return 'falla';
     return { cuerpo: await res.arrayBuffer(), tipo };
   } catch {
-    return null;
+    return 'falla';
+  }
+}
+
+/**
+ * Cada subida gasta cupo de Blob (2.000 por mes en Hobby; pasarse corta el
+ * store 30 días). Una unidad nueva son ~10 fotos y cada una se sube una sola
+ * vez: después sale del CDN y ni siquiera llega acá. Si falla no pasa nada:
+ * la foto ya se le dio al visitante, y la próxima vez se vuelve a intentar.
+ */
+async function guardarEnBlob(ruta: string, foto: Foto): Promise<void> {
+  try {
+    await put(ruta, Buffer.from(foto.cuerpo), {
+      access: 'public',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: foto.tipo,
+      cacheControlMaxAge: SEGUNDOS_EN_CACHE,
+    });
+  } catch (error) {
+    console.error(`[fotos] No se pudo guardar ${ruta} en Blob:`, error);
   }
 }
 

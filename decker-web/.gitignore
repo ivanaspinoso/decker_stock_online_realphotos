@@ -14,3 +14,6 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# Estado de scripts/subir-fotos-a-blob.mjs (qué galerías ya están en Blob).
+/.cache/

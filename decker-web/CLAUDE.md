@@ -552,18 +552,27 @@ chicas (miniatura ~16 KB, `croped` ~60 KB).
     `fotos/<carpeta>/<archivo>`); si no está, va a Ruta Sur; si tampoco, 307.
     La URL del store se saca de `BLOB_READ_WRITE_TOKEN`: sin token (local sin
     `vercel env pull`) el proxy salta Blob y va directo a Ruta Sur.
-  - **Las fotos se suben a Blob con `scripts/subir-fotos-a-blob.mjs`**, desde
-    una máquina a la que Ruta Sur le contesta (no desde Vercel: ese es el
-    problema). Sube sólo lo que falta. **Correrlo cuando entran unidades
-    nuevas**: una foto que no está en Blob depende de Ruta Sur como antes.
+  - **Las fotos llegan a Blob solas, por dos vías:**
+    1. **El proxy**: si Blob dio 404 y Ruta Sur dio la foto, la guarda en Blob
+       después de contestar (`after`). Una unidad nueva se completa la primera
+       vez que alguien la mira, si ese día Ruta Sur le contesta a Vercel.
+    2. **`scripts/subir-fotos-a-blob.mjs`, todos los días a las 9 y a las 18**
+       (tarea de Windows "Decker - fotos a Blob" en la PC de Ivana; si estaba
+       apagada, corre al prenderla). Corre desde una IP a la que Ruta Sur sí
+       contesta: cubre los días en que bloquea a Vercel. Sube miniaturas y
+       galerías que falten; las galerías completas quedan anotadas en
+       `.cache/fotos-blob.json` y no se vuelven a pedir. Log en
+       `.cache/fotos-blob.log`.
     ```
-    node --env-file=.env.local scripts/subir-fotos-a-blob.mjs             # miniaturas
-    node --env-file=.env.local scripts/subir-fotos-a-blob.mjs --galerias  # + fichas
+    node --env-file=.env.local scripts/subir-fotos-a-blob.mjs --simular   # qué falta
     ```
-    Octubre 2026: subidas las 245 miniaturas. Las galerías (`croped/`), no.
+    Si esa PC deja de existir, hay que mover la tarea a otra máquina en
+    Argentina. Sin ella, la vía 1 sigue andando mientras Vercel no esté
+    bloqueado, y la 307 siempre.
   - **Cupo de Blob en Hobby: 2.000 subidas/mes.** Pasarse no cobra, pero corta
-    el store 30 días. El script tiene `--tope` (1.500 por defecto) por corrida;
-    no sabe lo que se subió antes en el mes. Uso en vercel.com → Storage.
+    el store 30 días (y todo vuelve a depender de Ruta Sur). El script cuenta
+    sus subidas del mes y para en 1.500 (`TOPE_DEL_MES`); el resto queda para
+    el proxy. Uso real en vercel.com → Storage → decker-fotos.
 - Las fotos propias (`public/marca/`) se usan en **WebP ya comprimido**
   (`camiones.webp` ~60 KB, `herostock.webp` ~200 KB, `banner.webp` ~340 KB).
   Una foto nueva hay que comprimirla antes de subirla: nadie la achica después.
